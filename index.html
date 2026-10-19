@@ -4,26 +4,114 @@
 <meta charset="UTF-8">
 <title>🎣 Рыбалка на речке</title>
 <style>
+  * { box-sizing: border-box; }
   body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #0d1520; font-family: 'Segoe UI', sans-serif; overflow: hidden; user-select: none; }
   #game-container { position: relative; }
   canvas { box-shadow: 0 10px 30px rgba(0,0,0,0.6); border-radius: 12px; cursor: crosshair; display: block; }
   
-  /* Кнопка сброса */
-  #resetBtn {
-    position: absolute; top: 20px; right: 20px;
-    background: rgba(200, 60, 60, 0.85); color: white; border: 2px solid rgba(255,100,100,0.5);
-    padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 14px;
+  .btn {
+    position: absolute; top: 20px; color: white; border: 2px solid;
+    padding: 8px 14px; border-radius: 8px; font-weight: bold; font-size: 14px;
     cursor: pointer; transition: all 0.2s; backdrop-filter: blur(4px);
   }
-  #resetBtn:hover { background: rgba(255, 80, 80, 1); transform: scale(1.05); }
-  #resetBtn:active { transform: scale(0.95); }
+  .btn:hover { transform: scale(1.05); }
+  .btn:active { transform: scale(0.95); }
   
-  /* Уведомление о сбросе */
+  #catalogBtn { right: 260px; background: rgba(60, 120, 200, 0.85); border-color: rgba(100,180,255,0.5); }
+  #catalogBtn:hover { background: rgba(80, 150, 240, 1); }
+  
+  #shopBtn { right: 150px; background: rgba(60, 180, 100, 0.85); border-color: rgba(100,255,150,0.5); }
+  #shopBtn:hover { background: rgba(80, 220, 120, 1); }
+  
+  #resetBtn { right: 20px; background: rgba(200, 60, 60, 0.85); border-color: rgba(255,100,100,0.5); }
+  #resetBtn:hover { background: rgba(255, 80, 80, 1); }
+  
+  /* Оверлеи (Общие) */
+  .overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center;
+    backdrop-filter: blur(6px); border-radius: 12px; z-index: 10;
+  }
+  .overlay.show { display: flex; }
+  .panel {
+    background: linear-gradient(180deg, #2a3a4a, #1a2a3a);
+    border: 2px solid rgba(100,180,255,0.4); border-radius: 16px;
+    padding: 24px; max-width: 760px; max-height: 85vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8); position: relative;
+  }
+  .panel h2 { color: #aaddff; margin: 0 0 16px; text-align: center; font-size: 24px; letter-spacing: 1px; }
+  
+  .close-btn {
+    position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.1);
+    border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%;
+    cursor: pointer; font-size: 18px; font-weight: bold;
+  }
+  .close-btn:hover { background: rgba(255,80,80,0.5); }
+
+  /* Каталог */
+  .section-title { color: #aaddff; font-size: 14px; font-weight: bold; margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(100,180,255,0.2); padding-bottom: 4px; }
+  .fish-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  .fish-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(100,180,255,0.2); border-radius: 12px; padding: 12px 8px; text-align: center; transition: all 0.2s; }
+  .fish-card.caught { border-color: rgba(100,255,100,0.5); background: rgba(100,255,100,0.05); }
+  .fish-card.trash-card.caught { border-color: rgba(200,150,100,0.5); background: rgba(200,150,100,0.05); }
+  .fish-card .emoji { font-size: 40px; display: block; margin-bottom: 6px; filter: grayscale(1) opacity(0.3); }
+  .fish-card.caught .emoji { filter: none; }
+  .fish-card .name { font-size: 12px; color: #ccc; font-weight: bold; }
+  .fish-card.caught .name { color: #fff; }
+  .fish-card .pts { font-size: 11px; color: #ffd700; margin-top: 2px; }
+  .fish-card.trash-card .pts { color: #ff9966; }
+
+  /* Достижения */
+  .achv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .achv { padding: 14px; border-radius: 12px; background: rgba(255,215,0,0.05); border: 2px dashed rgba(255,215,0,0.3); text-align: center; transition: all 0.3s; }
+  .achv.done { background: rgba(255,215,0,0.15); border-color: #ffd700; border-style: solid; box-shadow: 0 0 20px rgba(255,215,0,0.3); }
+  .achv.trash-achv { background: rgba(200,150,100,0.05); border-color: rgba(200,150,100,0.3); }
+  .achv.trash-achv.done { background: rgba(200,150,100,0.15); border-color: #c89664; box-shadow: 0 0 20px rgba(200,150,100,0.3); }
+  .achv .icon { font-size: 36px; display: block; margin-bottom: 6px; filter: grayscale(1) opacity(0.4); }
+  .achv.done .icon { filter: none; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+  .achv .title { color: #ffd700; font-weight: bold; font-size: 15px; }
+  .achv.trash-achv .title { color: #c89664; }
+  .achv.done.trash-achv .title { color: #ff9966; }
+  .achv .desc { color: #aaa; font-size: 12px; margin-top: 4px; }
+  .achv .progress-bar { height: 6px; background: rgba(0,0,0,0.3); border-radius: 3px; margin-top: 8px; overflow: hidden; }
+  .achv .progress-fill { height: 100%; background: #ffd700; border-radius: 3px; transition: width 0.4s; }
+  .achv.trash-achv .progress-fill { background: #c89664; }
+
+  /* Магазин */
+  .shop-item {
+    display: flex; align-items: center; gap: 16px; padding: 12px;
+    background: rgba(255,255,255,0.05); border-radius: 12px; margin-bottom: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .shop-item .icon { font-size: 36px; width: 50px; text-align: center; }
+  .shop-item .info { flex: 1; }
+  .shop-item .name { color: #fff; font-weight: bold; font-size: 16px; }
+  .shop-item .desc { color: #aaa; font-size: 12px; margin-top: 2px; }
+  .shop-item .buy-btn {
+    background: #4CAF50; color: #fff; border: none; padding: 8px 16px;
+    border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s;
+    min-width: 100px;
+  }
+  .shop-item .buy-btn:hover:not(:disabled) { background: #66bb6a; transform: scale(1.05); }
+  .shop-item .buy-btn:disabled { background: #555; cursor: not-allowed; opacity: 0.6; }
+
+  /* Тосты */
+  #achvToast, #trashToast {
+    position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
+    padding: 16px 40px; border-radius: 12px; font-size: 18px; font-weight: bold;
+    opacity: 0; pointer-events: none; transition: opacity 0.4s, transform 0.4s;
+    text-align: center; border: 3px solid #fff; z-index: 20;
+  }
+  #achvToast { background: linear-gradient(180deg, #ffd700, #ffa000); color: #1a1a1a; box-shadow: 0 0 40px rgba(255,215,0,0.8); }
+  #trashToast { background: linear-gradient(180deg, #8a7a5a, #5a4a3a); color: #fff; box-shadow: 0 0 40px rgba(200,150,100,0.8); border-color: #c89664; }
+  #achvToast.show, #trashToast.show { opacity: 1; transform: translateX(-50%) translateY(20px); }
+  
   #toast {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     background: rgba(0,0,0,0.9); color: #fff; padding: 20px 40px; border-radius: 12px;
     font-size: 20px; font-weight: bold; opacity: 0; pointer-events: none; transition: opacity 0.3s;
-    border: 2px solid #4CAF50; text-align: center;
+    border: 2px solid #4CAF50; text-align: center; z-index: 15;
   }
   #toast.show { opacity: 1; }
 </style>
@@ -31,7 +119,51 @@
 <body>
 <div id="game-container">
   <canvas id="game"></canvas>
-  <button id="resetBtn" onclick="resetProgress()">🗑 Сброс</button>
+  <button id="catalogBtn" class="btn" onclick="toggleCatalog()">📖 Каталог</button>
+  <button id="shopBtn" class="btn" onclick="toggleShop()">🛒 Магазин</button>
+  <button id="resetBtn" class="btn" onclick="resetProgress()">🗑 Сброс</button>
+  
+  <!-- Каталог -->
+  <div id="catalogOverlay" class="overlay" onclick="if(event.target===this) toggleCatalog()">
+    <div class="panel">
+      <button class="close-btn" onclick="toggleCatalog()">×</button>
+      <h2>📖 Каталог уловов</h2>
+      <div class="section-title">🐟 Рыбы</div>
+      <div class="fish-grid" id="fishGrid"></div>
+      <div class="section-title">🗑 Мусор</div>
+      <div class="fish-grid" id="trashGrid"></div>
+      <div class="section-title">🏆 Достижения</div>
+      <div class="achv-grid">
+        <div class="achv" id="achvCollector">
+          <span class="icon">🏆</span>
+          <div class="title">Коллекционер</div>
+          <div class="desc" id="achvCollectorDesc">0/10</div>
+          <div class="progress-bar"><div class="progress-fill" id="achvCollectorBar" style="width:0%"></div></div>
+        </div>
+        <div class="achv trash-achv" id="achvTrash">
+          <span class="icon">🗑️</span>
+          <div class="title">Мусорщик</div>
+          <div class="desc" id="achvTrashDesc">0/4</div>
+          <div class="progress-bar"><div class="progress-fill" id="achvTrashBar" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Магазин -->
+  <div id="shopOverlay" class="overlay" onclick="if(event.target===this) toggleShop()">
+    <div class="panel">
+      <button class="close-btn" onclick="toggleShop()">×</button>
+      <h2>🛒 Магазин прокачки</h2>
+      <div style="text-align:center; font-size: 24px; color: #ffd700; font-weight: bold; margin-bottom: 16px;">
+        Ваши очки: <span id="shopScore">0</span>
+      </div>
+      <div id="shopItems"></div>
+    </div>
+  </div>
+  
+  <div id="achvToast">🏆 Достижение открыто!<br><span style="font-size:14px;">«Коллекционер» — поймана вся рыба!</span></div>
+  <div id="trashToast">🗑️ Достижение открыто!<br><span style="font-size:14px;">«Мусорщик» — собран весь мусор!</span></div>
   <div id="toast">Прогресс сброшен!</div>
 </div>
 
@@ -42,108 +174,257 @@ const W = 900, H = 600;
 canvas.width = W; canvas.height = H;
 
 // ===== СОСТОЯНИЯ =====
-const S = { 
-  IDLE: 'idle',         // готов к забросу
-  CASTING: 'casting',   // летит поплавок
-  WAITING: 'waiting',   // ждём поклёва
-  BITE: 'bite',         // клюёт! нужно подсечь
-  REELING: 'reeling',   // вываживаем (мини-игра)
-  RETURNING: 'returning', // возвращаем улов
-  RESULT: 'result'      // показываем результат
-};
-
+const S = { IDLE: 'idle', CASTING: 'casting', WAITING: 'waiting', BITE: 'bite', REELING: 'reeling', RETURNING: 'returning', RESULT: 'result' };
 let state = S.IDLE;
 let stateTime = 0;
-let score = 0;
+
+// ===== ПРОГРЕСС =====
+let score = parseInt(localStorage.getItem('fishScore') || '0');
 let bestScore = parseInt(localStorage.getItem('fishBest') || '0');
 let totalCaught = parseInt(localStorage.getItem('fishTotal') || '0');
+let catalog = JSON.parse(localStorage.getItem('fishCatalog') || '{}');
+
+let upgrades = JSON.parse(localStorage.getItem('fishUpgrades') || '{"reel":0, "zone":0, "luck":0}');
+let hasBait = localStorage.getItem('fishHasBait') === 'true';
+
+// Достижения
+const ACHV_COLLECTOR_KEY = 'fishCollectionAchv';
+const ACHV_TRASH_KEY = 'fishTrashAchv';
+
+function saveProgress() {
+  localStorage.setItem('fishScore', score);
+  localStorage.setItem('fishBest', bestScore);
+  localStorage.setItem('fishTotal', totalCaught);
+  localStorage.setItem('fishCatalog', JSON.stringify(catalog));
+  localStorage.setItem('fishUpgrades', JSON.stringify(upgrades));
+  localStorage.setItem('fishHasBait', hasBait);
+}
+
+// ===== ПЕРЕМЕННЫЕ ИГРЫ =====
 let lastCatch = null;
-let particles = [];
-let rippleEffects = [];
-let floatingTexts = [];
-let bubbles = [];
+let particles = [], rippleEffects = [], floatingTexts = [], bubbles = [], rainDrops = [];
+let reelPos = 0, zoneStart = 0, zoneEnd = 0, reelSpeed = 85;
 
-// Настройки мини-игры
-let reelPos = 0;
-let zoneStart = 0, zoneEnd = 0;
-let reelSpeed = 85;
+// Время и Погода
+const WEATHERS = ['day', 'sunset', 'night', 'rain', 'fog'];
+let currentWeatherIndex = 0;
+let weatherTimer = 0;
+const WEATHER_DURATION = 45; // секунд на погоду
 
-// Удочка
-const rod = { baseX: 100, baseY: 480, tipX: 180, tipY: 380 };
-const bobber = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0, phase: 0, bobY: 0 };
-
-// Рыбы
+// ===== ВСЕ ОБЪЕКТЫ =====
 const FISH_TYPES = [
-  { name: 'Окунь',         color: '#e8a020', size: 25, pts: 10,  weight: 35, emoji: '🐟' },
-  { name: 'Карась',        color: '#d4b048', size: 30, pts: 15,  weight: 30, emoji: '🐠' },
-  { name: 'Щука',          color: '#4a8a3a', size: 45, pts: 30,  weight: 18, emoji: '🦈' },
-  { name: 'Сом',           color: '#5a4a3a', size: 55, pts: 50,  weight: 10, emoji: '🐋' },
-  { name: 'Золотая рыбка', color: '#ffd700', size: 25, pts: 100, weight: 4,  emoji: '✨' },
-  { name: 'Ботинок',       color: '#3a3a3a', size: 35, pts: 1,   weight: 3,  emoji: '👢' }
+  { name: 'Окунь',         color: '#e8a020', size: 25, pts: 10,  baseWeight: 30, emoji: '🐟', isTrash: false },
+  { name: 'Карась',        color: '#d4b048', size: 30, pts: 15,  baseWeight: 25, emoji: '🐠', isTrash: false },
+  { name: 'Щука',          color: '#4a8a3a', size: 45, pts: 30,  baseWeight: 15, emoji: '🦈', isTrash: false },
+  { name: 'Сом',           color: '#5a4a3a', size: 55, pts: 50,  baseWeight: 8,  emoji: '🐋', isTrash: false },
+  { name: 'Золотая рыбка', color: '#ffd700', size: 25, pts: 100, baseWeight: 2,  emoji: '✨', isTrash: false },
+  { name: 'Форель',        color: '#c08060', size: 35, pts: 40,  baseWeight: 4,  emoji: '🐡', isTrash: false },
+  { name: 'Лещ',           color: '#8a7a5a', size: 38, pts: 25,  baseWeight: 5,  emoji: '🎏', isTrash: false },
+  { name: 'Ёрш',           color: '#6a7a8a', size: 20, pts: 8,   baseWeight: 6,  emoji: '🐟', isTrash: false },
+  { name: 'Плотва',        color: '#aab0a0', size: 22, pts: 12,  baseWeight: 8,  emoji: '🐠', isTrash: false },
+  { name: 'Карп',          color: '#b08040', size: 50, pts: 60,  baseWeight: 2,  emoji: '🐳', isTrash: false },
+  { name: 'Угорь',         color: '#4a5a4a', size: 60, pts: 70,  baseWeight: 3,  emoji: '🐍', isTrash: false },
+  { name: 'Ботинок',       color: '#3a3a3a', size: 35, pts: 1,   baseWeight: 8,  emoji: '👢', isTrash: true },
+  { name: 'Бутылка',       color: '#4a8a4a', size: 28, pts: 1,   baseWeight: 8,  emoji: '🍾', isTrash: true },
+  { name: 'Шина',          color: '#1a1a1a', size: 45, pts: 1,   baseWeight: 5,  emoji: '🛞', isTrash: true },
+  { name: 'Банка',         color: '#8a8a9a', size: 20, pts: 1,   baseWeight: 8,  emoji: '🥫', isTrash: true }
 ];
+const FISH_ONLY = FISH_TYPES.filter(f => !f.isTrash);
+const TRASH_ONLY = FISH_TYPES.filter(f => f.isTrash);
 
-// Фоновые рыбы
+const rod = { baseX: 100, baseY: 480, tipX: 180, tipY: 380 };
+const bobber = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0, phase: 0, mouseX: 600, mouseY: 450 };
+
+// ===== ФОН =====
 let bgFish = [];
-for (let i = 0; i < 14; i++) {
-  bgFish.push({
-    x: Math.random() * W, y: 340 + Math.random() * 230,
-    speed: 0.3 + Math.random() * 0.7,
-    dir: Math.random() > 0.5 ? 1 : -1,
-    size: 6 + Math.random() * 10,
-    color: FISH_TYPES[Math.floor(Math.random() * 4)].color,
-    wobble: Math.random() * Math.PI * 2,
-    depth: 0.3 + Math.random() * 0.7
+for (let i = 0; i < 12; i++) bgFish.push({ x: Math.random()*W, y: 340+Math.random()*230, speed: 0.3+Math.random()*0.7, dir: Math.random()>0.5?1:-1, size: 6+Math.random()*10, color: FISH_ONLY[Math.floor(Math.random()*FISH_ONLY.length)].color, wobble: Math.random()*Math.PI*2, depth: 0.3+Math.random()*0.7 });
+for (let i = 0; i < 20; i++) bubbles.push({ x: Math.random()*W, y: 340+Math.random()*250, size: 1+Math.random()*3, speed: 0.2+Math.random()*0.5, depth: Math.random() });
+for (let i = 0; i < 80; i++) rainDrops.push({ x: Math.random()*W, y: Math.random()*H, speed: 400+Math.random()*400, len: 10+Math.random()*20 });
+
+// ===== ЛОГИКА ПОГОДЫ =====
+function getWeather() { return WEATHERS[currentWeatherIndex]; }
+function changeWeather(forceIndex) {
+  if (forceIndex !== undefined) currentWeatherIndex = forceIndex;
+  else currentWeatherIndex = (currentWeatherIndex + 1) % WEATHERS.length;
+  weatherTimer = 0;
+}
+
+// Изменение весов рыбы в зависимости от погоды
+function getAdjustedWeights() {
+  const w = getWeather();
+  return FISH_TYPES.map(f => {
+    let weight = f.baseWeight;
+    if (w === 'night') {
+      if (f.name === 'Сом' || f.name === 'Угорь') weight *= 3;
+      if (f.name === 'Золотая рыбка') weight = 0;
+    } else if (w === 'sunset') {
+      if (f.name === 'Золотая рыбка') weight *= 3;
+      if (f.name === 'Щука') weight *= 1.5;
+    } else if (w === 'fog') {
+      if (!f.isTrash) weight *= 1.5; // в тумане рыба активнее
+    } else if (w === 'rain') {
+      if (f.isTrash) weight *= 1.2;
+    }
+    return { ...f, weight };
   });
 }
 
-// Пузырьки
-for (let i = 0; i < 20; i++) {
-  bubbles.push({
-    x: Math.random() * W, y: 340 + Math.random() * 250,
-    size: 1 + Math.random() * 3, speed: 0.2 + Math.random() * 0.5
-  });
+// ===== ЛОГИКА МАГАЗИНА =====
+const SHOP_ITEMS = [
+  { id: 'reel', name: '⚡ Скорость вываживания', desc: 'Замедляет индикатор в мини-игре', max: 5, baseCost: 50, costMult: 2 },
+  { id: 'zone', name: '🎯 Ширина зоны', desc: 'Увеличивает зелёную зону', max: 5, baseCost: 60, costMult: 2 },
+  { id: 'luck', name: '🍀 Удача', desc: 'Снижает шанс выпадения мусора', max: 5, baseCost: 80, costMult: 2.5 },
+  { id: 'bait', name: '🪱 Наживка', desc: 'Следующий улов гарантированно рыба', max: 1, baseCost: 100, costMult: 1, isConsumable: true }
+];
+
+function getShopCost(item) {
+  if (item.isConsumable) return item.baseCost;
+  const currentLvl = upgrades[item.id] || 0;
+  return Math.floor(item.baseCost * Math.pow(item.costMult, currentLvl));
+}
+
+function buyUpgrade(id) {
+  const item = SHOP_ITEMS.find(i => i.id === id);
+  if (!item) return;
+  const cost = getShopCost(item);
+  
+  if (score < cost) return;
+  
+  if (item.isConsumable) {
+    if (hasBait) return;
+    hasBait = true;
+  } else {
+    if ((upgrades[id] || 0) >= item.max) return;
+    upgrades[id] = (upgrades[id] || 0) + 1;
+  }
+  
+  score -= cost;
+  saveProgress();
+  renderShop();
+  updateUI();
+}
+
+function toggleShop() {
+  const overlay = document.getElementById('shopOverlay');
+  overlay.classList.toggle('show');
+  if (overlay.classList.contains('show')) renderShop();
+  else { document.getElementById('catalogOverlay').classList.remove('show'); }
+}
+
+function renderShop() {
+  document.getElementById('shopScore').textContent = score;
+  const container = document.getElementById('shopItems');
+  container.innerHTML = SHOP_ITEMS.map(item => {
+    const cost = getShopCost(item);
+    const lvl = item.isConsumable ? (hasBait ? 1 : 0) : (upgrades[item.id] || 0);
+    const isMax = !item.isConsumable && lvl >= item.max;
+    const canBuy = !isMax && !(item.isConsumable && hasBait) && score >= cost;
+    
+    let btnText = isMax ? 'MAX' : `Купить (${cost})`;
+    if (item.isConsumable && hasBait) btnText = 'Есть';
+    
+    return `
+      <div class="shop-item">
+        <div class="icon">${item.name.split(' ')[0]}</div>
+        <div class="info">
+          <div class="name">${item.name.substring(2)} ${!item.isConsumable ? `(ур. ${lvl}/${item.max})` : ''}</div>
+          <div class="desc">${item.desc}</div>
+        </div>
+        <button class="buy-btn" onclick="buyUpgrade('${item.id}')" ${canBuy ? '' : 'disabled'}>${btnText}</button>
+      </div>
+    `;
+  }).join('');
+}
+
+// ===== КАТАЛОГ И ДОСТИЖЕНИЯ =====
+function addToCatalog(name) {
+  if (!catalog[name]) catalog[name] = 0;
+  catalog[name]++;
+  saveProgress();
+  checkAchievements();
+}
+
+function checkAchievements() {
+  const fishCaught = FISH_ONLY.filter(f => catalog[f.name] > 0).length;
+  if (fishCaught >= FISH_ONLY.length && localStorage.getItem(ACHV_COLLECTOR_KEY) !== 'true') {
+    localStorage.setItem(ACHV_COLLECTOR_KEY, 'true');
+    showToast('achvToast');
+  }
+  const trashCaught = TRASH_ONLY.filter(f => catalog[f.name] > 0).length;
+  if (trashCaught >= TRASH_ONLY.length && localStorage.getItem(ACHV_TRASH_KEY) !== 'true') {
+    localStorage.setItem(ACHV_TRASH_KEY, 'true');
+    showToast('trashToast');
+  }
+}
+
+function showToast(id) {
+  const el = document.getElementById(id);
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function toggleCatalog() {
+  const overlay = document.getElementById('catalogOverlay');
+  overlay.classList.toggle('show');
+  if (overlay.classList.contains('show')) renderCatalog();
+  else { document.getElementById('shopOverlay').classList.remove('show'); }
+}
+
+function renderCatalog() {
+  document.getElementById('fishGrid').innerHTML = FISH_ONLY.map(f => {
+    const count = catalog[f.name] || 0;
+    return `<div class="fish-card ${count > 0 ? 'caught' : ''}"><span class="emoji">${f.emoji}</span><div class="name">${count > 0 ? f.name : '???'}</div><div class="pts">${count > 0 ? '+' + f.pts : ''}</div><div style="font-size:10px;color:#888;margin-top:2px;">${count > 0 ? '×' + count : 'не поймана'}</div></div>`;
+  }).join('');
+  
+  document.getElementById('trashGrid').innerHTML = TRASH_ONLY.map(f => {
+    const count = catalog[f.name] || 0;
+    return `<div class="fish-card trash-card ${count > 0 ? 'caught' : ''}"><span class="emoji">${f.emoji}</span><div class="name">${count > 0 ? f.name : '???'}</div><div class="pts">${count > 0 ? '🗑' : ''}</div><div style="font-size:10px;color:#888;margin-top:2px;">${count > 0 ? '×' + count : 'не найден'}</div></div>`;
+  }).join('');
+  
+  const fishCaught = FISH_ONLY.filter(f => catalog[f.name] > 0).length;
+  const trashCaught = TRASH_ONLY.filter(f => catalog[f.name] > 0).length;
+  const collectorDone = localStorage.getItem(ACHV_COLLECTOR_KEY) === 'true';
+  const trashDone = localStorage.getItem(ACHV_TRASH_KEY) === 'true';
+  
+  document.getElementById('achvCollector').classList.toggle('done', collectorDone);
+  document.getElementById('achvCollectorDesc').textContent = collectorDone ? '✓ Собрана вся коллекция рыб!' : `Поймано ${fishCaught}/${FISH_ONLY.length} видов`;
+  document.getElementById('achvCollectorBar').style.width = (fishCaught / FISH_ONLY.length * 100) + '%';
+  
+  document.getElementById('achvTrash').classList.toggle('done', trashDone);
+  document.getElementById('achvTrashDesc').textContent = trashDone ? '✓ Собран весь мусор!' : `Найдено ${trashCaught}/${TRASH_ONLY.length} видов`;
+  document.getElementById('achvTrashBar').style.width = (trashCaught / TRASH_ONLY.length * 100) + '%';
 }
 
 // ===== ВСПОМОГАТЕЛЬНЫЕ =====
 function addParticles(x, y, color, count, spread = 4) {
-  for (let i = 0; i < count; i++) {
-    particles.push({
-      x, y,
-      vx: (Math.random() - 0.5) * spread * 2,
-      vy: (Math.random() - 0.5) * spread * 2 - 1,
-      life: 1, color, size: 2 + Math.random() * 4
-    });
-  }
+  for (let i = 0; i < count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*spread*2, vy: (Math.random()-0.5)*spread*2-1, life: 1, color, size: 2+Math.random()*4 });
 }
-
-function addRipple(x, y) {
-  rippleEffects.push({ x, y, radius: 5, life: 1 });
-}
-
-function addFloatingText(text, x, y, color) {
-  floatingTexts.push({ text, x, y, color, life: 1.5, vy: -50 });
-}
+function addRipple(x, y) { rippleEffects.push({ x, y, radius: 5, life: 1 }); }
+function addFloatingText(text, x, y, color) { floatingTexts.push({ text, x, y, color, life: 1.5, vy: -50 }); }
 
 function pickFish() {
-  const total = FISH_TYPES.reduce((s, f) => s + f.weight, 0);
+  const adjusted = getAdjustedWeights();
+  
+  // Удача снижает вес мусора
+  const luckReduction = 1 - (upgrades.luck || 0) * 0.12;
+  adjusted.forEach(f => { if (f.isTrash) f.weight *= Math.max(0.1, luckReduction); });
+  
+  // Наживка убирает весь мусор
+  if (hasBait) adjusted.forEach(f => { if (f.isTrash) f.weight = 0; });
+  
+  const total = adjusted.reduce((s, f) => s + f.weight, 0);
   let r = Math.random() * total;
-  for (const f of FISH_TYPES) {
+  for (const f of adjusted) {
     r -= f.weight;
     if (r <= 0) return f;
   }
-  return FISH_TYPES[0];
+  return adjusted[0];
 }
 
-// ===== СБРОС =====
 function resetProgress() {
-  if (!confirm('Точно сбросить весь прогресс? (очки и рекорд)')) return;
-  score = 0;
-  bestScore = 0;
-  totalCaught = 0;
-  lastCatch = null;
-  localStorage.removeItem('fishBest');
-  localStorage.removeItem('fishTotal');
-  
+  if (!confirm('Сбросить ВЕСЬ прогресс: очки, каталог, магазин и достижения?')) return;
+  score = 0; bestScore = 0; totalCaught = 0; catalog = {}; upgrades = {reel:0, zone:0, luck:0}; hasBait = false;
+  localStorage.clear();
   const toast = document.getElementById('toast');
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 1500);
@@ -151,118 +432,99 @@ function resetProgress() {
 
 // ===== УПРАВЛЕНИЕ =====
 canvas.addEventListener('click', (e) => {
+  if (document.querySelector('.overlay.show')) return;
   const rect = canvas.getBoundingClientRect();
   const mx = (e.clientX - rect.left) * (W / rect.width);
   const my = (e.clientY - rect.top) * (H / rect.height);
   handleClick(mx, my);
 });
-
 canvas.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();
   bobber.mouseX = (e.clientX - rect.left) * (W / rect.width);
   bobber.mouseY = (e.clientY - rect.top) * (H / rect.height);
 });
-
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Space') {
     e.preventDefault();
-    if (state === S.IDLE) handleClick(bobber.mouseX || 600, bobber.mouseY || 450);
-    else if (state === S.BITE) handleClick(0, 0);
-    else if (state === S.REELING) handleClick(0, 0);
+    if (document.querySelector('.overlay.show')) return;
+    if (state === S.IDLE) handleClick(bobber.mouseX, bobber.mouseY);
+    else if (state === S.BITE || state === S.REELING) handleClick(0, 0);
   }
 });
 
 function handleClick(mx, my) {
   switch (state) {
-    case S.IDLE:
-      castRod(mx, my);
-      break;
-    case S.BITE:
-      // Мгновенная подсечка
-      startReeling();
-      break;
-    case S.REELING:
-      // Мгновенная проверка!
-      checkReel();
-      break;
-    case S.RESULT:
-      if (stateTime > 0.8) resetToIdle();
-      break;
+    case S.IDLE: castRod(mx, my); break;
+    case S.BITE: startReeling(); break;
+    case S.REELING: checkReel(); break;
+    case S.RESULT: if (stateTime > 0.8) resetToIdle(); break;
   }
 }
 
 function castRod(mx, my) {
-  bobber.x = rod.tipX;
-  bobber.y = rod.tipY;
+  bobber.x = rod.tipX; bobber.y = rod.tipY;
   bobber.tx = Math.max(300, Math.min(W - 60, mx));
   bobber.ty = Math.max(340, Math.min(H - 60, my));
-  
-  const dx = bobber.tx - bobber.x;
-  const dy = bobber.ty - bobber.y;
+  const dx = bobber.tx - bobber.x, dy = bobber.ty - bobber.y;
   const dist = Math.hypot(dx, dy);
   const flightTime = Math.max(0.3, dist / 900);
-  
   bobber.vx = dx / flightTime;
   bobber.vy = dy / flightTime - 400 * flightTime;
-  
-  state = S.CASTING;
-  stateTime = 0;
+  state = S.CASTING; stateTime = 0;
 }
 
 function startReeling() {
-  state = S.REELING;
-  stateTime = 0;
+  state = S.REELING; stateTime = 0;
   reelPos = 0;
-  reelSpeed = 85 + Math.random() * 40;
   
-  // Зона всегда достижима
+  // Скорость зависит от прокачки
+  const baseSpeed = 85 + Math.random() * 40;
+  const speedReduction = (upgrades.reel || 0) * 0.15;
+  reelSpeed = baseSpeed * Math.max(0.3, 1 - speedReduction);
+  
+  // Зона зависит от прокачки
   zoneStart = 35 + Math.random() * 25;
-  zoneEnd = zoneStart + 18 + Math.random() * 12;
+  const baseZone = 18 + Math.random() * 12;
+  const bonusZone = (upgrades.zone || 0) * 4;
+  zoneEnd = Math.min(95, zoneStart + baseZone + bonusZone);
   
   addParticles(bobber.x, bobber.y, '#fff', 15);
   addRipple(bobber.x, bobber.y);
 }
 
 function checkReel() {
-  // Мгновенная проверка текущей позиции
   if (reelPos >= zoneStart && reelPos <= zoneEnd) {
-    // Успех!
     const fish = pickFish();
     lastCatch = fish;
     score += fish.pts;
     totalCaught++;
-    if (score > bestScore) {
-      bestScore = score;
-      localStorage.setItem('fishBest', bestScore);
-    }
-    localStorage.setItem('fishTotal', totalCaught);
+    if (score > bestScore) bestScore = score;
     
-    state = S.RETURNING;
-    stateTime = 0;
+    if (hasBait) hasBait = false; // Тратим наживку
+    addToCatalog(fish.name);
+    saveProgress();
     
+    state = S.RETURNING; stateTime = 0;
     addParticles(bobber.x, bobber.y, fish.color, 25, 6);
     addRipple(bobber.x, bobber.y);
     addFloatingText(`+${fish.pts}`, bobber.x, bobber.y - 20, fish.color);
   } else {
-    // Промах
-    state = S.RESULT;
-    stateTime = 0;
+    state = S.RESULT; stateTime = 0;
     addFloatingText('Сорвалась!', bobber.x, bobber.y - 20, '#ff6666');
   }
 }
 
-function resetToIdle() {
-  state = S.IDLE;
-  stateTime = 0;
-  lastCatch = null;
-}
+function resetToIdle() { state = S.IDLE; stateTime = 0; lastCatch = null; }
 
 // ===== ОБНОВЛЕНИЕ =====
 function update(dt) {
   stateTime += dt;
+  weatherTimer += dt;
   const t = performance.now() / 1000;
   
-  // Фоновые рыбы
+  if (weatherTimer > WEATHER_DURATION) changeWeather();
+  
+  // Фон
   for (const f of bgFish) {
     f.x += f.speed * f.dir;
     f.wobble += dt * 3;
@@ -270,99 +532,68 @@ function update(dt) {
     if (f.x > W + 40) { f.x = -40; f.y = 340 + Math.random() * 230; }
     if (f.x < -40) { f.x = W + 40; f.y = 340 + Math.random() * 230; }
   }
-  
-  // Пузырьки
   for (const b of bubbles) {
     b.y -= b.speed;
     b.x += Math.sin(t + b.y * 0.05) * 0.3;
     if (b.y < 320) { b.y = H; b.x = Math.random() * W; }
   }
   
-  // Частицы
+  // Эффекты
   for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx; p.y += p.vy;
-    p.vy += 8 * dt;
-    p.life -= dt * 1.5;
+    const p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 8 * dt; p.life -= dt * 1.5;
     if (p.life <= 0) particles.splice(i, 1);
   }
-  
-  // Волны
   for (let i = rippleEffects.length - 1; i >= 0; i--) {
-    const r = rippleEffects[i];
-    r.radius += dt * 60;
-    r.life -= dt * 1.2;
+    const r = rippleEffects[i]; r.radius += dt * 60; r.life -= dt * 1.2;
     if (r.life <= 0) rippleEffects.splice(i, 1);
   }
-  
-  // Тексты
   for (let i = floatingTexts.length - 1; i >= 0; i--) {
-    const ft = floatingTexts[i];
-    ft.y += ft.vy * dt;
-    ft.vy *= 0.95;
-    ft.life -= dt * 1.2;
+    const ft = floatingTexts[i]; ft.y += ft.vy * dt; ft.vy *= 0.95; ft.life -= dt * 1.2;
     if (ft.life <= 0) floatingTexts.splice(i, 1);
   }
   
-  // Логика состояний
+  // Дождь
+  if (getWeather() === 'rain') {
+    for (const r of rainDrops) {
+      r.y += r.speed * dt;
+      if (r.y > H) { r.y = -20; r.x = Math.random() * W; }
+    }
+  }
+  
+  // Логика
   switch (state) {
     case S.CASTING: {
-      bobber.x += bobber.vx * dt;
-      bobber.y += bobber.vy * dt;
-      bobber.vy += 800 * dt;
+      bobber.x += bobber.vx * dt; bobber.y += bobber.vy * dt; bobber.vy += 800 * dt;
       if (bobber.y >= bobber.ty && bobber.vy > 0) {
-        bobber.y = bobber.ty;
-        state = S.WAITING;
-        stateTime = 0;
-        addRipple(bobber.x, bobber.y);
-        addParticles(bobber.x, bobber.y, '#aaddff', 10);
+        bobber.y = bobber.ty; state = S.WAITING; stateTime = 0;
+        bobber.waitSeed = 1.5 + Math.random() * 4;
+        addRipple(bobber.x, bobber.y); addParticles(bobber.x, bobber.y, '#aaddff', 10);
       }
       break;
     }
     case S.WAITING: {
       bobber.phase += dt * 2;
-      bobber.bobY = Math.sin(bobber.phase * 2) * 3;
-      if (stateTime > 1.5 + Math.random() * 0.02 + 2) {
-        // Триггер поклёва (просто проверяем время)
-      }
-      if (stateTime > (1.5 + (bobber.waitSeed || (bobber.waitSeed = Math.random() * 4)))) {
-        state = S.BITE;
-        stateTime = 0;
-        bobber.waitSeed = null;
-        addParticles(bobber.x, bobber.y, '#fff', 20);
-        addRipple(bobber.x, bobber.y);
+      if (stateTime > (bobber.waitSeed || 3)) {
+        state = S.BITE; stateTime = 0;
+        addParticles(bobber.x, bobber.y, '#fff', 20); addRipple(bobber.x, bobber.y);
       }
       break;
     }
     case S.BITE: {
-      if (stateTime > 0.9) {
-        state = S.RESULT;
-        stateTime = 0;
-        addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666');
-      }
+      if (stateTime > 0.9) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); }
       break;
     }
     case S.REELING: {
       reelPos += reelSpeed * dt;
-      if (reelPos > 100) {
-        // Авто-промах если проскочили
-        state = S.RESULT;
-        stateTime = 0;
-        addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666');
-      }
+      if (reelPos > 100) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); }
       break;
     }
     case S.RETURNING: {
-      // Поплавок с рыбой летит обратно к удилищу
       const progress = Math.min(1, stateTime / 0.8);
       const ease = 1 - Math.pow(1 - progress, 3);
       bobber.x = bobber.tx + (rod.tipX - bobber.tx) * ease;
       bobber.y = bobber.ty + (rod.tipY - bobber.ty) * ease;
-      
-      if (progress >= 1) {
-        state = S.RESULT;
-        stateTime = 0;
-      }
+      if (progress >= 1) { state = S.RESULT; stateTime = 0; }
       break;
     }
     case S.RESULT: {
@@ -372,414 +603,338 @@ function update(dt) {
   }
 }
 
-// ===== РИСОВАНИЕ =====
+// ===== РИСОВАНИЕ (ГРАФИКА) =====
 function drawFishBody(x, y, size, color, dir = 1, alpha = 1) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(dir, 1);
-  ctx.globalAlpha = alpha;
-  
+  ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1); ctx.globalAlpha = alpha;
   ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, size, size * 0.45, 0, 0, Math.PI * 2);
-  ctx.fill();
-  
-  ctx.beginPath();
-  ctx.moveTo(-size * 0.9, 0);
-  ctx.lineTo(-size * 1.5, -size * 0.5);
-  ctx.lineTo(-size * 1.5, size * 0.5);
-  ctx.closePath();
-  ctx.fill();
-  
-  ctx.fillStyle = '#000';
-  ctx.beginPath();
-  ctx.arc(size * 0.5, -size * 0.1, size * 0.1, 0, Math.PI * 2);
-  ctx.fill();
-  
+  ctx.beginPath(); ctx.ellipse(0, 0, size, size * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-size * 0.9, 0); ctx.lineTo(-size * 1.5, -size * 0.5); ctx.lineTo(-size * 1.5, size * 0.5); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(size * 0.5, -size * 0.1, size * 0.1, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+function drawTrashBody(x, y, size, color, emoji) {
+  ctx.save(); ctx.translate(x, y);
+  ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(0, 0, size * 0.8, size * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 0, size * 0.6, size * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.font = `${size * 1.2}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(emoji, 0, 0);
   ctx.restore();
 }
 
 function drawBobber(x, y) {
   // Леска
-  ctx.strokeStyle = 'rgba(255,255,255,0.6)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(rod.tipX, rod.tipY);
-  const midX = (rod.tipX + x) / 2;
-  const midY = Math.min(rod.tipY, y) - 30;
-  ctx.quadraticCurveTo(midX, midY, x, y);
-  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(rod.tipX, rod.tipY); ctx.quadraticCurveTo((rod.tipX+x)/2, Math.min(rod.tipY,y)-30, x, y); ctx.stroke();
   
-  // Антенна
-  ctx.strokeStyle = '#ff3333';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(x, y - 8);
-  ctx.lineTo(x, y - 22);
-  ctx.stroke();
+  // Свечение ночью
+  if (getWeather() === 'night') {
+    ctx.shadowColor = '#ffff88'; ctx.shadowBlur = 15;
+  }
   
-  // Красная часть
-  ctx.fillStyle = '#ff4444';
-  ctx.beginPath();
-  ctx.arc(x, y, 9, Math.PI, 0);
-  ctx.fill();
+  ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x, y - 22); ctx.stroke();
+  ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.arc(x, y, 9, Math.PI, 0); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI); ctx.fill();
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
   
-  // Белая часть
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.arc(x, y, 9, 0, Math.PI);
-  ctx.fill();
-  
-  // Обводка
-  ctx.strokeStyle = '#333';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(x, y, 9, 0, Math.PI * 2);
-  ctx.stroke();
+  ctx.shadowBlur = 0;
 }
 
-function draw() {
-  const t = performance.now() / 1000;
+function drawEnvironment(t) {
+  const weather = getWeather();
   
-  // === НЕБО ===
+  // 1. НЕБО
   const skyGrad = ctx.createLinearGradient(0, 0, 0, 320);
-  skyGrad.addColorStop(0, '#87CEEB');
-  skyGrad.addColorStop(0.7, '#b8e0f0');
-  skyGrad.addColorStop(1, '#ffd9a0');
-  ctx.fillStyle = skyGrad;
-  ctx.fillRect(0, 0, W, 320);
+  if (weather === 'day') { skyGrad.addColorStop(0, '#87CEEB'); skyGrad.addColorStop(0.7, '#b8e0f0'); skyGrad.addColorStop(1, '#ffd9a0'); }
+  else if (weather === 'sunset') { skyGrad.addColorStop(0, '#ff7e5f'); skyGrad.addColorStop(0.5, '#feb47b'); skyGrad.addColorStop(1, '#ffe29a'); }
+  else if (weather === 'night') { skyGrad.addColorStop(0, '#0b1021'); skyGrad.addColorStop(0.7, '#1a2a4a'); skyGrad.addColorStop(1, '#2a3a5a'); }
+  else if (weather === 'rain') { skyGrad.addColorStop(0, '#4a5a6a'); skyGrad.addColorStop(0.7, '#6a7a8a'); skyGrad.addColorStop(1, '#8a9aaa'); }
+  else if (weather === 'fog') { skyGrad.addColorStop(0, '#b0b8c0'); skyGrad.addColorStop(0.7, '#c8d0d8'); skyGrad.addColorStop(1, '#e0e8f0'); }
+  ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, W, 320);
   
-  // Солнце
-  const sunX = 750, sunY = 100;
-  const sunGrad = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, 100);
-  sunGrad.addColorStop(0, 'rgba(255,250,200,1)');
-  sunGrad.addColorStop(1, 'rgba(255,220,100,0)');
-  ctx.fillStyle = sunGrad;
-  ctx.beginPath();
-  ctx.arc(sunX, sunY, 100, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = '#fff8d0';
-  ctx.beginPath();
-  ctx.arc(sunX, sunY, 35, 0, Math.PI * 2);
-  ctx.fill();
-  
-  // Облака
-  ctx.fillStyle = 'rgba(255,255,255,0.7)';
-  const clouds = [[200, 80, 1], [500, 130, 0.8], [650, 60, 0.6]];
-  for (const [cx, cy, scale] of clouds) {
-    const offset = (t * 5 * scale) % (W + 200) - 100;
-    ctx.beginPath();
-    ctx.arc(offset, cy, 25 * scale, 0, Math.PI * 2);
-    ctx.arc(offset + 25 * scale, cy + 5, 30 * scale, 0, Math.PI * 2);
-    ctx.arc(offset + 55 * scale, cy, 22 * scale, 0, Math.PI * 2);
-    ctx.fill();
+  // 2. СОЛНЦЕ / ЛУНА
+  if (weather === 'day' || weather === 'sunset') {
+    const sunX = 750, sunY = 100;
+    const sunGrad = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, 100);
+    const sunColor = weather === 'sunset' ? 'rgba(255,150,50,1)' : 'rgba(255,250,200,1)';
+    sunGrad.addColorStop(0, sunColor); sunGrad.addColorStop(1, 'rgba(255,220,100,0)');
+    ctx.fillStyle = sunGrad; ctx.beginPath(); ctx.arc(sunX, sunY, 100, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff8d0'; ctx.beginPath(); ctx.arc(sunX, sunY, 35, 0, Math.PI * 2); ctx.fill();
+  } else if (weather === 'night') {
+    // Луна
+    ctx.fillStyle = '#f0f0ff'; ctx.beginPath(); ctx.arc(750, 100, 40, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#d0d0e0'; ctx.beginPath(); ctx.arc(765, 90, 8, 0, Math.PI * 2); ctx.arc(745, 110, 5, 0, Math.PI * 2); ctx.fill();
+    // Звёзды
+    for (let i = 0; i < 30; i++) {
+      const sx = (i * 37 + Math.sin(i) * 20) % W;
+      const sy = (i * 23) % 200;
+      ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.sin(t * 2 + i) * 0.3})`;
+      ctx.fillRect(sx, sy, 2, 2);
+    }
   }
   
-  // Дальние холмы
-  ctx.fillStyle = '#6a8a5a';
-  ctx.beginPath();
-  ctx.moveTo(0, 320);
-  for (let x = 0; x <= W; x += 40) {
-    ctx.lineTo(x, 290 + Math.sin(x * 0.008) * 25 + Math.sin(x * 0.02) * 8);
+  // 3. ОБЛАКА (только днём/на закате)
+  if (weather === 'day' || weather === 'sunset' || weather === 'rain') {
+    const cloudAlpha = weather === 'rain' ? 0.4 : 0.6;
+    ctx.fillStyle = weather === 'rain' ? 'rgba(100,110,120,0.5)' : `rgba(255,255,255,${cloudAlpha})`;
+    for (const [cx, cy, sc] of [[200, 80, 1], [500, 130, 0.8], [650, 60, 0.6]]) {
+      const offset = (t * 5 * sc) % (W + 200) - 100;
+      ctx.beginPath();
+      ctx.arc(offset, cy, 25 * sc, 0, Math.PI * 2);
+      ctx.arc(offset + 25 * sc, cy + 5, 30 * sc, 0, Math.PI * 2);
+      ctx.arc(offset + 55 * sc, cy, 22 * sc, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
-  ctx.lineTo(W, 320);
-  ctx.closePath();
-  ctx.fill();
+
+  // 4. ДЕРЕВЬЯ И ХОЛМЫ (Параллакс)
+  // Дальние
+  ctx.fillStyle = weather === 'night' ? '#1a2a1a' : weather === 'sunset' ? '#5a4a3a' : '#6a8a5a';
+  ctx.beginPath(); ctx.moveTo(0, 320);
+  for (let x = 0; x <= W; x += 40) ctx.lineTo(x, 290 + Math.sin(x * 0.008) * 25 + Math.sin(x * 0.02) * 8);
+  ctx.lineTo(W, 320); ctx.closePath(); ctx.fill();
   
-  ctx.fillStyle = '#4a6a3a';
-  ctx.beginPath();
-  ctx.moveTo(0, 320);
-  for (let x = 0; x <= W; x += 40) {
-    ctx.lineTo(x, 305 + Math.sin(x * 0.012 + 2) * 18);
+  // Ближние
+  ctx.fillStyle = weather === 'night' ? '#0a1a0a' : weather === 'sunset' ? '#4a3a2a' : '#4a6a3a';
+  ctx.beginPath(); ctx.moveTo(0, 320);
+  for (let x = 0; x <= W; x += 40) ctx.lineTo(x, 305 + Math.sin(x * 0.012 + 2) * 18);
+  ctx.lineTo(W, 320); ctx.closePath(); ctx.fill();
+  
+  // Деревья на берегу
+  ctx.fillStyle = weather === 'night' ? '#0a150a' : weather === 'sunset' ? '#3a2a1a' : '#2a4a2a';
+  const trees = [50, 130, 210, 800, 870];
+  for (const tx of trees) {
+    ctx.beginPath(); ctx.moveTo(tx, 315); ctx.lineTo(tx - 15, 315); ctx.lineTo(tx, 260); ctx.lineTo(tx + 15, 315); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(tx, 290); ctx.lineTo(tx - 12, 290); ctx.lineTo(tx, 240); ctx.lineTo(tx + 12, 290); ctx.fill();
   }
-  ctx.lineTo(W, 320);
-  ctx.closePath();
-  ctx.fill();
-  
-  // Берег
-  ctx.fillStyle = '#8a7a5a';
-  ctx.fillRect(0, 318, W, 8);
-  
-  // === ВОДА ===
-  const waterGrad = ctx.createLinearGradient(0, 326, 0, H);
-  waterGrad.addColorStop(0, '#3a7ca8');
-  waterGrad.addColorStop(0.5, '#2a5a88');
-  waterGrad.addColorStop(1, '#1a3a5a');
-  ctx.fillStyle = waterGrad;
-  ctx.fillRect(0, 326, W, H - 326);
+
+  // 5. ВОДА
+  const waterGrad = ctx.createLinearGradient(0, 320, 0, H);
+  if (weather === 'day') { waterGrad.addColorStop(0, '#3a7ca8'); waterGrad.addColorStop(1, '#1a3a5a'); }
+  else if (weather === 'sunset') { waterGrad.addColorStop(0, '#8a5a4a'); waterGrad.addColorStop(1, '#2a1a3a'); }
+  else if (weather === 'night') { waterGrad.addColorStop(0, '#0a1a3a'); waterGrad.addColorStop(1, '#050a15'); }
+  else if (weather === 'rain') { waterGrad.addColorStop(0, '#4a5a6a'); waterGrad.addColorStop(1, '#1a2a3a'); }
+  else if (weather === 'fog') { waterGrad.addColorStop(0, '#8a9aaa'); waterGrad.addColorStop(1, '#3a4a5a'); }
+  ctx.fillStyle = waterGrad; ctx.fillRect(0, 320, W, H - 320);
   
   // Волны
-  ctx.strokeStyle = 'rgba(150, 200, 255, 0.25)';
+  ctx.strokeStyle = weather === 'night' ? 'rgba(100,150,200,0.15)' : 'rgba(150,200,255,0.25)';
   ctx.lineWidth = 2;
   for (let i = 0; i < 8; i++) {
     const wy = 340 + i * 35;
     ctx.beginPath();
     for (let x = 0; x <= W; x += 10) {
       const y = wy + Math.sin(x * 0.02 + t * 1.5 + i) * 3;
-      if (x === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+      if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     }
     ctx.stroke();
   }
   
-  // Блики
-  for (let i = 0; i < 25; i++) {
-    const bx = 400 + Math.sin(t * 0.5 + i * 1.7) * 380;
-    const by = 340 + (i * 23) % 240;
-    const alpha = 0.1 + Math.sin(t * 2 + i) * 0.08;
-    ctx.fillStyle = `rgba(255, 250, 200, ${Math.max(0, alpha)})`;
-    ctx.fillRect(bx, by, 20 + Math.sin(t + i) * 10, 2);
+  // Блики (только днём/закате)
+  if (weather === 'day' || weather === 'sunset') {
+    for (let i = 0; i < 25; i++) {
+      const bx = 400 + Math.sin(t * 0.5 + i * 1.7) * 380;
+      const by = 340 + (i * 23) % 240;
+      const alpha = 0.1 + Math.sin(t * 2 + i) * 0.08;
+      ctx.fillStyle = `rgba(255, 250, 200, ${Math.max(0, alpha)})`;
+      ctx.fillRect(bx, by, 20 + Math.sin(t + i) * 10, 2);
+    }
   }
   
-  // Пузырьки
+  // Рыбы в воде
+  for (const f of bgFish) drawFishBody(f.x, f.y, f.size, f.color, f.dir, weather === 'night' ? 0.2 : 0.4 + f.depth * 0.4);
+  
+  // Пузыри
   for (const b of bubbles) {
-    ctx.fillStyle = `rgba(200, 230, 255, ${0.3 * b.depth || 0.3})`;
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillStyle = `rgba(200, 230, 255, ${0.3 * b.depth})`;
+    ctx.beginPath(); ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2); ctx.fill();
   }
   
-  // Фоновые рыбы
-  for (const f of bgFish) {
-    drawFishBody(f.x, f.y, f.size, f.color, f.dir, 0.4 + f.depth * 0.4);
+  // Дождь
+  if (weather === 'rain') {
+    ctx.strokeStyle = 'rgba(180, 200, 220, 0.4)'; ctx.lineWidth = 1.5;
+    for (const r of rainDrops) {
+      ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x - 2, r.y + r.len); ctx.stroke();
+    }
+    
+    // Круги от дождя
+    for (let i = 0; i < 5; i++) {
+      const rx = (i * 173 + t * 50) % W;
+      const ry = 340 + (i * 67) % 250;
+      const rr = (t * 100 + i * 30) % 30;
+      if (rr > 0) {
+        ctx.strokeStyle = `rgba(200, 220, 240, ${1 - rr/30})`; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.ellipse(rx, ry, rr, rr * 0.3, 0, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
   }
   
-  // Волны от поплавка
+  // Туман
+  if (weather === 'fog') {
+    ctx.fillStyle = 'rgba(200, 210, 220, 0.4)';
+    for (let i = 0; i < 5; i++) {
+      const fx = (i * 200 + t * 10) % W;
+      ctx.beginPath(); ctx.arc(fx, 350 + i * 40, 150, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+}
+
+function draw() {
+  const t = performance.now() / 1000;
+  
+  drawEnvironment(t);
+  
+  // Частицы волн
   for (const r of rippleEffects) {
-    ctx.strokeStyle = `rgba(200, 230, 255, ${r.life * 0.6})`;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.ellipse(r.x, r.y, r.radius, r.radius * 0.3, 0, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.strokeStyle = `rgba(200, 230, 255, ${r.life * 0.6})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(r.x, r.y, r.radius, r.radius * 0.3, 0, 0, Math.PI * 2); ctx.stroke();
   }
   
-  // === ПОПЛАВОК ===
+  // Поплавок
   if (state !== S.IDLE) {
     let by = bobber.y;
     if (state === S.WAITING) by += Math.sin(bobber.phase * 2) * 3;
     else if (state === S.BITE) by += Math.sin(t * 30) * 6;
-    else if (state === S.RETURNING && lastCatch) {
-      // Рыба висит на крючке при возврате
-      drawFishBody(bobber.x, by + 20, lastCatch.size * 0.8, lastCatch.color, 1, 1);
+    else if ((state === S.RETURNING || state === S.RESULT) && lastCatch) {
+      if (lastCatch.isTrash) drawTrashBody(bobber.x, by + 22, lastCatch.size * 0.7, lastCatch.color, lastCatch.emoji);
+      else drawFishBody(bobber.x, by + 22, lastCatch.size * 0.8, lastCatch.color, 1, 1);
     }
     drawBobber(bobber.x, by);
   }
   
-  // === РЫБАК ===
   drawFisherman();
   
-  // === УДОЧКА ===
-  ctx.strokeStyle = '#8B4513';
-  ctx.lineWidth = 6;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(rod.baseX, rod.baseY);
-  ctx.quadraticCurveTo(140, 420, rod.tipX, rod.tipY);
-  ctx.stroke();
+  // Удочка
+  ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 6; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(rod.baseX, rod.baseY); ctx.quadraticCurveTo(140, 420, rod.tipX, rod.tipY); ctx.stroke();
+  ctx.strokeStyle = '#a06030'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(140, 420); ctx.quadraticCurveTo(165, 400, rod.tipX, rod.tipY); ctx.stroke();
   
-  ctx.strokeStyle = '#a06030';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(140, 420);
-  ctx.quadraticCurveTo(165, 400, rod.tipX, rod.tipY);
-  ctx.stroke();
-  
-  // === ЧАСТИЦЫ ===
+  // Частицы
   for (const p of particles) {
-    ctx.globalAlpha = p.life;
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
   }
   ctx.globalAlpha = 1;
   
-  // === ТЕКСТЫ ===
+  // Тексты
   for (const ft of floatingTexts) {
-    ctx.globalAlpha = Math.min(1, ft.life * 2);
-    ctx.font = 'bold 24px "Segoe UI", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.strokeStyle = 'rgba(0,0,0,0.7)';
-    ctx.lineWidth = 4;
-    ctx.strokeText(ft.text, ft.x, ft.y);
-    ctx.fillStyle = ft.color;
-    ctx.fillText(ft.text, ft.x, ft.y);
+    ctx.globalAlpha = Math.min(1, ft.life * 2); ctx.font = 'bold 24px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+    ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 4; ctx.strokeText(ft.text, ft.x, ft.y);
+    ctx.fillStyle = ft.color; ctx.fillText(ft.text, ft.x, ft.y);
   }
   ctx.globalAlpha = 1;
   
-  // === UI ===
   drawUI();
-  
-  // === МИНИ-ИГРА ===
   if (state === S.REELING) drawReelUI();
-  
-  // === ПОДСКАЗКИ ===
   drawHints();
 }
 
 function drawFisherman() {
-  // Ноги
-  ctx.fillStyle = '#2a4a6a';
-  ctx.fillRect(60, 490, 15, 65);
-  ctx.fillRect(90, 490, 15, 65);
+  const weather = getWeather();
   
-  // Тело
-  ctx.fillStyle = '#c0392b';
-  ctx.beginPath();
-  ctx.ellipse(82, 460, 28, 40, 0, 0, Math.PI * 2);
-  ctx.fill();
+  // Ноги
+  ctx.fillStyle = '#2a4a6a'; ctx.fillRect(60, 490, 15, 65); ctx.fillRect(90, 490, 15, 65);
+  
+  // Ряса (улучшенная)
+  ctx.fillStyle = '#3a2a1a';
+  ctx.beginPath(); ctx.ellipse(82, 460, 28, 45, 0, 0, Math.PI * 2); ctx.fill();
+  
+  // Складки на рясе
+  ctx.strokeStyle = '#2a1a0a'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(70, 440); ctx.lineTo(65, 500); ctx.moveTo(94, 440); ctx.lineTo(99, 500); ctx.stroke();
+  
+  // Воротник
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(82, 425, 14, 6, 0, 0, Math.PI * 2); ctx.fill();
+  
+  // Снасти/удочка на груди (вместо креста)
+  ctx.strokeStyle = '#a06030'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(75, 445); ctx.lineTo(90, 465); ctx.stroke();
+  ctx.fillStyle = '#c0c0c0'; ctx.beginPath(); ctx.arc(75, 445, 2, 0, Math.PI * 2); ctx.fill();
   
   // Руки
-  ctx.strokeStyle = '#c0392b';
-  ctx.lineWidth = 11;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(70, 440);
-  ctx.lineTo(115, 460);
-  ctx.lineTo(rod.baseX, rod.baseY);
-  ctx.stroke();
+  ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 11; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(70, 440); ctx.lineTo(115, 460); ctx.lineTo(rod.baseX, rod.baseY); ctx.stroke();
   
   // Голова
-  ctx.fillStyle = '#f0c090';
-  ctx.beginPath();
-  ctx.arc(82, 400, 22, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.fillStyle = '#f0c090'; ctx.beginPath(); ctx.arc(82, 400, 23, 0, Math.PI * 2); ctx.fill();
   
-  // Шляпа
-  ctx.fillStyle = '#5a4a2a';
-  ctx.beginPath();
-  ctx.ellipse(82, 388, 32, 8, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(82, 380, 18, 14, 0, Math.PI, 0);
-  ctx.fill();
+  // Тонзура
+  ctx.fillStyle = '#4a3020'; ctx.beginPath();
+  ctx.arc(82, 400, 23, Math.PI * 0.75, Math.PI * 2.25, false); ctx.lineTo(82, 400); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.arc(82, 400, 23, Math.PI * 0.85, Math.PI * 1.15, false); ctx.fill();
+  ctx.beginPath(); ctx.arc(82, 400, 23, Math.PI * 1.85, Math.PI * 2.15, false); ctx.fill();
   
-  // Глаз
-  ctx.fillStyle = '#000';
-  ctx.beginPath();
-  ctx.arc(90, 398, 2.5, 0, Math.PI * 2);
-  ctx.fill();
+  // Лысина
+  ctx.fillStyle = '#f0c090'; ctx.beginPath(); ctx.arc(82, 396, 15, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.ellipse(78, 392, 5, 3, -0.5, 0, Math.PI * 2); ctx.fill();
   
-  // Усы
-  ctx.strokeStyle = '#3a2a1a';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(85, 408);
-  ctx.lineTo(108, 405);
-  ctx.moveTo(85, 412);
-  ctx.lineTo(108, 415);
-  ctx.stroke();
+  // Глаз, усы
+  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(90, 398, 2.5, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#3a2a1a'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(85, 408); ctx.lineTo(108, 405); ctx.moveTo(85, 412); ctx.lineTo(108, 415); ctx.stroke();
+  
+  // Ночью фонарь
+  if (weather === 'night') {
+    ctx.fillStyle = 'rgba(255, 220, 100, 0.2)'; ctx.beginPath(); ctx.arc(100, 450, 40, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffdd44'; ctx.beginPath(); ctx.arc(100, 450, 6, 0, Math.PI * 2); ctx.fill();
+  }
 }
 
 function drawUI() {
-  // Панель
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
-  ctx.beginPath();
-  ctx.roundRect(20, 20, 260, 110, 12);
-  ctx.fill();
-  
-  ctx.font = 'bold 22px "Segoe UI", sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillStyle = '#fff';
+  // Инфо панель
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'; ctx.beginPath(); ctx.roundRect(20, 20, 260, 130, 12); ctx.fill();
+  ctx.font = 'bold 22px "Segoe UI", sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
   ctx.fillText(`💰 Очки: ${score}`, 40, 55);
-  
-  ctx.font = '16px "Segoe UI", sans-serif';
-  ctx.fillStyle = '#ffd700';
+  ctx.font = '16px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700';
   ctx.fillText(`🏆 Рекорд: ${bestScore}`, 40, 82);
+  ctx.fillStyle = '#aaddff'; ctx.fillText(`🎣 Поймано: ${totalCaught}`, 40, 105);
+  if (hasBait) { ctx.fillStyle = '#ff9966'; ctx.fillText(`🪱 Наживка активна!`, 40, 128); }
   
-  ctx.fillStyle = '#aaddff';
-  ctx.fillText(`🎣 Поймано: ${totalCaught}`, 40, 105);
+  // Погода
+  const wIcons = { day: '☀️ День', sunset: '🌅 Закат', night: '🌙 Ночь', rain: '🌧️ Дождь', fog: '🌫️ Туман' };
+  ctx.font = 'bold 16px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.roundRect(W/2 - 70, 20, 140, 32, 8); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.fillText(wIcons[getWeather()], W/2, 42);
   
   // Последний улов
   if (lastCatch && (state === S.RESULT || state === S.RETURNING)) {
     const panelW = 240;
-    ctx.fillStyle = 'rgba(0,0,0,0.55)';
-    ctx.beginPath();
-    ctx.roundRect(W - panelW - 20, 20, panelW, 70, 12);
-    ctx.fill();
-    
-    ctx.font = 'bold 24px "Segoe UI", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = lastCatch.color;
-    ctx.fillText(`${lastCatch.emoji} ${lastCatch.name}`, W - panelW/2 - 20, 55);
-    
-    ctx.font = '16px "Segoe UI", sans-serif';
-    ctx.fillStyle = '#fff';
-    ctx.fillText(`+${lastCatch.pts} очков`, W - panelW/2 - 20, 78);
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.roundRect(W - panelW - 20, 90, panelW, 70, 12); ctx.fill();
+    ctx.font = 'bold 24px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = lastCatch.color;
+    ctx.fillText(`${lastCatch.emoji} ${lastCatch.name}`, W - panelW/2 - 20, 125);
+    ctx.font = '16px "Segoe UI", sans-serif'; ctx.fillStyle = lastCatch.isTrash ? '#ff8888' : '#fff';
+    ctx.fillText(lastCatch.isTrash ? '🗑 Мусор...' : `+${lastCatch.pts} очков`, W - panelW/2 - 20, 148);
   }
 }
 
 function drawReelUI() {
-  const barW = 500, barH = 32;
-  const barX = (W - barW) / 2;
-  const barY = H - 130;
+  const barW = 500, barH = 32, barX = (W - barW) / 2, barY = H - 130;
+  ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.beginPath(); ctx.roundRect(barX - 25, barY - 55, barW + 50, barH + 100, 16); ctx.fill();
+  ctx.strokeStyle = 'rgba(100,200,100,0.5)'; ctx.lineWidth = 2; ctx.stroke();
   
-  // Панель
-  ctx.fillStyle = 'rgba(0,0,0,0.85)';
-  ctx.beginPath();
-  ctx.roundRect(barX - 25, barY - 55, barW + 50, barH + 100, 16);
-  ctx.fill();
-  
-  ctx.strokeStyle = 'rgba(100,200,100,0.5)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  
-  // Заголовок
-  ctx.font = 'bold 22px "Segoe UI", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 22px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
   ctx.fillText('🎣 Кликни в зелёной зоне!', W/2, barY - 22);
   
-  // Фон шкалы
-  ctx.fillStyle = '#222';
-  ctx.beginPath();
-  ctx.roundRect(barX, barY, barW, barH, 8);
-  ctx.fill();
+  ctx.fillStyle = '#222'; ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 8); ctx.fill();
   
-  // Зелёная зона
-  const zx = barX + (zoneStart / 100) * barW;
-  const zw = ((zoneEnd - zoneStart) / 100) * barW;
+  const zx = barX + (zoneStart / 100) * barW, zw = ((zoneEnd - zoneStart) / 100) * barW;
   const grad = ctx.createLinearGradient(zx, barY, zx + zw, barY);
-  grad.addColorStop(0, '#4CAF50');
-  grad.addColorStop(0.5, '#7fff7f');
-  grad.addColorStop(1, '#4CAF50');
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.roundRect(zx, barY, zw, barH, 6);
-  ctx.fill();
+  grad.addColorStop(0, '#4CAF50'); grad.addColorStop(0.5, '#7fff7f'); grad.addColorStop(1, '#4CAF50');
+  ctx.fillStyle = grad; ctx.beginPath(); ctx.roundRect(zx, barY, zw, barH, 6); ctx.fill();
+  ctx.strokeStyle = '#aaffaa'; ctx.lineWidth = 2; ctx.strokeRect(zx, barY, zw, barH);
   
-  // Граница зоны
-  ctx.strokeStyle = '#aaffaa';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(zx, barY, zw, barH);
-  
-  // Индикатор
   const ix = barX + (reelPos / 100) * barW;
+  ctx.shadowColor = '#fff'; ctx.shadowBlur = 20; ctx.fillStyle = '#fff';
+  ctx.fillRect(ix - 3, barY - 8, 6, barH + 16); ctx.shadowBlur = 0;
   
-  // Свечение
-  ctx.shadowColor = '#fff';
-  ctx.shadowBlur = 20;
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(ix - 3, barY - 8, 6, barH + 16);
-  ctx.shadowBlur = 0;
-  
-  // Стрелка сверху
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.moveTo(ix, barY - 12);
-  ctx.lineTo(ix - 6, barY - 20);
-  ctx.lineTo(ix + 6, barY - 20);
-  ctx.closePath();
-  ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath();
+  ctx.moveTo(ix, barY - 12); ctx.lineTo(ix - 6, barY - 20); ctx.lineTo(ix + 6, barY - 20); ctx.closePath(); ctx.fill();
 }
 
 function drawHints() {
-  ctx.font = 'bold 18px "Segoe UI", sans-serif';
-  ctx.textAlign = 'center';
-  
-  let hint = '';
-  let color = '#fff';
-  
+  ctx.font = 'bold 18px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+  let hint = '', color = '#fff';
   switch (state) {
     case S.IDLE: hint = '🖱️ Кликни в воду, чтобы забросить удочку'; break;
     case S.WAITING: hint = '⏳ Ждём поклёвки...'; break;
@@ -787,45 +942,35 @@ function drawHints() {
     case S.RETURNING: hint = '✨ Тянешь улов...'; break;
     case S.RESULT: hint = '👉 Кликни, чтобы продолжить'; break;
   }
-  
   if (hint) {
-    ctx.fillStyle = 'rgba(0,0,0,0.6)';
-    ctx.beginPath();
-    ctx.roundRect(W/2 - 230, H - 55, 460, 38, 10);
-    ctx.fill();
-    ctx.fillStyle = color;
-    ctx.fillText(hint, W/2, H - 30);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.roundRect(W/2 - 230, H - 55, 460, 38, 10); ctx.fill();
+    ctx.fillStyle = color; ctx.fillText(hint, W/2, H - 30);
   }
 }
 
-// Polyfill roundRect
 if (!CanvasRenderingContext2D.prototype.roundRect) {
   CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
     if (typeof r === 'number') r = { tl: r, tr: r, br: r, bl: r };
-    this.beginPath();
-    this.moveTo(x + r.tl, y);
-    this.lineTo(x + w - r.tr, y);
-    this.quadraticCurveTo(x + w, y, x + w, y + r.tr);
-    this.lineTo(x + w, y + h - r.br);
-    this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
-    this.lineTo(x + r.bl, y + h);
-    this.quadraticCurveTo(x, y + h, x, y + h - r.bl);
-    this.lineTo(x, y + r.tl);
-    this.quadraticCurveTo(x, y, x + r.tl, y);
-    this.closePath();
-    return this;
+    this.beginPath(); this.moveTo(x + r.tl, y); this.lineTo(x + w - r.tr, y);
+    this.quadraticCurveTo(x + w, y, x + w, y + r.tr); this.lineTo(x + w, y + h - r.br);
+    this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h); this.lineTo(x + r.bl, y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - r.bl); this.lineTo(x, y + r.tl);
+    this.quadraticCurveTo(x, y, x + r.tl, y); this.closePath(); return this;
   };
 }
 
-// ===== ИГРОВОЙ ЦИКЛ =====
+function updateUI() {
+  // Обновляем кнопку магазина, если она открыта
+  const shopOverlay = document.getElementById('shopOverlay');
+  if (shopOverlay.classList.contains('show')) renderShop();
+}
+
 let lastTime = performance.now();
 function loop(now) {
   const dt = Math.min(0.05, (now - lastTime) / 1000);
   lastTime = now;
-  
   update(dt);
   draw();
-  
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
