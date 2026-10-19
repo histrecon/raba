@@ -1,735 +1,743 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>🎣 Рыбалка на речке</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    display: flex; justify-content: center; align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1a2a3a, #0d1520);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow: hidden;
+  }
+  #game {
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 3px rgba(100,180,255,0.2);
+    cursor: pointer;
+    max-width: 100vw;
+    max-height: 100vh;
+  }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
 <script>
-const canvas = document.getElementById('canvas');
+const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 
-let W, H;
-function resize() {
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
+const W = 900, H = 600;
+canvas.width = W;
+canvas.height = H;
 
-// ============================================================
-//  ПАЛИТРА
-// ============================================================
-const INK       = '#1a3a8f';
-const INK_DARK  = '#0d2470';
-const INK_LIGHT = '#5a78c8';
-const INK_FAINT = '#c8d4f0';
-const PAPER     = '#fdfdfd';
+// ===== СОСТОЯНИЕ ИГРЫ =====
+const State = {
+  IDLE: 'idle',           // удочка не заброшена
+  CASTING: 'casting',     // летит поплавок
+  WAITING: 'waiting',     // ждём поклёва
+  BITE: 'bite',           // поклёвка! нужно подсечь
+  REELING: 'reeling',     // вываживаем (мини-игра)
+  CAUGHT: 'caught',       // поймали
+  MISSED: 'missed'        // упустили
+};
 
-// ============================================================
-//  УРОВНИ
-// ============================================================
-const levels = [
-  {
-    spawn: { x: 100, y: 560 },
-    goal: { x: 1600, y: 480 },
-    platforms: [
-      { x: 0, y: 560, w: 1800, h: 200 },
-      { x: 300, y: 460, w: 150, h: 20 },
-      { x: 550, y: 380, w: 150, h: 20 },
-      { x: 800, y: 460, w: 200, h: 20 },
-      { x: 1150, y: 400, w: 150, h: 20 },
-      { x: 1400, y: 480, w: 300, h: 200 },
-    ],
-    ladders: [
-      { x: 380, y: 380, w: 40, h: 180 },
-      { x: 880, y: 380, w: 40, h: 180 },
-    ],
-    coins: [
-      { x: 350, y: 430 }, { x: 400, y: 430 },
-      { x: 600, y: 350 }, { x: 650, y: 350 },
-      { x: 900, y: 430 }, { x: 950, y: 430 },
-      { x: 1200, y: 370 }, { x: 1250, y: 370 },
-    ],
-    spikes: [{ x: 700, y: 540, w: 60, h: 20 }],
-  },
-  {
-    spawn: { x: 80, y: 620 },
-    goal: { x: 1700, y: 300 },
-    platforms: [
-      { x: 0, y: 620, w: 500, h: 200 },
-      { x: 400, y: 500, w: 200, h: 20 },
-      { x: 700, y: 420, w: 200, h: 20 },
-      { x: 1000, y: 500, w: 200, h: 20 },
-      { x: 1300, y: 420, w: 200, h: 20 },
-      { x: 1550, y: 300, w: 300, h: 300 },
-      { x: 1550, y: 620, w: 60, h: 200 },
-    ],
-    ladders: [
-      { x: 460, y: 420, w: 40, h: 200 },
-      { x: 760, y: 340, w: 40, h: 180 },
-      { x: 1060, y: 420, w: 40, h: 180 },
-      { x: 1360, y: 340, w: 40, h: 180 },
-      { x: 1580, y: 200, w: 40, h: 200 },
-    ],
-    coins: [
-      { x: 450, y: 470 }, { x: 500, y: 470 },
-      { x: 750, y: 390 }, { x: 800, y: 390 },
-      { x: 1050, y: 470 }, { x: 1100, y: 470 },
-      { x: 1350, y: 390 }, { x: 1400, y: 390 },
-      { x: 1600, y: 270 }, { x: 1700, y: 270 },
-    ],
-    spikes: [
-      { x: 550, y: 600, w: 100, h: 20 },
-      { x: 1150, y: 600, w: 100, h: 20 },
-    ],
-  },
-  {
-    spawn: { x: 60, y: 640 },
-    goal: { x: 1750, y: 200 },
-    platforms: [
-      { x: 0, y: 640, w: 400, h: 200 },
-      { x: 500, y: 580, w: 200, h: 20 },
-      { x: 800, y: 500, w: 200, h: 20 },
-      { x: 1100, y: 580, w: 200, h: 20 },
-      { x: 1400, y: 500, w: 200, h: 20 },
-      { x: 1650, y: 200, w: 250, h: 500 },
-      { x: 1700, y: 620, w: 60, h: 60 },
-    ],
-    ladders: [
-      { x: 550, y: 500, w: 40, h: 180 },
-      { x: 850, y: 420, w: 40, h: 180 },
-      { x: 1150, y: 500, w: 40, h: 180 },
-      { x: 1450, y: 420, w: 40, h: 180 },
-      { x: 1680, y: 120, w: 40, h: 180 },
-    ],
-    coins: [
-      { x: 550, y: 550 }, { x: 600, y: 550 },
-      { x: 850, y: 470 }, { x: 900, y: 470 },
-      { x: 1150, y: 550 }, { x: 1200, y: 550 },
-      { x: 1450, y: 470 }, { x: 1500, y: 470 },
-      { x: 1700, y: 170 }, { x: 1800, y: 170 },
-    ],
-    spikes: [
-      { x: 380, y: 620, w: 120, h: 20 },
-      { x: 1000, y: 620, w: 100, h: 20 },
-      { x: 1300, y: 620, w: 100, h: 20 },
-    ],
-  },
+let state = State.IDLE;
+let score = 0;
+let bestScore = parseInt(localStorage.getItem('fishBest') || '0');
+let caughtFish = [];
+let stateTimer = 0;
+
+// Удочка и поплавок
+const rod = {
+  baseX: 130, baseY: 480,
+  tipX: 200, tipY: 380
+};
+
+const bobber = {
+  x: 0, y: 0,
+  targetX: 0, targetY: 0,
+  vx: 0, vy: 0,
+  phase: 0
+};
+
+let waitTime = 0;
+let biteWindow = 0;
+let reelingProgress = 0;
+let reelTarget = 0;
+let reelZoneStart = 0;
+let reelZoneEnd = 0;
+
+// ===== РЫБЫ =====
+const FISH_TYPES = [
+  { name: 'Окунь',        color: '#e8a020', size: 28, points: 10, weight: 35, emoji: '🐟' },
+  { name: 'Карась',       color: '#d4b048', size: 32, points: 15, weight: 30, emoji: '🐠' },
+  { name: 'Щука',         color: '#4a8a3a', size: 45, points: 30, weight: 18, emoji: '🦈' },
+  { name: 'Сом',          color: '#5a4a3a', size: 55, points: 50, weight: 10, emoji: '🐋' },
+  { name: 'Золотая рыбка', color: '#ffd700', size: 26, points: 100, weight: 4, emoji: '✨' },
+  { name: 'Старый ботинок', color: '#3a3a3a', size: 40, points: 1, weight: 3, emoji: '👢' }
 ];
 
-// ============================================================
-//  КОНСТАНТЫ
-// ============================================================
-const GRAVITY      = 0.5;
-const STEP_DIST    = 20;
-const STEP_TIME    = 14;
-const JUMP_FORCE   = -10;
-const CLIMB_SPEED  = 1.4;
-const FULL_H       = 56;
-const CROUCH_H     = 36;
-
-const player = {
-  x: 0, y: 0,
-  w: 24, h: FULL_H,
-  vx: 0, vy: 0,
-  onGround: false,
-  onLadder: false,
-  crouching: false,
-  facing: 1,
-  animTime: 0,
-  spawnX: 0, spawnY: 0,
-
-  stepping: false,
-  stepProgress: 0,
-  stepFromX: 0,
-  stepToX: 0,
-};
-
-let currentLevel = 0;
-let state = 'playing';
-let coinsTotal = 0;
-let coinsCollected = 0;
-let deaths = 0;
-let camera = { x: 0, y: 0 };
-let levelCoins = [], levelSpikes = [], levelPlatforms = [], levelLadders = [];
-let levelGoal = null;
-let levelWidth = 0, levelHeight = 800;
-
-// ============================================================
-//  ВВОД  ✅ FIX: очередь нажатий вместо флага "только что"
-// ============================================================
-const keys = {};
-// очередь шагов: 'left' | 'right' — обрабатывается в updatePlayer
-let stepQueue = [];
-
-const KEY_MAP = {
-  'KeyA': 'right',
-  'KeyD': 'left',
-  'KeyW': 'up',
-  'KeyS': 'down',
-  'ArrowUp': 'up',
-  'ArrowLeft': 'left',
-  'ArrowRight': 'right',
-  'ArrowDown': 'down',
-  'Space': 'up',
-};
-
-window.addEventListener('keydown', (e) => {
-  const a = KEY_MAP[e.code];
-  if (a) {
-    // ✅ ставим шаг в очередь ТОЛЬКО при первом нажатии (не при автоповторе)
-    if (!keys[a]) {
-      if (a === 'left' || a === 'right') stepQueue.push(a);
-    }
-    keys[a] = true;
-    e.preventDefault();
-  }
-  if (e.code === 'KeyR') resetLevel();
-});
-window.addEventListener('keyup', (e) => {
-  const a = KEY_MAP[e.code];
-  if (a) { keys[a] = false; e.preventDefault(); }
-});
-window.addEventListener('blur', () => {
-  for (const k in keys) keys[k] = false;
-  stepQueue = [];
-});
-
-// ============================================================
-//  УРОВЕНЬ
-// ============================================================
-function loadLevel(index) {
-  currentLevel = index;
-  const lvl = levels[index];
-  levelPlatforms = lvl.platforms.map(p => ({ ...p }));
-  levelLadders   = lvl.ladders.map(l => ({ ...l }));
-  levelCoins     = lvl.coins.map(c => ({ ...c, collected: false }));
-  levelSpikes    = lvl.spikes ? lvl.spikes.map(s => ({ ...s })) : [];
-  levelGoal      = { ...lvl.goal };
-  levelWidth     = Math.max(
-    ...levelPlatforms.map(p => p.x + p.w),
-    ...levelLadders.map(l => l.x + l.w),
-    levelGoal.x + 100
-  );
-  levelHeight = 800;
-  player.spawnX = lvl.spawn.x;
-  player.spawnY = lvl.spawn.y;
-  respawnPlayer();
-  coinsTotal = levelCoins.length;
-  coinsCollected = 0;
-  state = 'playing';
-  updateHUD();
-  showMessage('');
-}
-
-function respawnPlayer() {
-  player.h = FULL_H;
-  player.x = player.spawnX;
-  player.y = player.spawnY - player.h;
-  player.vx = 0;
-  player.vy = 0;
-  player.onGround = false;
-  player.onLadder = false;
-  player.crouching = false;
-  player.facing = 1;
-  player.stepping = false;
-  player.stepProgress = 0;
-  stepQueue = [];
-  camera.x = player.x - W / 2;
-  camera.y = player.y - H / 2;
-}
-
-function resetLevel() {
-  if (state === 'win' && currentLevel < levels.length - 1) loadLevel(currentLevel + 1);
-  else loadLevel(currentLevel);
-}
-
-function updateHUD() {
-  document.getElementById('lvl').textContent = currentLevel + 1;
-  document.getElementById('lvlTotal').textContent = levels.length;
-  document.getElementById('coinCount').textContent = coinsCollected;
-  document.getElementById('coinTotal').textContent = coinsTotal;
-  document.getElementById('deathCount').textContent = deaths;
-}
-
-function showMessage(text, sub = '') {
-  const el = document.getElementById('message');
-  if (text) {
-    el.innerHTML = text + (sub ? `<small>${sub}</small>` : '');
-    el.classList.add('show');
-  } else {
-    el.classList.remove('show');
+// Рыбы, плавающие в реке (декоративные)
+let swimmingFish = [];
+function initSwimmingFish() {
+  swimmingFish = [];
+  for (let i = 0; i < 12; i++) {
+    swimmingFish.push({
+      x: Math.random() * W,
+      y: 340 + Math.random() * 230,
+      speed: 0.3 + Math.random() * 0.8,
+      dir: Math.random() > 0.5 ? 1 : -1,
+      size: 6 + Math.random() * 10,
+      color: FISH_TYPES[Math.floor(Math.random() * 4)].color,
+      wobble: Math.random() * Math.PI * 2,
+      depth: Math.random()
+    });
   }
 }
+initSwimmingFish();
 
-// ============================================================
-//  КОЛЛИЗИИ
-// ============================================================
-function rectsOverlap(a, b) {
-  return a.x < b.x + b.w && a.x + a.w > b.x &&
-         a.y < b.y + b.h && a.y + a.h > b.y;
-}
-function playerRect() {
-  return { x: player.x, y: player.y, w: player.w, h: player.h };
-}
-function isOnLadder() {
-  const pr = playerRect();
-  for (const l of levelLadders) {
-    if (pr.x + pr.w > l.x && pr.x < l.x + l.w &&
-        pr.y + pr.h > l.y && pr.y < l.y + l.h) return true;
-  }
-  return false;
-}
-function canStepTo(newX) {
-  const test = { x: newX, y: player.y, w: player.w, h: player.h };
-  for (const p of levelPlatforms) {
-    if (rectsOverlap(test, p)) return false;
-  }
-  return true;
-}
-
-// ============================================================
-//  ШАГ
-// ============================================================
-function startStep(direction) {
-  if (player.stepping) return;
-  if (player.crouching) return;
-
-  const targetX = player.x + direction * STEP_DIST;
-  if (!canStepTo(targetX)) {
-    // упёрлись в стену — не двигаемся
-    return;
-  }
-  player.facing = direction;
-  player.stepFromX = player.x;
-  player.stepToX = targetX;
-  player.stepProgress = 0;
-  player.stepping = true;
-}
-
-function updateStep() {
-  if (!player.stepping) return;
-  player.stepProgress += 1 / STEP_TIME;
-
-  if (player.stepProgress >= 1) {
-    player.x = player.stepToX;
-    player.stepProgress = 0;
-    player.stepping = false;
-    return;
-  }
-  const t = player.stepProgress;
-  const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-  player.x = player.stepFromX + (player.stepToX - player.stepFromX) * eased;
-  player.animTime += 0.25;
-}
-
-// ============================================================
-//  UPDATE
-// ============================================================
-function updatePlayer() {
-  const up   = keys['up'];
-  const down = keys['down'];
-
-  player.onLadder = isOnLadder();
-
-  if (player.onLadder) {
-    // ============ ЛЕСТНИЦА ============
-    player.stepping = false;
-    player.crouching = false;
-    if (up)        player.vy = -CLIMB_SPEED;
-    else if (down) player.vy =  CLIMB_SPEED;
-    else           player.vy = 0;
-
-    // на лестнице A/D тоже шагают вбок, но через очередь
-    if (!player.stepping && stepQueue.length) {
-      const dir = stepQueue.shift();
-      startStep(dir === 'right' ? 1 : -1);
-    }
-    updateStep();
-
-    if (up && player.onGround) {
-      player.vy = JUMP_FORCE;
-      player.onLadder = false;
-    }
-  } else {
-    // ============ ОБЫЧНОЕ ДВИЖЕНИЕ ============
-    player.crouching = down && player.onGround;
-
-    // изменение высоты при приседе
-    if (player.crouching && player.h !== CROUCH_H) {
-      const diff = FULL_H - CROUCH_H;
-      player.y += diff;
-      player.h = CROUCH_H;
-    } else if (!player.crouching && player.h !== FULL_H) {
-      const diff = FULL_H - CROUCH_H;
-      const test = { x: player.x, y: player.y - diff, w: player.w, h: diff };
-      let blocked = false;
-      for (const p of levelPlatforms) {
-        if (rectsOverlap(test, p)) { blocked = true; break; }
-      }
-      if (!blocked) {
-        player.y -= diff;
-        player.h = FULL_H;
-      }
-    }
-
-    // ✅ ШАГ: берём из очереди (только если ещё не шагаем)
-    if (!player.stepping && stepQueue.length) {
-      const dir = stepQueue.shift();
-      startStep(dir === 'right' ? 1 : -1);
-    }
-    updateStep();
-
-    // прыжок
-    if (up && player.onGround && !player.crouching) {
-      player.vy = JUMP_FORCE;
-      player.onGround = false;
-      player.stepping = false;
-      player.stepProgress = 0;
-    }
-
-    // гравитация
-    player.vy += GRAVITY;
-    if (player.vy > 13) player.vy = 13;
-  }
-
-  // Вертикальное движение
-  player.y += player.vy;
-
-  // ✅ FIX: НЕ трогаем player.x здесь — им управляет updateStep()
-  // Единственное исключение — на лестнице, если не шагаем и нажата клавиша
-  if (player.onLadder && !player.stepping) {
-    // можно чуть сдвинуться вбок, но мы уже обрабатываем это через шаги
-  }
-
-  if (player.x < 0) { player.x = 0; player.stepping = false; }
-
-  resolveCollisionsY();  // сначала по Y (пол/потолок)
-
-  // Проверки
-  if (player.y > levelHeight + 300) { die(); return; }
-
-  for (const s of levelSpikes) {
-    if (rectsOverlap(playerRect(), s)) { die(); return; }
-  }
-
-  for (const c of levelCoins) {
-    if (c.collected) continue;
-    const cr = { x: c.x - 12, y: c.y - 12, w: 24, h: 24 };
-    if (rectsOverlap(playerRect(), cr)) {
-      c.collected = true;
-      coinsCollected++;
-      updateHUD();
-    }
-  }
-
-  const gr = { x: levelGoal.x - 20, y: levelGoal.y - 80, w: 40, h: 80 };
-  if (rectsOverlap(playerRect(), gr)) win();
-}
-
-function resolveCollisionsX() {
-  // больше не используем (шаги сами проверяют canStepTo)
-}
-function resolveCollisionsY() {
-  player.onGround = false;
-  for (const p of levelPlatforms) {
-    if (rectsOverlap(playerRect(), p)) {
-      if (player.vy > 0) {
-        player.y = p.y - player.h;
-        player.vy = 0;
-        player.onGround = true;
-      } else if (player.vy < 0) {
-        player.y = p.y + p.h;
-        player.vy = 0;
-      }
-    }
-  }
-}
-
-function die() {
-  deaths++;
-  updateHUD();
-  state = 'dead';
-  showMessage('Упс!', 'Респавн...');
-  setTimeout(() => {
-    if (state === 'dead') {
-      respawnPlayer();
-      state = 'playing';
-      showMessage('');
-    }
-  }, 700);
-}
-
-function win() {
-  state = 'win';
-  if (currentLevel < levels.length - 1) {
-    showMessage('Уровень пройден!', 'Нажми R для следующего');
-  } else {
-    showMessage('Победа!', 'Все уровни пройдены. R — сыграть снова');
-  }
-}
-
-function updateCamera() {
-  const tx = player.x + player.w / 2 - W / 2;
-  const ty = player.y + player.h / 2 - H / 2;
-  camera.x += (tx - camera.x) * 0.08;
-  camera.y += (ty - camera.y) * 0.08;
-  camera.x = Math.max(0, Math.min(camera.x, Math.max(0, levelWidth - W)));
-  camera.y = Math.max(-100, Math.min(camera.y, Math.max(0, levelHeight - H)));
-}
-
-// ============================================================
-//  ОТРИСОВКА
-// ============================================================
-function jitter(amount = 0.6) {
-  return (Math.random() - 0.5) * amount;
-}
-function handLine(x1, y1, x2, y2, color = INK, width = 2) {
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  const segs = 3;
-  ctx.moveTo(x1 + jitter(), y1 + jitter());
-  for (let i = 1; i <= segs; i++) {
-    const t = i / segs;
-    const x = x1 + (x2 - x1) * t + jitter(1.2);
-    const y = y1 + (y2 - y1) * t + jitter(1.2);
-    ctx.lineTo(x, y);
-  }
-  ctx.stroke();
-}
-function handRect(x, y, w, h, color = INK, width = 2) {
-  handLine(x, y, x + w, y, color, width);
-  handLine(x + w, y, x + w, y + h, color, width);
-  handLine(x + w, y + h, x, y + h, color, width);
-  handLine(x, y + h, x, y, color, width);
-}
-function handHatch(x, y, w, h, color = INK_FAINT, step = 8) {
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 1;
-  for (let i = -h; i < w; i += step) {
-    ctx.beginPath();
-    ctx.moveTo(x + i, y + h);
-    ctx.lineTo(x + i + h, y);
-    ctx.stroke();
-  }
-}
-
-function drawPaper() {
-  ctx.fillStyle = PAPER;
-  ctx.fillRect(0, 0, W, H);
-  const cell = 28;
-  const offX = (-camera.x * 0.25) % cell;
-  const offY = (-camera.y * 0.25) % cell;
-  ctx.strokeStyle = INK_FAINT;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  for (let x = offX; x < W; x += cell) {
-    ctx.moveTo(Math.round(x) + 0.5, 0);
-    ctx.lineTo(Math.round(x) + 0.5, H);
-  }
-  for (let y = offY; y < H; y += cell) {
-    ctx.moveTo(0, Math.round(y) + 0.5);
-    ctx.lineTo(W, Math.round(y) + 0.5);
-  }
-  ctx.stroke();
-  const marginX = 40 - camera.x * 0.15;
-  if (marginX > 0 && marginX < W) {
-    ctx.strokeStyle = INK_LIGHT;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(marginX, 0);
-    ctx.lineTo(marginX, H);
-    ctx.stroke();
-  }
-}
-
-function drawPlatform(p) {
-  handRect(p.x, p.y, p.w, p.h, INK, 2.2);
-  handHatch(p.x + 3, p.y + 3, p.w - 6, p.h - 6, INK_FAINT, 9);
-  handLine(p.x, p.y, p.x + p.w, p.y, INK_DARK, 3);
-}
-
-function drawLadder(l) {
-  handLine(l.x, l.y, l.x, l.y + l.h, INK, 2);
-  handLine(l.x + l.w, l.y, l.x + l.w, l.y + l.h, INK, 2);
-  const step = 16;
-  for (let y = l.y + step; y < l.y + l.h; y += step) {
-    handLine(l.x, y, l.x + l.w, y, INK, 1.6);
-  }
-}
-
-function drawCoin(c) {
-  if (c.collected) return;
-  const t = performance.now() / 300;
-  const bounce = Math.sin(t + c.x * 0.1) * 2.5;
-  ctx.save();
-  ctx.translate(c.x, c.y + bounce);
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = 2.2;
-  ctx.beginPath();
-  const r = 11;
-  for (let a = 0; a <= Math.PI * 2 + 0.01; a += Math.PI / 8) {
-    const rr = r + jitter(1.4);
-    const x = Math.cos(a) * rr;
-    const y = Math.sin(a) * rr;
-    if (a === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.stroke();
-  ctx.strokeStyle = INK_LIGHT;
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  ctx.arc(0, 0, r * 0.6, 0, Math.PI * 1.5);
-  ctx.stroke();
-  ctx.restore();
-}
-
-function drawSpike(s) {
-  const count = Math.floor(s.w / 12);
-  const step = s.w / count;
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = 2;
+// Частицы
+let particles = [];
+function spawnParticles(x, y, color, count = 12) {
   for (let i = 0; i < count; i++) {
-    const x = s.x + i * step;
-    ctx.beginPath();
-    ctx.moveTo(x + jitter(0.5), s.y + s.h);
-    ctx.lineTo(x + step / 2 + jitter(0.8), s.y);
-    ctx.lineTo(x + step + jitter(0.5), s.y + s.h);
-    ctx.stroke();
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 4,
+      vy: (Math.random() - 0.5) * 4 - 1,
+      life: 1,
+      color,
+      size: 2 + Math.random() * 4
+    });
   }
-  handLine(s.x, s.y + s.h, s.x + s.w, s.y + s.h, INK, 2.5);
 }
 
-function drawGoal() {
-  const g = levelGoal;
-  handLine(g.x, g.y, g.x, g.y - 80, INK, 2.5);
-  const wave = Math.sin(performance.now() / 200) * 3;
-  ctx.strokeStyle = INK_DARK;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(g.x, g.y - 80);
-  ctx.quadraticCurveTo(g.x + 25 + wave, g.y - 65, g.x, g.y - 50);
-  ctx.stroke();
-  ctx.strokeStyle = INK_FAINT;
-  ctx.lineWidth = 1;
-  for (let i = 2; i < 30; i += 4) {
-    ctx.beginPath();
-    ctx.moveTo(g.x + i * 0.4, g.y - 80 + i);
-    ctx.lineTo(g.x + i * 0.7, g.y - 80 + i + 3);
-    ctx.stroke();
-  }
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = 1.5;
-  const cx = g.x + 10, cy = g.y - 65;
-  ctx.beginPath();
-  for (let i = 0; i < 5; i++) {
-    const a = -Math.PI / 2 + (i * 4 * Math.PI) / 5;
-    const x = cx + Math.cos(a) * 6;
-    const y = cy + Math.sin(a) * 6;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.stroke();
+// Всплывающие сообщения
+let messages = [];
+function showMessage(text, color = '#fff', y = 200) {
+  messages.push({ text, color, y, life: 1.5 });
 }
 
-function drawPlayer() {
-  ctx.save();
-  ctx.translate(player.x + player.w / 2, player.y);
+// ===== УПРАВЛЕНИЕ =====
+let mouseX = 0, mouseY = 0;
 
-  if (player.onGround) {
-    ctx.strokeStyle = INK_FAINT;
-    ctx.lineWidth = 1.5;
-    for (let i = -8; i <= 8; i += 4) {
-      ctx.beginPath();
-      ctx.moveTo(i, player.h + 2);
-      ctx.lineTo(i + 2, player.h + 5);
-      ctx.stroke();
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = (e.clientX - rect.left) * (W / rect.width);
+  mouseY = (e.clientY - rect.top) * (H / rect.height);
+});
+
+canvas.addEventListener('click', () => handleAction());
+window.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); handleAction(); }
+});
+
+function handleAction() {
+  switch (state) {
+    case State.IDLE:
+      castRod();
+      break;
+    case State.BITE:
+      // Подсечка!
+      if (biteWindow > 0) {
+        startReeling();
+      }
+      break;
+    case State.REELING:
+      // Клик останавливает индикатор
+      checkReel();
+      break;
+    case State.CAUGHT:
+    case State.MISSED:
+      if (stateTimer > 0.8) resetToIdle();
+      break;
+  }
+}
+
+function castRod() {
+  // Куда забрасываем - зависит от позиции мыши
+  const targetX = Math.max(300, Math.min(W - 100, mouseX || 600));
+  const targetY = Math.max(340, Math.min(H - 40, mouseY || 450));
+  
+  bobber.x = rod.tipX;
+  bobber.y = rod.tipY;
+  bobber.targetX = targetX;
+  bobber.targetY = targetY;
+  
+  // Параболическая траектория
+  const dx = targetX - rod.tipX;
+  const dy = targetY - rod.tipY;
+  const dist = Math.hypot(dx, dy);
+  const flightTime = dist / 900; // скорость
+  
+  bobber.vx = dx / flightTime;
+  bobber.vy = dy / flightTime - 400 * flightTime; // гравитация
+  
+  state = State.CASTING;
+  stateTimer = 0;
+}
+
+function onBobberLanded() {
+  state = State.WAITING;
+  waitTime = 1.5 + Math.random() * 4; // 1.5 - 5.5 секунд
+  stateTimer = 0;
+  spawnParticles(bobber.x, bobber.y, '#aaddff', 15);
+}
+
+function triggerBite() {
+  state = State.BITE;
+  biteWindow = 0.9; // 0.9 секунды на подсечку
+  stateTimer = 0;
+  spawnParticles(bobber.x, bobber.y, '#ffffff', 20);
+}
+
+function startReeling() {
+  state = State.REELING;
+  stateTimer = 0;
+  reelingProgress = 0;
+  // Целевая зона для клика (в процентах 0-100)
+  reelZoneStart = 30 + Math.random() * 30;
+  reelZoneEnd = reelZoneStart + 15 + Math.random() * 15;
+}
+
+function checkReel() {
+  if (reelingProgress >= reelZoneStart && reelingProgress <= reelZoneEnd) {
+    // Успех!
+    catchFish();
+  } else {
+    // Промах - упустили
+    state = State.MISSED;
+    stateTimer = 0;
+    showMessage('Упустил! 💨', '#ff6666', 250);
+    spawnParticles(bobber.x, bobber.y, '#888', 15);
+  }
+}
+
+function catchFish() {
+  // Выбираем рыбу по весам
+  const totalWeight = FISH_TYPES.reduce((s, f) => s + f.weight, 0);
+  let r = Math.random() * totalWeight;
+  let fish = FISH_TYPES[0];
+  for (const f of FISH_TYPES) {
+    r -= f.weight;
+    if (r <= 0) { fish = f; break; }
+  }
+  
+  score += fish.points;
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem('fishBest', bestScore.toString());
+  }
+  
+  caughtFish.push(fish);
+  state = State.CAUGHT;
+  stateTimer = 0;
+  
+  const msg = fish.points === 1 
+    ? `Поймал ${fish.name}... ${fish.emoji}`
+    : `+${fish.points} ${fish.name}! ${fish.emoji}`;
+  showMessage(msg, fish.points >= 50 ? '#ffd700' : '#7fff7f', 250);
+  spawnParticles(bobber.x, bobber.y, fish.color, 25);
+}
+
+function resetToIdle() {
+  state = State.IDLE;
+  stateTimer = 0;
+}
+
+// ===== ОБНОВЛЕНИЕ =====
+function update(dt) {
+  stateTimer += dt;
+  
+  // Время
+  const time = performance.now() / 1000;
+  
+  // Плавающие рыбы
+  for (const f of swimmingFish) {
+    f.x += f.speed * f.dir;
+    f.wobble += dt * 3;
+    f.y += Math.sin(f.wobble) * 0.3;
+    if (f.x > W + 40) { f.x = -40; f.y = 340 + Math.random() * 230; }
+    if (f.x < -40) { f.x = W + 40; f.y = 340 + Math.random() * 230; }
+  }
+  
+  // Частицы
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 8 * dt;
+    p.life -= dt * 1.5;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+  
+  // Сообщения
+  for (let i = messages.length - 1; i >= 0; i--) {
+    messages[i].life -= dt;
+    messages[i].y -= dt * 20;
+    if (messages[i].life <= 0) messages.splice(i, 1);
+  }
+  
+  // Логика состояний
+  switch (state) {
+    case State.CASTING: {
+      bobber.x += bobber.vx * dt;
+      bobber.y += bobber.vy * dt;
+      bobber.vy += 800 * dt;
+      if (bobber.y >= bobber.targetY && bobber.vy > 0) {
+        bobber.y = bobber.targetY;
+        onBobberLanded();
+      }
+      break;
+    }
+    case State.WAITING: {
+      waitTime -= dt;
+      // Покачивание поплавка
+      bobber.phase += dt * 2;
+      if (waitTime <= 0) triggerBite();
+      break;
+    }
+    case State.BITE: {
+      biteWindow -= dt;
+      if (biteWindow <= 0) {
+        state = State.MISSED;
+        stateTimer = 0;
+        showMessage('Сорвалась! 🐟💨', '#ff6666', 250);
+      }
+      break;
+    }
+    case State.REELING: {
+      reelingProgress += dt * 80; // скорость индикатора
+      if (reelingProgress > 100) reelingProgress = 0;
+      break;
+    }
+    case State.CAUGHT:
+    case State.MISSED: {
+      // Авто-возврат через 2 сек, если не кликнули
+      if (stateTimer > 2.2) resetToIdle();
+      break;
     }
   }
+}
 
-  ctx.strokeStyle = INK;
-  ctx.lineWidth = 2.5;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.scale(player.facing, 1);
-
-  const h = player.h;
-  const w = player.w;
-  const swing = player.stepping ? Math.sin(player.animTime) * 0.5 : 0;
-  const climbSwing = player.onLadder ? Math.sin(player.animTime) * 0.5 : 0;
-  const bob = Math.abs(Math.sin(player.animTime)) * 1.5;
-
-  const headR = w * 0.45;
-  const headY = -h * 0.08 - h * 0.5 + bob * 0.3;
+// ===== РИСОВАНИЕ =====
+function draw() {
+  const t = performance.now() / 1000;
+  
+  // ===== НЕБО =====
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, 300);
+  skyGrad.addColorStop(0, '#87CEEB');
+  skyGrad.addColorStop(0.6, '#b8e0f0');
+  skyGrad.addColorStop(1, '#ffd9a0');
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, W, 300);
+  
+  // Солнце
+  const sunX = 750, sunY = 100;
+  const sunGrad = ctx.createRadialGradient(sunX, sunY, 10, sunX, sunY, 80);
+  sunGrad.addColorStop(0, 'rgba(255,250,200,1)');
+  sunGrad.addColorStop(1, 'rgba(255,220,100,0)');
+  ctx.fillStyle = sunGrad;
   ctx.beginPath();
-  ctx.arc(0, headY, headR, 0, Math.PI * 2);
-  ctx.stroke();
-
-  const bodyTop = headY + headR;
-  const bodyBottom = h * 0.55;
-  const bodyMid = (bodyTop + bodyBottom) / 2;
-  ctx.beginPath();
-  ctx.moveTo(0, bodyTop);
-  ctx.lineTo(0, bodyBottom);
-  ctx.stroke();
-
-  const legSwing = player.onLadder ? climbSwing : swing;
-  ctx.beginPath();
-  ctx.moveTo(0, bodyBottom);
-  ctx.lineTo(-w * 0.35 + legSwing * 7, h - 2);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(0, bodyBottom);
-  ctx.lineTo(w * 0.35 - legSwing * 7, h - 2);
-  ctx.stroke();
-
-  const armY = bodyTop + (bodyMid - bodyTop) * 0.9;
-  const armSwing = player.onLadder ? climbSwing : swing;
-  const armDrop = player.crouching ? 8 : 14;
-  ctx.beginPath();
-  ctx.moveTo(0, armY);
-  ctx.lineTo(-w * 0.5 + armSwing * 5, armY + (player.onLadder ? -10 : armDrop));
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(0, armY);
-  ctx.lineTo(w * 0.5 - armSwing * 5, armY + (player.onLadder ? 10 : armDrop));
-  ctx.stroke();
-
-  ctx.fillStyle = INK;
-  ctx.beginPath();
-  ctx.arc(-headR * 0.35, headY - 1, 1.5, 0, Math.PI * 2);
+  ctx.arc(sunX, sunY, 80, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = '#fff8d0';
   ctx.beginPath();
-  ctx.arc(headR * 0.35, headY - 1, 1.5, 0, Math.PI * 2);
+  ctx.arc(sunX, sunY, 32, 0, Math.PI * 2);
   ctx.fill();
-
+  
+  // Дальние холмы
+  ctx.fillStyle = '#6a8a5a';
   ctx.beginPath();
-  ctx.arc(0, headY + 2, headR * 0.4, 0.2, Math.PI - 0.2);
-  ctx.stroke();
+  ctx.moveTo(0, 300);
+  for (let x = 0; x <= W; x += 40) {
+    ctx.lineTo(x, 280 + Math.sin(x * 0.008) * 30 + Math.sin(x * 0.02) * 10);
+  }
+  ctx.lineTo(W, 300);
+  ctx.closePath();
+  ctx.fill();
+  
+  ctx.fillStyle = '#4a6a3a';
+  ctx.beginPath();
+  ctx.moveTo(0, 300);
+  for (let x = 0; x <= W; x += 40) {
+    ctx.lineTo(x, 295 + Math.sin(x * 0.012 + 2) * 20);
+  }
+  ctx.lineTo(W, 300);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Берег
+  ctx.fillStyle = '#8a7a5a';
+  ctx.fillRect(0, 295, W, 10);
+  
+  // ===== ВОДА =====
+  const waterGrad = ctx.createLinearGradient(0, 305, 0, H);
+  waterGrad.addColorStop(0, '#3a7ca8');
+  waterGrad.addColorStop(0.5, '#2a5a88');
+  waterGrad.addColorStop(1, '#1a3a5a');
+  ctx.fillStyle = waterGrad;
+  ctx.fillRect(0, 305, W, H - 305);
+  
+  // Волны
+  ctx.strokeStyle = 'rgba(150, 200, 255, 0.3)';
+  ctx.lineWidth = 2;
+  for (let i = 0; i < 8; i++) {
+    const wy = 320 + i * 38;
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 10) {
+      const y = wy + Math.sin(x * 0.02 + t * 1.5 + i) * 3;
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  
+  // Блики от солнца на воде
+  for (let i = 0; i < 20; i++) {
+    const bx = 400 + Math.sin(t * 0.5 + i * 1.7) * 350;
+    const by = 340 + (i * 23) % 220;
+    const alpha = 0.15 + Math.sin(t * 2 + i) * 0.1;
+    ctx.fillStyle = `rgba(255, 250, 200, ${alpha})`;
+    ctx.fillRect(bx, by, 20 + Math.sin(t + i) * 10, 2);
+  }
+  
+  // ===== РЫБЫ В ВОДЕ =====
+  for (const f of swimmingFish) {
+    drawFish(f.x, f.y, f.size, f.color, f.dir, f.depth);
+  }
+  
+  // ===== ПОПЛАВОК И ЛЕСКА =====
+  if (state !== State.IDLE) {
+    // Леска
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(rod.tipX, rod.tipY);
+    const midX = (rod.tipX + bobber.x) / 2;
+    const midY = Math.min(rod.tipY, bobber.y) - 30;
+    ctx.quadraticCurveTo(midX, midY, bobber.x, bobber.y);
+    ctx.stroke();
+    
+    // Поплавок
+    const bobY = state === State.WAITING 
+      ? bobber.y + Math.sin(bobber.phase * 2) * 3
+      : state === State.BITE
+      ? bobber.y + Math.sin(t * 30) * 6
+      : bobber.y;
+    drawBobber(bobber.x, bobY);
+  }
+  
+  // ===== УДОЧКА =====
+  drawRod();
+  
+  // ===== РЫБАК =====
+  drawFisherman();
+  
+  // ===== ЧАСТИЦЫ =====
+  for (const p of particles) {
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  
+  // ===== UI =====
+  drawUI();
+  
+  // ===== СООБЩЕНИЯ =====
+  for (const m of messages) {
+    ctx.globalAlpha = Math.min(1, m.life * 2);
+    ctx.font = 'bold 32px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.lineWidth = 4;
+    ctx.strokeText(m.text, W/2, m.y);
+    ctx.fillStyle = m.color;
+    ctx.fillText(m.text, W/2, m.y);
+  }
+  ctx.globalAlpha = 1;
+  
+  // ===== МИНИ-ИГРА ВЫВАЖИВАНИЯ =====
+  if (state === State.REELING) {
+    drawReelUI();
+  }
+  
+  // ===== ПОДСКАЗКИ =====
+  drawHints();
+}
 
+function drawFish(x, y, size, color, dir, depth = 0.5) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(dir, 1);
+  ctx.globalAlpha = 0.4 + depth * 0.4;
+  
+  // Тело
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, size, size * 0.45, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Хвост
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.9, 0);
+  ctx.lineTo(-size * 1.5, -size * 0.5);
+  ctx.lineTo(-size * 1.5, size * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Глаз
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(size * 0.5, -size * 0.1, size * 0.1, 0, Math.PI * 2);
+  ctx.fill();
+  
   ctx.restore();
 }
 
-// ============================================================
-//  ЦИКЛ
-// ============================================================
-function loop() {
-  if (state === 'playing') {
-    updatePlayer();
-    updateCamera();
-  }
-  drawPaper();
+function drawBobber(x, y) {
+  // Антенна
+  ctx.strokeStyle = '#ff3333';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x, y - 8);
+  ctx.lineTo(x, y - 20);
+  ctx.stroke();
+  
+  // Верхняя часть (красная)
+  ctx.fillStyle = '#ff4444';
+  ctx.beginPath();
+  ctx.arc(x, y, 8, Math.PI, 0);
+  ctx.fill();
+  
+  // Нижняя часть (белая)
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(x, y, 8, 0, Math.PI);
+  ctx.fill();
+  
+  // Обводка
+  ctx.strokeStyle = '#333';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(x, y, 8, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawRod() {
   ctx.save();
-  ctx.translate(-camera.x, -camera.y);
-  for (const p of levelPlatforms) drawPlatform(p);
-  for (const l of levelLadders) drawLadder(l);
-  for (const s of levelSpikes) drawSpike(s);
-  for (const c of levelCoins) drawCoin(c);
-  drawGoal();
-  drawPlayer();
+  ctx.strokeStyle = '#8B4513';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(rod.baseX, rod.baseY);
+  ctx.quadraticCurveTo(150, 420, rod.tipX, rod.tipY);
+  ctx.stroke();
+  
+  // Более тонкая верхняя часть
+  ctx.strokeStyle = '#a06030';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(150, 420);
+  ctx.quadraticCurveTo(175, 400, rod.tipX, rod.tipY);
+  ctx.stroke();
+  
   ctx.restore();
+}
+
+function drawFisherman() {
+  const t = performance.now() / 1000;
+  
+  // Ноги
+  ctx.fillStyle = '#2a4a6a';
+  ctx.fillRect(60, 490, 15, 60);
+  ctx.fillRect(90, 490, 15, 60);
+  
+  // Тело
+  ctx.fillStyle = '#c0392b';
+  ctx.beginPath();
+  ctx.roundRect(55, 420, 55, 75, 8);
+  ctx.fill();
+  
+  // Руки (одна держит удочку)
+  ctx.strokeStyle = '#c0392b';
+  ctx.lineWidth = 12;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(70, 440);
+  ctx.lineTo(115, 460);
+  ctx.lineTo(rod.baseX, rod.baseY);
+  ctx.stroke();
+  
+  // Голова
+  ctx.fillStyle = '#f0c090';
+  ctx.beginPath();
+  ctx.arc(82, 400, 22, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Шляпа
+  ctx.fillStyle = '#5a4a2a';
+  ctx.beginPath();
+  ctx.ellipse(82, 388, 30, 8, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(82, 380, 18, 14, 0, Math.PI, 0);
+  ctx.fill();
+  
+  // Глаз
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(90, 398, 2.5, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Усы
+  ctx.strokeStyle = '#3a2a1a';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(85, 408);
+  ctx.lineTo(105, 405);
+  ctx.moveTo(85, 412);
+  ctx.lineTo(105, 415);
+  ctx.stroke();
+}
+
+function drawUI() {
+  // Панель сверху
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.beginPath();
+  ctx.roundRect(20, 20, 280, 90, 12);
+  ctx.fill();
+  
+  ctx.font = 'bold 22px "Segoe UI", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#fff';
+  ctx.fillText(`💰 Очки: ${score}`, 40, 55);
+  
+  ctx.font = '16px "Segoe UI", sans-serif';
+  ctx.fillStyle = '#ffd700';
+  ctx.fillText(`🏆 Рекорд: ${bestScore}`, 40, 82);
+  
+  ctx.fillStyle = '#aaddff';
+  ctx.fillText(`🐟 Поймано: ${caughtFish.length}`, 40, 100);
+  
+  // Последний улов
+  if (caughtFish.length > 0) {
+    const last = caughtFish[caughtFish.length - 1];
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath();
+    ctx.roundRect(W - 240, 20, 220, 50, 12);
+    ctx.fill();
+    ctx.font = '18px "Segoe UI", sans-serif';
+    ctx.fillStyle = last.color;
+    ctx.textAlign = 'center';
+    ctx.fillText(`${last.emoji} ${last.name}`, W - 130, 52);
+  }
+}
+
+function drawReelUI() {
+  const barW = 500, barH = 40;
+  const barX = (W - barW) / 2;
+  const barY = H - 120;
+  
+  // Фон
+  ctx.fillStyle = 'rgba(0,0,0,0.7)';
+  ctx.beginPath();
+  ctx.roundRect(barX - 20, barY - 50, barW + 40, barH + 100, 16);
+  ctx.fill();
+  
+  // Заголовок
+  ctx.font = 'bold 22px "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff';
+  ctx.fillText('🎣 Кликни в зелёной зоне!', W/2, barY - 20);
+  
+  // Фон шкалы
+  ctx.fillStyle = '#333';
+  ctx.beginPath();
+  ctx.roundRect(barX, barY, barW, barH, 8);
+  ctx.fill();
+  
+  // Зелёная зона
+  const zx1 = barX + (reelZoneStart / 100) * barW;
+  const zx2 = barX + (reelZoneEnd / 100) * barW;
+  ctx.fillStyle = '#3a8a3a';
+  ctx.fillRect(zx1, barY, zx2 - zx1, barH);
+  
+  // Белая полоска зоны
+  ctx.strokeStyle = '#7fff7f';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(zx1, barY, zx2 - zx1, barH);
+  
+  // Индикатор
+  const ix = barX + (reelingProgress / 100) * barW;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(ix - 3, barY - 8, 6, barH + 16);
+  
+  // Свечение
+  ctx.shadowColor = '#fff';
+  ctx.shadowBlur = 15;
+  ctx.fillRect(ix - 2, barY - 8, 4, barH + 16);
+  ctx.shadowBlur = 0;
+}
+
+function drawHints() {
+  ctx.font = '16px "Segoe UI", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  
+  let hint = '';
+  switch (state) {
+    case State.IDLE: hint = '🖱️ Кликни в воду, чтобы забросить удочку'; break;
+    case State.WAITING: hint = '⏳ Ждём поклёвки...'; break;
+    case State.BITE: hint = '❗ КЛЮЁТ! Скорее кликни!'; break;
+    case State.CAUGHT: hint = '✨ Кликни, чтобы продолжить'; break;
+    case State.MISSED: hint = '😞 Кликни, чтобы попробовать снова'; break;
+  }
+  
+  if (hint) {
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.beginPath();
+    ctx.roundRect(W/2 - 220, H - 50, 440, 35, 10);
+    ctx.fill();
+    ctx.fillStyle = state === State.BITE ? '#ffdd44' : 'rgba(255,255,255,0.9)';
+    ctx.fillText(hint, W/2, H - 27);
+  }
+}
+
+// Polyfill для roundRect
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    if (typeof r === 'number') r = { tl: r, tr: r, br: r, bl: r };
+    this.beginPath();
+    this.moveTo(x + r.tl, y);
+    this.lineTo(x + w - r.tr, y);
+    this.quadraticCurveTo(x + w, y, x + w, y + r.tr);
+    this.lineTo(x + w, y + h - r.br);
+    this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h);
+    this.lineTo(x + r.bl, y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - r.bl);
+    this.lineTo(x, y + r.tl);
+    this.quadraticCurveTo(x, y, x + r.tl, y);
+    this.closePath();
+    return this;
+  };
+}
+
+// ===== ИГРОВОЙ ЦИКЛ =====
+let lastTime = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+  
+  update(dt);
+  draw();
+  
   requestAnimationFrame(loop);
 }
-
-loadLevel(0);
-loop();
+requestAnimationFrame(loop);
 </script>
-
+</body>
+</html>
