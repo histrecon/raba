@@ -3,32 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🐟 3D Рыбка</title>
+<title>🎮 Stickman Platformer</title>
 <style>
   html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
     height: 100%;
-    background: radial-gradient(circle at 50% 30%, #0a4d68 0%, #00203f 60%, #000a14 100%);
-    font-family: system-ui, sans-serif;
-  }
-  canvas { display: block; cursor: crosshair; }
-  #hint {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: rgba(255,255,255,0.55);
-    font-size: 14px;
-    pointer-events: none;
+    background: #1a1a2e;
+    font-family: 'Segoe UI', system-ui, sans-serif;
     user-select: none;
   }
+  canvas { display: block; }
+  #ui {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    pointer-events: none;
+    line-height: 1.6;
+  }
+  #ui .level { color: #ffd166; }
+  #ui .coins { color: #ffe066; }
+  #ui .deaths { color: #ef476f; }
+  #controls {
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.65);
+    font-size: 13px;
+    text-align: center;
+    pointer-events: none;
+    background: rgba(0,0,0,0.35);
+    padding: 8px 16px;
+    border-radius: 8px;
+    backdrop-filter: blur(4px);
+    white-space: nowrap;
+  }
+  #controls b { color: #fff; }
+  #message {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-size: 42px;
+    font-weight: 800;
+    text-shadow: 0 4px 16px rgba(0,0,0,0.8);
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  #message.show { opacity: 1; }
+  #message small { display: block; font-size: 18px; font-weight: 400; margin-top: 12px; opacity: 0.8; }
 </style>
 </head>
 <body>
 <canvas id="canvas"></canvas>
-<div id="hint">Нажми на рыбку — она уплывёт 🐟</div>
+<div id="ui">
+  <div class="level">Уровень: <span id="lvl">1</span> / <span id="lvlTotal">3</span></div>
+  <div class="coins">🪙 Монеты: <span id="coinCount">0</span> / <span id="coinTotal">0</span></div>
+  <div class="deaths">💀 Смерти: <span id="deathCount">0</span></div>
+</div>
+<div id="controls">
+  <b>W</b> — прыжок / вверх по лестнице &nbsp;·&nbsp;
+  <b>A</b> — влево &nbsp;·&nbsp;
+  <b>S</b> — вправо &nbsp;·&nbsp;
+  <b>D</b> — спуск / присед &nbsp;·&nbsp;
+  <b>R</b> — рестарт уровня
+</div>
+<div id="message"></div>
 
 <script>
 const canvas = document.getElementById('canvas');
@@ -42,365 +91,756 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// ---------- Пузырьки ----------
-const bubbles = Array.from({ length: 50 }, () => ({
-  x: Math.random() * W,
-  y: Math.random() * H,
-  r: 1 + Math.random() * 5,
-  speed: 0.2 + Math.random() * 1.0,
-  offset: Math.random() * Math.PI * 2
-}));
+// ============================================================
+//  УРОВНИ
+// ============================================================
+// Формат:
+//   platforms: {x, y, w, h} — твёрдые блоки
+//   ladders:   {x, y, w, h} — зоны лестниц
+//   coins:     [{x, y}]
+//   spikes:    [{x, y, w, h}] — опасные шипы
+//   spawn:     {x, y} — старт игрока
+//   goal:      {x, y} — финишный флаг
+//   bg:        цвет фона уровня
+// ============================================================
 
-// ---------- Рыбка ----------
-const fish = {
-  x: W / 2,
-  y: H / 2,
-  vx: 2.5,
-  vy: 1.2,
-  size: 42,
-  // heading — куда рыбка плывёт в мировых координатах (угол)
-  heading: 0,
-  // displayHeading — плавно догоняет heading, чтобы не дёргалась
-  displayHeading: 0,
-  // turnPhase: 0 → рыба смотрит "вбок" (профиль),
-  //           1 → рыба смотрит "на нас/от нас" (вид сверху, сжата по ширине)
-  turnPhase: 0,
-  tailPhase: 0,
-  scared: 0,
-  maxSpeed: 5.5
+const levels = [
+  // ---------- УРОВЕНЬ 1: обучение ----------
+  {
+    bg: ['#1a1a2e', '#16213e'],
+    spawn: { x: 100, y: 400 },
+    goal: { x: 1600, y: 380 },
+    platforms: [
+      { x: 0, y: 560, w: 1800, h: 200 },     // земля
+      { x: 300, y: 460, w: 150, h: 20 },     // платформа 1
+      { x: 550, y: 380, w: 150, h: 20 },     // платформа 2
+      { x: 800, y: 460, w: 200, h: 20 },     // платформа 3
+      { x: 1150, y: 400, w: 150, h: 20 },    // платформа 4
+      { x: 1400, y: 480, w: 300, h: 200 },   // финишная возвышенность
+    ],
+    ladders: [
+      { x: 380, y: 380, w: 40, h: 180 },     // лестница между ур. земли и платформы 1
+      { x: 880, y: 380, w: 40, h: 180 },
+    ],
+    coins: [
+      { x: 350, y: 430 }, { x: 400, y: 430 },
+      { x: 600, y: 350 }, { x: 650, y: 350 },
+      { x: 900, y: 430 }, { x: 950, y: 430 },
+      { x: 1200, y: 370 }, { x: 1250, y: 370 },
+    ],
+    spikes: [
+      { x: 700, y: 540, w: 60, h: 20 },
+    ],
+  },
+
+  // ---------- УРОВЕНЬ 2: с лестницами ----------
+  {
+    bg: ['#0f2027', '#203a43'],
+    spawn: { x: 80, y: 500 },
+    goal: { x: 1700, y: 180 },
+    platforms: [
+      { x: 0, y: 620, w: 500, h: 200 },
+      { x: 400, y: 500, w: 200, h: 20 },
+      { x: 700, y: 420, w: 200, h: 20 },
+      { x: 1000, y: 500, w: 200, h: 20 },
+      { x: 1300, y: 420, w: 200, h: 20 },
+      { x: 1550, y: 300, w: 300, h: 300 },   // финишная башня
+      { x: 1550, y: 620, w: 60, h: 200 },
+    ],
+    ladders: [
+      { x: 460, y: 420, w: 40, h: 200 },     // земля → платформа 2
+      { x: 760, y: 340, w: 40, h: 180 },     // платформа 2 → платформа 3
+      { x: 1060, y: 420, w: 40, h: 180 },    // платформа 3 → платформа 4
+      { x: 1360, y: 340, w: 40, h: 180 },    // платформа 4 → платформа 5
+      { x: 1580, y: 200, w: 40, h: 200 },    // финальная башня
+    ],
+    coins: [
+      { x: 450, y: 470 }, { x: 500, y: 470 },
+      { x: 750, y: 390 }, { x: 800, y: 390 },
+      { x: 1050, y: 470 }, { x: 1100, y: 470 },
+      { x: 1350, y: 390 }, { x: 1400, y: 390 },
+      { x: 1600, y: 270 }, { x: 1700, y: 270 },
+    ],
+    spikes: [
+      { x: 550, y: 600, w: 100, h: 20 },
+      { x: 1150, y: 600, w: 100, h: 20 },
+    ],
+  },
+
+  // ---------- УРОВЕНЬ 3: финальный ----------
+  {
+    bg: ['#2c003e', '#1a0033'],
+    spawn: { x: 60, y: 500 },
+    goal: { x: 1750, y: 120 },
+    platforms: [
+      { x: 0, y: 640, w: 400, h: 200 },
+      { x: 500, y: 580, w: 200, h: 20 },
+      { x: 800, y: 500, w: 200, h: 20 },
+      { x: 1100, y: 580, w: 200, h: 20 },
+      { x: 1400, y: 500, w: 200, h: 20 },
+      { x: 1650, y: 200, w: 250, h: 500 },   // финальная башня
+      { x: 1700, y: 620, w: 60, h: 60 },
+    ],
+    ladders: [
+      { x: 550, y: 500, w: 40, h: 180 },
+      { x: 850, y: 420, w: 40, h: 180 },
+      { x: 1150, y: 500, w: 40, h: 180 },
+      { x: 1450, y: 420, w: 40, h: 180 },
+      { x: 1680, y: 120, w: 40, h: 180 },
+    ],
+    coins: [
+      { x: 550, y: 550 }, { x: 600, y: 550 },
+      { x: 850, y: 470 }, { x: 900, y: 470 },
+      { x: 1150, y: 550 }, { x: 1200, y: 550 },
+      { x: 1450, y: 470 }, { x: 1500, y: 470 },
+      { x: 1700, y: 170 }, { x: 1800, y: 170 },
+    ],
+    spikes: [
+      { x: 380, y: 620, w: 120, h: 20 },
+      { x: 1000, y: 620, w: 100, h: 20 },
+      { x: 1300, y: 620, w: 100, h: 20 },
+    ],
+  },
+];
+
+// ============================================================
+//  СОСТОЯНИЕ ИГРЫ
+// ============================================================
+const GRAVITY = 0.65;
+const MOVE_SPEED = 4;
+const CLIMB_SPEED = 3;
+const JUMP_FORCE = -13;
+const CROUCH_SPEED = 1.5;
+
+const player = {
+  x: 0, y: 0,
+  w: 24, h: 56,
+  vx: 0, vy: 0,
+  onGround: false,
+  onLadder: false,
+  crouching: false,
+  facing: 1,
+  animTime: 0,
 };
 
-// ---------- Взаимодействие ----------
-function distToFish(px, py) {
-  return Math.hypot(px - fish.x, py - fish.y);
-}
+let currentLevel = 0;
+let state = 'playing'; // playing | dead | win | gameover
+let coinsTotal = 0;
+let coinsCollected = 0;
+let deaths = 0;
+let totalCoinsCollected = 0;
+let camera = { x: 0, y: 0 };
+let levelCoins = [];
+let levelSpikes = [];
+let levelPlatforms = [];
+let levelLadders = [];
+let levelGoal = null;
+let levelWidth = 0;
+let levelHeight = 0;
 
-function scareFish(px, py) {
-  const dx = fish.x - px;
-  const dy = fish.y - py;
-  const dist = Math.hypot(dx, dy) || 1;
-  const boost = 16;
-  fish.vx += (dx / dist) * boost;
-  fish.vy += (dy / dist) * boost;
-  fish.scared = 70;
-}
-
-canvas.addEventListener('pointerdown', (e) => {
-  if (distToFish(e.clientX, e.clientY) < fish.size * 1.7) {
-    scareFish(e.clientX, e.clientY);
-  }
+// ---------- Ввод ----------
+const keys = {};
+window.addEventListener('keydown', (e) => {
+  keys[e.key.toLowerCase()] = true;
+  if (e.key.toLowerCase() === 'r') resetLevel();
+  if (['w','a','s','d',' '].includes(e.key.toLowerCase())) e.preventDefault();
+});
+window.addEventListener('keyup', (e) => {
+  keys[e.key.toLowerCase()] = false;
 });
 
-canvas.addEventListener('pointermove', (e) => {
-  if (distToFish(e.clientX, e.clientY) < fish.size * 1.3 && fish.scared <= 0) {
-    scareFish(e.clientX, e.clientY);
-  }
-});
+// ============================================================
+//  ЗАГРУЗКА УРОВНЯ
+// ============================================================
+function loadLevel(index) {
+  currentLevel = index;
+  const lvl = levels[index];
+  levelPlatforms = lvl.platforms.map(p => ({ ...p }));
+  levelLadders = lvl.ladders.map(l => ({ ...l }));
+  levelCoins = lvl.coins.map(c => ({ ...c, collected: false }));
+  levelSpikes = lvl.spikes ? lvl.spikes.map(s => ({ ...s })) : [];
+  levelGoal = { ...lvl.goal };
 
-// ---------- Обновление ----------
-let wanderAngle = Math.random() * Math.PI * 2;
+  levelWidth = Math.max(...levelPlatforms.map(p => p.x + p.w), ...levelLadders.map(l => l.x + l.w), levelGoal.x + 100);
+  levelHeight = H;
 
-function update() {
-  // Плавное случайное блуждание — рыбка сама выбирает, куда плыть
-  if (fish.scared <= 0) {
-    wanderAngle += (Math.random() - 0.5) * 0.15;
+  player.x = lvl.spawn.x;
+  player.y = lvl.spawn.y - player.h;
+  player.vx = 0;
+  player.vy = 0;
+  player.onGround = false;
+  player.onLadder = false;
+  player.crouching = false;
 
-    // подталкиваем скорость в сторону wanderAngle
-    const wanderForce = 0.35;
-    fish.vx += Math.cos(wanderAngle) * wanderForce;
-    fish.vy += Math.sin(wanderAngle) * wanderForce;
+  coinsTotal = levelCoins.length;
+  coinsCollected = 0;
+  state = 'playing';
 
-    // мягко удерживаем внутри экрана: не притягиваем к центру,
-    // а отталкиваем от самых краёв, чтобы не вылетела
-    const edge = 90;
-    if (fish.x < edge) fish.vx += (edge - fish.x) * 0.02;
-    if (fish.x > W - edge) fish.vx -= (fish.x - (W - edge)) * 0.02;
-    if (fish.y < edge) fish.vy += (edge - fish.y) * 0.02;
-    if (fish.y > H - edge) fish.vy -= (fish.y - (H - edge)) * 0.02;
+  updateHUD();
+  showMessage('');
+}
+
+function resetLevel() {
+  if (state === 'win' && currentLevel < levels.length - 1) {
+    loadLevel(currentLevel + 1);
   } else {
-    fish.scared--;
+    loadLevel(currentLevel);
+  }
+}
+
+function updateHUD() {
+  document.getElementById('lvl').textContent = currentLevel + 1;
+  document.getElementById('lvlTotal').textContent = levels.length;
+  document.getElementById('coinCount').textContent = coinsCollected;
+  document.getElementById('coinTotal').textContent = coinsTotal;
+  document.getElementById('deathCount').textContent = deaths;
+}
+
+function showMessage(text, sub = '') {
+  const el = document.getElementById('message');
+  if (text) {
+    el.innerHTML = text + (sub ? `<small>${sub}</small>` : '');
+    el.classList.add('show');
+  } else {
+    el.classList.remove('show');
+  }
+}
+
+// ============================================================
+//  ФИЗИКА И КОЛЛИЗИИ
+// ============================================================
+function rectsOverlap(a, b) {
+  return a.x < b.x + b.w && a.x + a.w > b.x &&
+         a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+function playerRect() {
+  return { x: player.x, y: player.y, w: player.w, h: player.h };
+}
+
+function isOnLadder() {
+  const pr = playerRect();
+  for (const l of levelLadders) {
+    if (pr.x + pr.w > l.x && pr.x < l.x + l.w &&
+        pr.y + pr.h > l.y && pr.y < l.y + l.h) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function onLadderTop() {
+  const pr = playerRect();
+  for (const l of levelLadders) {
+    // стоим на верхней точке лестницы
+    if (pr.x + pr.w > l.x && pr.x < l.x + l.w &&
+        Math.abs(pr.y + pr.h - l.y) < 8) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Проверка "стоит на земле" с учётом платформ
+function checkGround() {
+  const pr = playerRect();
+  const test = { x: pr.x, y: pr.y + pr.h, w: pr.w, h: 2 };
+  for (const p of levelPlatforms) {
+    if (rectsOverlap(test, p)) return true;
+  }
+  return false;
+}
+
+function resolveCollisions() {
+  const pr = playerRect();
+
+  // горизонталь
+  for (const p of levelPlatforms) {
+    if (rectsOverlap(pr, p)) {
+      if (player.vx > 0) {
+        player.x = p.x - player.w;
+      } else if (player.vx < 0) {
+        player.x = p.x + p.w;
+      }
+      player.vx = 0;
+      pr.x = player.x;
+    }
   }
 
-  // Затухание
-  fish.vx *= 0.97;
-  fish.vy *= 0.97;
-
-  // Ограничение скорости
-  const sp = Math.hypot(fish.vx, fish.vy);
-  const max = fish.scared > 0 ? fish.maxSpeed * 2.2 : fish.maxSpeed;
-  if (sp > max) {
-    fish.vx = (fish.vx / sp) * max;
-    fish.vy = (fish.vy / sp) * max;
+  // вертикаль
+  player.onGround = false;
+  for (const p of levelPlatforms) {
+    const pr2 = playerRect();
+    if (rectsOverlap(pr2, p)) {
+      if (player.vy > 0) {
+        // падаем вниз
+        player.y = p.y - player.h;
+        player.vy = 0;
+        player.onGround = true;
+      } else if (player.vy < 0) {
+        // прыгаем вверх — бьёмся головой
+        player.y = p.y + p.h;
+        player.vy = 0;
+      }
+    }
   }
+}
 
-  // Не выходить за экран жёстко
-  const margin = fish.size;
-  if (fish.x < margin) { fish.x = margin; fish.vx = Math.abs(fish.vx); }
-  if (fish.x > W - margin) { fish.x = W - margin; fish.vx = -Math.abs(fish.vx); }
-  if (fish.y < margin) { fish.y = margin; fish.vy = Math.abs(fish.vy); }
-  if (fish.y > H - margin) { fish.y = H - margin; fish.vy = -Math.abs(fish.vy); }
+// ============================================================
+//  ОБНОВЛЕНИЕ
+// ============================================================
+function updatePlayer() {
+  const onLadderNow = isOnLadder();
+  player.onLadder = onLadderNow;
 
-  fish.x += fish.vx;
-  fish.y += fish.vy;
+  // Управление
+  const left = keys['a'];
+  const right = keys['s'];
+  const up = keys['w'];
+  const down = keys['d'];
 
-  // ---- Логика разворота ----
-  // Куда рыба хочет плыть
-  if (sp > 0.2) {
-    const targetHeading = Math.atan2(fish.vy, fish.vx);
+  // Лестница
+  if (player.onLadder) {
+    player.crouching = false;
 
-    // Плавно поворачиваем текущий heading к целевому (кратчайший путь)
-    let diff = targetHeading - fish.displayHeading;
-    while (diff > Math.PI) diff -= Math.PI * 2;
-    while (diff < -Math.PI) diff += Math.PI * 2;
-
-    // Если угол большой (рыба летит "на нас" или "от нас") — 
-    // увеличиваем turnPhase, чтобы она развернулась через "вид сверху"
-    const absDiff = Math.abs(diff);
-
-    // turnPhase растёт, если разворот большой, иначе спадает
-    if (absDiff > Math.PI * 0.55) {
-      fish.turnPhase = Math.min(1, fish.turnPhase + 0.05);
+    if (up) {
+      player.vy = -CLIMB_SPEED;
+      player.onGround = false;
+    } else if (down) {
+      // слезаем вниз только если не на самом верху — иначе присед
+      if (!onLadderTop() || !checkGround()) {
+        player.vy = CLIMB_SPEED;
+      } else {
+        player.vy = 0;
+      }
     } else {
-      fish.turnPhase = Math.max(0, fish.turnPhase - 0.06);
+      player.vy = 0;
     }
 
-    // если разворот почти закончен — плавно сбрасываем turnPhase
-    if (absDiff < 0.15) fish.turnPhase *= 0.9;
+    // Горизонтальное движение на лестнице — медленное, чтобы можно было сойти
+    if (left) { player.vx = -MOVE_SPEED * 0.6; player.facing = -1; }
+    else if (right) { player.vx = MOVE_SPEED * 0.6; player.facing = 1; }
+    else player.vx = 0;
 
-    fish.displayHeading += diff * 0.12;
+    // Прыжок с лестницы
+    if (up && checkGround() && onLadderTop()) {
+      player.vy = JUMP_FORCE;
+      player.onGround = false;
+    }
+  } else {
+    // Обычное движение
+    player.crouching = down && checkGround();
+
+    const speed = player.crouching ? CROUCH_SPEED : MOVE_SPEED;
+
+    if (left) { player.vx = -speed; player.facing = -1; }
+    else if (right) { player.vx = speed; player.facing = 1; }
+    else player.vx *= 0.7;
+
+    // Прыжок
+    if (up && player.onGround && !player.crouching) {
+      player.vy = JUMP_FORCE;
+      player.onGround = false;
+    }
+
+    // Гравитация
+    player.vy += GRAVITY;
+    if (player.vy > 18) player.vy = 18;
+
+    // Присед уменьшает высоту и не даёт пройти в узкий проход
+    if (player.crouching) {
+      if (player.h > 40) {
+        player.y += 16;
+        player.h = 40;
+      }
+    } else {
+      if (player.h < 56) {
+        player.y -= 16;
+        player.h = 56;
+        // проверка, что не залезли в стену
+        for (const p of levelPlatforms) {
+          if (rectsOverlap(playerRect(), p)) {
+            player.y += 16;
+            player.h = 40;
+            break;
+          }
+        }
+      }
+    }
   }
 
-  // Хвост: быстрее при быстрой скорости
-  fish.tailPhase += 0.15 + sp * 0.06;
+  // Движение по X
+  player.x += player.vx;
+  if (player.x < 0) { player.x = 0; player.vx = 0; }
 
-  // Пузырьки
-  for (const b of bubbles) {
-    b.y -= b.speed;
-    b.x += Math.sin(b.offset + b.y * 0.02) * 0.3;
-    if (b.y < -10) {
-      b.y = H + 10;
-      b.x = Math.random() * W;
+  // Движение по Y
+  player.y += player.vy;
+
+  // Коллизии
+  resolveCollisions();
+
+  // Границы
+  if (player.y > levelHeight + 200) {
+    die();
+  }
+  if (player.y < -200) {
+    player.y = -200;
+    player.vy = 0;
+  }
+
+  // Шипы
+  for (const s of levelSpikes) {
+    if (rectsOverlap(playerRect(), s)) {
+      die();
+      return;
     }
+  }
+
+  // Монеты
+  for (const c of levelCoins) {
+    if (c.collected) continue;
+    const coinRect = { x: c.x - 12, y: c.y - 12, w: 24, h: 24 };
+    if (rectsOverlap(playerRect(), coinRect)) {
+      c.collected = true;
+      coinsCollected++;
+      updateHUD();
+    }
+  }
+
+  // Финиш
+  const goalRect = { x: levelGoal.x - 20, y: levelGoal.y - 80, w: 40, h: 80 };
+  if (rectsOverlap(playerRect(), goalRect)) {
+    win();
+  }
+
+  // Анимация
+  if (Math.abs(player.vx) > 0.5 || !player.onGround || player.onLadder) {
+    player.animTime += 0.15;
+  } else {
+    player.animTime *= 0.95;
   }
 }
 
-// ---------- Отрисовка ----------
-function drawBubbles() {
-  ctx.fillStyle = 'rgba(180, 220, 255, 0.2)';
-  for (const b of bubbles) {
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-    ctx.fill();
+function die() {
+  deaths++;
+  updateHUD();
+  state = 'dead';
+  showMessage('💀 Упс!', 'R — попробовать снова');
+  setTimeout(() => {
+    if (state === 'dead') loadLevel(currentLevel);
+  }, 800);
+}
+
+function win() {
+  state = 'win';
+  totalCoinsCollected += coinsCollected;
+  if (currentLevel < levels.length - 1) {
+    showMessage('🎉 Уровень пройден!', 'Нажми R для следующего');
+  } else {
+    showMessage('🏆 Победа!', 'Все уровни пройдены! R — сыграть снова');
   }
 }
 
-function drawFish() {
-  const s = fish.size;
-  const scared = fish.scared > 0;
+// ============================================================
+//  КАМЕРА
+// ============================================================
+function updateCamera() {
+  const targetX = player.x + player.w / 2 - W / 2;
+  const targetY = player.y + player.h / 2 - H / 2;
+  camera.x += (targetX - camera.x) * 0.08;
+  camera.y += (targetY - camera.y) * 0.08;
+
+  // ограничение камеры
+  camera.x = Math.max(0, Math.min(camera.x, levelWidth - W));
+  camera.y = Math.max(-100, Math.min(camera.y, levelHeight - H + 100));
+}
+
+// ============================================================
+//  ОТРИСОВКА
+// ============================================================
+function drawBackground() {
+  const lvl = levels[currentLevel];
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, lvl.bg[0]);
+  grad.addColorStop(1, lvl.bg[1]);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  // Звёзды (параллакс)
+  ctx.save();
+  ctx.translate(-camera.x * 0.2, -camera.y * 0.2);
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  for (let i = 0; i < 60; i++) {
+    const sx = (i * 137.5) % (levelWidth * 1.2);
+    const sy = (i * 91.3) % (H * 0.8);
+    ctx.fillRect(sx, sy, 2, 2);
+  }
+  ctx.restore();
+}
+
+function drawPlatform(p) {
+  // Трава сверху
+  ctx.fillStyle = '#4a2c0f';
+  ctx.fillRect(p.x, p.y, p.w, p.h);
+  ctx.fillStyle = '#2d1810';
+  ctx.fillRect(p.x + 4, p.y + 4, p.w - 8, p.h - 8);
+
+  // Верхняя "травяная" полоса
+  ctx.fillStyle = '#3a8f3a';
+  ctx.fillRect(p.x, p.y, p.w, 6);
+  ctx.fillStyle = '#4fbf4f';
+  ctx.fillRect(p.x, p.y, p.w, 3);
+
+  // Блики
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.fillRect(p.x + 2, p.y + 8, p.w - 4, 2);
+}
+
+function drawLadder(l) {
+  ctx.fillStyle = 'rgba(150, 100, 50, 0.9)';
+  // боковые стойки
+  ctx.fillRect(l.x, l.y, 6, l.h);
+  ctx.fillRect(l.x + l.w - 6, l.y, 6, l.h);
+  // перекладины
+  const step = 16;
+  for (let y = l.y + step; y < l.y + l.h; y += step) {
+    ctx.fillRect(l.x, y - 2, l.w, 4);
+  }
+}
+
+function drawCoin(c) {
+  if (c.collected) return;
+  const t = performance.now() / 300;
+  const bounce = Math.sin(t + c.x * 0.1) * 3;
+  const scale = 0.85 + Math.sin(t * 2 + c.x * 0.1) * 0.15;
 
   ctx.save();
-  ctx.translate(fish.x, fish.y);
+  ctx.translate(c.x, c.y + bounce);
+  ctx.scale(scale, 1);
 
-  // Куда смотрит морда. Если heading в левой половине — рисуем зеркально,
-  // чтобы рыба не была "вверх ногами".
-  const facingLeft = Math.cos(fish.displayHeading) < 0;
-  const baseAngle = facingLeft
-    ? fish.displayHeading - Math.PI
-    : fish.displayHeading;
-
-  ctx.rotate(baseAngle);
-
-  // ---- 3D-эффект разворота ----
-  // turnPhase: 0 → рыба в профиль (широкое тело),
-  //            1 → рыба развернулась к нам/от нас (тело сжато, "толщина" видна)
-  const turn = fish.turnPhase;
-
-  // bodyWidth: 1 → нормальная ширина тела, уходит к 0.15 при развороте
-  const bodyWidth = 1 - turn * 0.85;
-  // "Толщина" тела видна при развороте — добавляем вертикальный масштаб
-  const bodyHeight = 1 + turn * 0.25;
-
-  // Мягкое покачивание хвоста
-  const wag = Math.sin(fish.tailPhase) * 0.5;
-
-  // ---- Тень на "дне" ----
-  ctx.save();
-  ctx.shadowColor = scared
-    ? 'rgba(255, 140, 80, 0.9)'
-    : 'rgba(100, 200, 255, 0.8)';
-  ctx.shadowBlur = scared ? 28 : 20;
-
-  // ---- Хвост (рисуем до тела, чтобы был за ним) ----
-  // При развороте хвост "схлопывается" к центру — становится толщиной
-  const tailSpread = 0.75 * (1 - turn * 0.6);
-  const tailGrad = ctx.createLinearGradient(-s * 0.6, 0, -s * 1.6, 0);
-  if (scared) {
-    tailGrad.addColorStop(0, '#ff7a3d');
-    tailGrad.addColorStop(1, '#ff4d1f');
-  } else {
-    tailGrad.addColorStop(0, '#ffb347');
-    tailGrad.addColorStop(1, '#e8852a');
-  }
-  ctx.fillStyle = tailGrad;
-
+  // тень
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
   ctx.beginPath();
-  ctx.moveTo(-s * 0.55 * bodyWidth, 0);
-  ctx.quadraticCurveTo(
-    -s * 1.2 * bodyWidth,
-    (-s * tailSpread) + wag * 14,
-    -s * 1.7 * bodyWidth,
-    (-s * tailSpread * 0.4) + wag * 20
-  );
-  ctx.quadraticCurveTo(
-    -s * 1.35 * bodyWidth,
-    0,
-    -s * 1.7 * bodyWidth,
-    (s * tailSpread * 0.4) + wag * 20
-  );
-  ctx.quadraticCurveTo(
-    -s * 1.2 * bodyWidth,
-    (s * tailSpread) + wag * 14,
-    -s * 0.55 * bodyWidth,
-    0
-  );
-  ctx.closePath();
+  ctx.ellipse(0, 14, 10, 3, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // ---- Верхний плавник ----
-  const finGrad = ctx.createLinearGradient(0, -s * 0.8, 0, 0);
-  if (scared) {
-    finGrad.addColorStop(0, '#ff8a5c');
-    finGrad.addColorStop(1, '#ff5a2a');
-  } else {
-    finGrad.addColorStop(0, '#ffc266');
-    finGrad.addColorStop(1, '#e8852a');
-  }
-  ctx.fillStyle = finGrad;
+  // монета
+  const grad = ctx.createRadialGradient(-3, -3, 1, 0, 0, 12);
+  grad.addColorStop(0, '#fff9b0');
+  grad.addColorStop(0.5, '#ffd700');
+  grad.addColorStop(1, '#b8860b');
+  ctx.fillStyle = grad;
   ctx.beginPath();
-  ctx.moveTo(-s * 0.15 * bodyWidth, -s * 0.55 * bodyHeight);
-  ctx.quadraticCurveTo(
-    -s * 0.45 * bodyWidth,
-    -s * 1.15 * bodyHeight,
-    s * 0.05 * bodyWidth,
-    -s * 0.6 * bodyHeight
-  );
-  ctx.closePath();
-  ctx.fill();
-
-  // ---- Нижний плавник ----
-  ctx.beginPath();
-  ctx.moveTo(-s * 0.15 * bodyWidth, s * 0.5 * bodyHeight);
-  ctx.quadraticCurveTo(
-    -s * 0.45 * bodyWidth,
-    s * 1.0 * bodyHeight,
-    s * 0.05 * bodyWidth,
-    s * 0.55 * bodyHeight
-  );
-  ctx.closePath();
-  ctx.fill();
-
-  // ---- Тело (объёмное, с градиентом и бликом) ----
-  const bodyGrad = ctx.createRadialGradient(
-    s * 0.2, -s * 0.25, s * 0.1,
-    0, 0, s * 1.1
-  );
-  if (scared) {
-    bodyGrad.addColorStop(0, '#ffd9a8');
-    bodyGrad.addColorStop(0.5, '#ff8a3d');
-    bodyGrad.addColorStop(1, '#c93814');
-  } else {
-    bodyGrad.addColorStop(0, '#fff2c4');
-    bodyGrad.addColorStop(0.5, '#ffb347');
-    bodyGrad.addColorStop(1, '#d16a1f');
-  }
-  ctx.fillStyle = bodyGrad;
-
-  ctx.beginPath();
-  ctx.ellipse(
-    0, 0,
-    s * bodyWidth,
-    s * 0.62 * bodyHeight,
-    0, 0, Math.PI * 2
-  );
-  ctx.fill();
-
-  // Тёмная полоска по спине — усиливает объём
-  ctx.strokeStyle = scared
-    ? 'rgba(120, 30, 0, 0.35)'
-    : 'rgba(120, 60, 0, 0.3)';
-  ctx.lineWidth = s * 0.08;
-  ctx.beginPath();
-  ctx.ellipse(
-    0, -s * 0.15 * bodyHeight,
-    s * bodyWidth * 0.85,
-    s * 0.35 * bodyHeight,
-    0, Math.PI * 0.05, Math.PI * 0.95
-  );
-  ctx.stroke();
-
-  // Блик сверху
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
-  ctx.beginPath();
-  ctx.ellipse(
-    s * 0.1 * bodyWidth,
-    -s * 0.28 * bodyHeight,
-    s * 0.5 * bodyWidth,
-    s * 0.15 * bodyHeight,
-    -0.2, 0, Math.PI * 2
-  );
-  ctx.fill();
-
-  // ---- Чешуя (лёгкие блики) ----
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
-  for (let i = 0; i < 3; i++) {
-    ctx.beginPath();
-    ctx.ellipse(
-      (-0.35 + i * 0.25) * s * bodyWidth,
-      (i % 2 === 0 ? -1 : 1) * s * 0.1 * bodyHeight,
-      s * 0.12 * bodyWidth,
-      s * 0.08 * bodyHeight,
-      0, 0, Math.PI * 2
-    );
-    ctx.fill();
-  }
-
-  // ---- Глаз ----
-  const eyeX = s * 0.6 * bodyWidth;
-  const eyeY = -s * 0.15 * bodyHeight;
-
-  // белок
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  ctx.arc(eyeX, eyeY, s * 0.15, 0, Math.PI * 2);
-  ctx.fill();
-
-  // зрачок
-  ctx.fillStyle = '#111';
-  ctx.beginPath();
-  ctx.arc(eyeX + s * 0.04, eyeY, s * 0.08, 0, Math.PI * 2);
+  ctx.arc(0, 0, 12, 0, Math.PI * 2);
   ctx.fill();
 
   // блик
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
   ctx.beginPath();
-  ctx.arc(eyeX + s * 0.07, eyeY - s * 0.04, s * 0.025, 0, Math.PI * 2);
+  ctx.arc(-4, -4, 3, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.restore(); // shadow
-  ctx.restore(); // transform
+  // символ
+  ctx.fillStyle = '#b8860b';
+  ctx.font = 'bold 14px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('$', 0, 1);
+
+  ctx.restore();
 }
 
-// ---------- Цикл ----------
-function loop() {
-  ctx.clearRect(0, 0, W, H);
+function drawSpike(s) {
+  ctx.fillStyle = '#c0c0c0';
+  const count = Math.floor(s.w / 12);
+  const step = s.w / count;
+  for (let i = 0; i < count; i++) {
+    const x = s.x + i * step;
+    ctx.beginPath();
+    ctx.moveTo(x, s.y + s.h);
+    ctx.lineTo(x + step / 2, s.y);
+    ctx.lineTo(x + step, s.y + s.h);
+    ctx.closePath();
+    ctx.fill();
+  }
+  // основание
+  ctx.fillStyle = '#555';
+  ctx.fillRect(s.x, s.y + s.h - 3, s.w, 3);
+}
 
-  drawBubbles();
-  update();
-  drawFish();
+function drawGoal() {
+  const g = levelGoal;
+  // флагшток
+  ctx.fillStyle = '#888';
+  ctx.fillRect(g.x - 2, g.y - 80, 4, 80);
+  // флаг
+  const wave = Math.sin(performance.now() / 200) * 4;
+  ctx.fillStyle = '#e63946';
+  ctx.beginPath();
+  ctx.moveTo(g.x + 2, g.y - 80);
+  ctx.quadraticCurveTo(g.x + 25 + wave, g.y - 68, g.x + 2, g.y - 50);
+  ctx.closePath();
+  ctx.fill();
+  // звезда
+  ctx.fillStyle = '#ffd700';
+  ctx.font = '16px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('⭐', g.x + 12, g.y - 62);
+}
+
+function drawPlayer() {
+  const px = player.x;
+  const py = player.y;
+  const h = player.h;
+  const w = player.w;
+
+  ctx.save();
+  ctx.translate(px + w / 2, py);
+
+  // тень под игроком
+  if (player.onGround) {
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(0, h + 2, w * 0.7, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Толщина линий
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  // Масштаб по X для разворота
+  ctx.scale(player.facing, 1);
+
+  // Анимация ходьбы
+  const swing = player.onGround && Math.abs(player.vx) > 0.5
+    ? Math.sin(player.animTime) * 0.5
+    : 0;
+  const climbSwing = player.onLadder
+    ? Math.sin(player.animTime) * 0.6
+    : 0;
+  const bob = Math.abs(Math.sin(player.animTime)) * 2;
+
+  // Голова (круг)
+  const headR = w * 0.45;
+  const headY = -h * 0.08 + (player.onGround ? 0 : -1);
+  ctx.beginPath();
+  ctx.arc(0, headY - h * 0.5 + bob * 0.3, headR, 0, Math.PI * 2);
+  ctx.fillStyle = '#222';
+  ctx.fill();
+
+  // Тело (линия)
+  const bodyTop = headY - h * 0.5 + headR + bob * 0.3;
+  const bodyBottom = h * 0.55;
+  const bodyMid = (bodyTop + bodyBottom) / 2;
+
+  ctx.beginPath();
+  ctx.moveTo(0, bodyTop);
+  ctx.lineTo(0, bodyBottom);
+  ctx.stroke();
+
+  // Ноги
+  const legSwing = player.onLadder ? climbSwing : swing;
+  const hipY = bodyBottom;
+
+  // левая нога
+  ctx.beginPath();
+  ctx.moveTo(0, hipY);
+  ctx.lineTo(-w * 0.35 + legSwing * 8, h - 2);
+  ctx.stroke();
+
+  // правая нога
+  ctx.beginPath();
+  ctx.moveTo(0, hipY);
+  ctx.lineTo(w * 0.35 - legSwing * 8, h - 2);
+  ctx.stroke();
+
+  // Руки
+  const armY = bodyTop + (bodyMid - bodyTop) * 0.9;
+  const armSwing = player.onLadder ? climbSwing : swing;
+  const armAngle = player.crouching ? 0.5 : 1;
+
+  // левая рука
+  ctx.beginPath();
+  ctx.moveTo(0, armY);
+  ctx.lineTo(
+    -w * 0.5 + armSwing * 6,
+    armY + (player.onLadder ? -10 : 14 * armAngle)
+  );
+  ctx.stroke();
+
+  // правая рука
+  ctx.beginPath();
+  ctx.moveTo(0, armY);
+  ctx.lineTo(
+    w * 0.5 - armSwing * 6,
+    armY + (player.onLadder ? 10 : 14 * armAngle)
+  );
+  ctx.stroke();
+
+  // Глазки (для прикола)
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.arc(-headR * 0.35, headY - h * 0.5 - 2 + bob * 0.3, headR * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(headR * 0.35, headY - h * 0.5 - 2 + bob * 0.3, headR * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.arc(-headR * 0.3, headY - h * 0.5 - 2 + bob * 0.3, headR * 0.1, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(headR * 0.4, headY - h * 0.5 - 2 + bob * 0.3, headR * 0.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ============================================================
+//  ЦИКЛ
+// ============================================================
+function loop() {
+  if (state === 'playing' || state === 'dead') {
+    updatePlayer();
+    updateCamera();
+  }
+
+  // Рисуем
+  drawBackground();
+
+  ctx.save();
+  ctx.translate(-camera.x, -camera.y);
+
+  // Платформы
+  for (const p of levelPlatforms) drawPlatform(p);
+
+  // Лестницы
+  for (const l of levelLadders) drawLadder(l);
+
+  // Шипы
+  for (const s of levelSpikes) drawSpike(s);
+
+  // Монеты
+  for (const c of levelCoins) drawCoin(c);
+
+  // Финиш
+  drawGoal();
+
+  // Игрок
+  drawPlayer();
+
+  ctx.restore();
 
   requestAnimationFrame(loop);
 }
 
+// ============================================================
+//  СТАРТ
+// ============================================================
+loadLevel(0);
 loop();
 </script>
 </body>
