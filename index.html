@@ -18,12 +18,8 @@
     font-size: 17px; font-weight: 700;
     pointer-events: none; line-height: 1.5;
   }
-  #ui .level { color: #1a3a8f; }
-  #ui .coins { color: #2451b8; }
-  #ui .deaths { color: #4a6dd4; }
   #controls {
     position: fixed; bottom: 16px; left: 50%;
-    transform: translateX(-50%);
     color: #1a3a8f;
     font-size: 14px;
     text-align: center;
@@ -56,12 +52,12 @@
 <body>
 <canvas id="canvas"></canvas>
 <div id="ui">
-  <div class="level">Уровень: <span id="lvl">1</span> / <span id="lvlTotal">3</span></div>
-  <div class="coins">Монет: <span id="coinCount">0</span> / <span id="coinTotal">0</span></div>
-  <div class="deaths">Падений: <span id="deathCount">0</span></div>
+  <div>Уровень: <span id="lvl">1</span> / <span id="lvlTotal">3</span></div>
+  <div>Монет: <span id="coinCount">0</span> / <span id="coinTotal">0</span></div>
+  <div>Падений: <span id="deathCount">0</span></div>
 </div>
 <div id="controls">
-  <b>W</b> — вверх / прыжок · <b>A</b> — влево · <b>D</b> — вправо · <b>S</b> — присед / вниз · <b>R</b> — рестарт
+  <b>W</b> — вверх / прыжок · <b>A</b> — вправо · <b>D</b> — влево · <b>S</b> — присед / вниз · <b>R</b> — рестарт
 </div>
 <div id="message"></div>
 
@@ -78,18 +74,16 @@ window.addEventListener('resize', resize);
 resize();
 
 // ============================================================
-//  ПАЛИТРА — только синяя ручка + белый лист
+//  ПАЛИТРА
 // ============================================================
-const INK       = '#1a3a8f';   // основной синий
-const INK_DARK  = '#0d2470';   // тёмный синий
-const INK_LIGHT = '#5a78c8';   // светлый синий
-const INK_FAINT = '#c8d4f0';   // очень бледный синий (линии)
-const PAPER     = '#fdfdfd';   // белый лист
+const INK       = '#1a3a8f';
+const INK_DARK  = '#0d2470';
+const INK_LIGHT = '#5a78c8';
+const INK_FAINT = '#c8d4f0';
+const PAPER     = '#fdfdfd';
 
 // ============================================================
 //  УРОВНИ
-// ============================================================
-// spawn.y — это Y земли (низ игрока)
 // ============================================================
 const levels = [
   {
@@ -181,15 +175,16 @@ const levels = [
 ];
 
 // ============================================================
-//  КОНСТАНТЫ  (медленнее!)
+//  КОНСТАНТЫ  — очень медленно
 // ============================================================
-const GRAVITY      = 0.55;   // было 0.65
-const MOVE_SPEED   = 2.4;    // было 4  — теперь медленнее
-const CLIMB_SPEED  = 2.0;    // было 3
-const JUMP_FORCE   = -11;    // было -13
-const CROUCH_SPEED = 1.0;
+const GRAVITY      = 0.45;   // было 0.55 — падение мягче
+const MOVE_SPEED   = 1.2;    // было 2.4 — вдвое медленнее
+const CLIMB_SPEED  = 1.4;    // было 2.0
+const JUMP_FORCE   = -9.5;   // было -11 — ниже прыжок
+const CROUCH_SPEED = 0.6;    // было 1.0
 const FULL_H       = 56;
 const CROUCH_H     = 36;
+const FRICTION     = 0.75;   // плавнее остановка
 
 const player = {
   x: 0, y: 0,
@@ -214,12 +209,20 @@ let levelGoal = null;
 let levelWidth = 0, levelHeight = 800;
 
 // ============================================================
-//  ВВОД
+//  ВВОД  — A ↔ D поменяны!
 // ============================================================
 const keys = {};
 const KEY_MAP = {
-  'KeyW': 'up', 'KeyA': 'left', 'KeyD': 'right', 'KeyS': 'down',
-  'ArrowUp': 'up', 'ArrowLeft': 'left', 'ArrowRight': 'right', 'ArrowDown': 'down',
+  // ✅ A теперь вправо, D теперь влево (по ТЗ)
+  'KeyA': 'right',
+  'KeyD': 'left',
+  'KeyW': 'up',
+  'KeyS': 'down',
+  // стрелки оставляем по их смыслу
+  'ArrowUp': 'up',
+  'ArrowLeft': 'left',
+  'ArrowRight': 'right',
+  'ArrowDown': 'down',
   'Space': 'up',
 };
 window.addEventListener('keydown', (e) => {
@@ -342,7 +345,6 @@ function updatePlayer() {
       player.onLadder = false;
     }
   } else {
-    // присед
     player.crouching = down && player.onGround;
 
     if (player.crouching && player.h !== CROUCH_H) {
@@ -365,7 +367,7 @@ function updatePlayer() {
     const speed = player.crouching ? CROUCH_SPEED : MOVE_SPEED;
     if (left)       { player.vx = -speed; player.facing = -1; }
     else if (right) { player.vx =  speed; player.facing =  1; }
-    else            { player.vx *= 0.65; }
+    else            { player.vx *= FRICTION; }   // ✅ плавное затухание
 
     if (up && player.onGround && !player.crouching) {
       player.vy = JUMP_FORCE;
@@ -373,7 +375,7 @@ function updatePlayer() {
     }
 
     player.vy += GRAVITY;
-    if (player.vy > 15) player.vy = 15;
+    if (player.vy > 13) player.vy = 13;
   }
 
   player.x += player.vx;
@@ -402,8 +404,8 @@ function updatePlayer() {
   const gr = { x: levelGoal.x - 20, y: levelGoal.y - 80, w: 40, h: 80 };
   if (rectsOverlap(playerRect(), gr)) win();
 
-  if (Math.abs(player.vx) > 0.3 || !player.onGround || player.onLadder) {
-    player.animTime += 0.12;
+  if (Math.abs(player.vx) > 0.15 || !player.onGround || player.onLadder) {
+    player.animTime += 0.08;   // ✅ анимация медленнее
   } else {
     player.animTime *= 0.9;
   }
@@ -461,22 +463,18 @@ function win() {
 function updateCamera() {
   const tx = player.x + player.w / 2 - W / 2;
   const ty = player.y + player.h / 2 - H / 2;
-  camera.x += (tx - camera.x) * 0.1;
-  camera.y += (ty - camera.y) * 0.1;
+  camera.x += (tx - camera.x) * 0.07;
+  camera.y += (ty - camera.y) * 0.07;
   camera.x = Math.max(0, Math.min(camera.x, Math.max(0, levelWidth - W)));
   camera.y = Math.max(-100, Math.min(camera.y, Math.max(0, levelHeight - H)));
 }
 
 // ============================================================
-//  ОТРИСОВКА — всё «ручкой»
+//  ОТРИСОВКА
 // ============================================================
-
-// Лёгкое дрожание для «рукописного» эффекта
 function jitter(amount = 0.6) {
   return (Math.random() - 0.5) * amount;
 }
-
-// Рисует линию «от руки» с небольшим дрожанием
 function handLine(x1, y1, x2, y2, color = INK, width = 2) {
   ctx.strokeStyle = color;
   ctx.lineWidth = width;
@@ -492,16 +490,12 @@ function handLine(x1, y1, x2, y2, color = INK, width = 2) {
   }
   ctx.stroke();
 }
-
-// Рисует прямоугольник «от руки» с двойным контуром
 function handRect(x, y, w, h, color = INK, width = 2) {
   handLine(x, y, x + w, y, color, width);
   handLine(x + w, y, x + w, y + h, color, width);
   handLine(x + w, y + h, x, y + h, color, width);
   handLine(x, y + h, x, y, color, width);
 }
-
-// Рисует штриховку внутри прямоугольника
 function handHatch(x, y, w, h, color = INK_FAINT, step = 8) {
   ctx.strokeStyle = color;
   ctx.lineWidth = 1;
@@ -517,13 +511,11 @@ function drawPaper() {
   ctx.fillStyle = PAPER;
   ctx.fillRect(0, 0, W, H);
 
-  // Клетка тетради (с параллаксом)
   const cell = 28;
   const offX = (-camera.x * 0.25) % cell;
   const offY = (-camera.y * 0.25) % cell;
   ctx.strokeStyle = INK_FAINT;
   ctx.lineWidth = 1;
-
   ctx.beginPath();
   for (let x = offX; x < W; x += cell) {
     ctx.moveTo(Math.round(x) + 0.5, 0);
@@ -535,7 +527,6 @@ function drawPaper() {
   }
   ctx.stroke();
 
-  // Красная/синяя линия поля слева (как в тетради)
   const marginX = 40 - camera.x * 0.15;
   if (marginX > 0 && marginX < W) {
     ctx.strokeStyle = INK_LIGHT;
@@ -548,19 +539,14 @@ function drawPaper() {
 }
 
 function drawPlatform(p) {
-  // Основной контур
   handRect(p.x, p.y, p.w, p.h, INK, 2.2);
-  // Штриховка
   handHatch(p.x + 3, p.y + 3, p.w - 6, p.h - 6, INK_FAINT, 9);
-  // Верхняя жирная линия (трава)
   handLine(p.x, p.y, p.x + p.w, p.y, INK_DARK, 3);
 }
 
 function drawLadder(l) {
-  // Стойки
   handLine(l.x, l.y, l.x, l.y + l.h, INK, 2);
   handLine(l.x + l.w, l.y, l.x + l.w, l.y + l.h, INK, 2);
-  // Перекладины
   const step = 16;
   for (let y = l.y + step; y < l.y + l.h; y += step) {
     handLine(l.x, y, l.x + l.w, y, INK, 1.6);
@@ -571,11 +557,8 @@ function drawCoin(c) {
   if (c.collected) return;
   const t = performance.now() / 300;
   const bounce = Math.sin(t + c.x * 0.1) * 2.5;
-
   ctx.save();
   ctx.translate(c.x, c.y + bounce);
-
-  // Круг от руки
   ctx.strokeStyle = INK;
   ctx.lineWidth = 2.2;
   ctx.beginPath();
@@ -589,14 +572,11 @@ function drawCoin(c) {
   }
   ctx.closePath();
   ctx.stroke();
-
-  // Внутренняя загогулина
   ctx.strokeStyle = INK_LIGHT;
   ctx.lineWidth = 1.2;
   ctx.beginPath();
   ctx.arc(0, 0, r * 0.6, 0, Math.PI * 1.5);
   ctx.stroke();
-
   ctx.restore();
 }
 
@@ -618,10 +598,7 @@ function drawSpike(s) {
 
 function drawGoal() {
   const g = levelGoal;
-  // Флагшток
   handLine(g.x, g.y, g.x, g.y - 80, INK, 2.5);
-
-  // Флаг — треугольник от руки
   const wave = Math.sin(performance.now() / 200) * 3;
   ctx.strokeStyle = INK_DARK;
   ctx.lineWidth = 2;
@@ -629,8 +606,6 @@ function drawGoal() {
   ctx.moveTo(g.x, g.y - 80);
   ctx.quadraticCurveTo(g.x + 25 + wave, g.y - 65, g.x, g.y - 50);
   ctx.stroke();
-
-  // Штриховка внутри флага
   ctx.strokeStyle = INK_FAINT;
   ctx.lineWidth = 1;
   for (let i = 2; i < 30; i += 4) {
@@ -639,8 +614,6 @@ function drawGoal() {
     ctx.lineTo(g.x + i * 0.7, g.y - 80 + i + 3);
     ctx.stroke();
   }
-
-  // Звёздочка
   ctx.strokeStyle = INK;
   ctx.lineWidth = 1.5;
   const cx = g.x + 10, cy = g.y - 65;
@@ -660,7 +633,6 @@ function drawPlayer() {
   ctx.save();
   ctx.translate(player.x + player.w / 2, player.y);
 
-  // Тень — маленькие штрихи под ногами
   if (player.onGround) {
     ctx.strokeStyle = INK_FAINT;
     ctx.lineWidth = 1.5;
@@ -680,19 +652,17 @@ function drawPlayer() {
 
   const h = player.h;
   const w = player.w;
-  const swing = (player.onGround && Math.abs(player.vx) > 0.3)
-    ? Math.sin(player.animTime) * 0.45 : 0;
-  const climbSwing = player.onLadder ? Math.sin(player.animTime) * 0.55 : 0;
-  const bob = Math.abs(Math.sin(player.animTime)) * 1.5;
+  const swing = (player.onGround && Math.abs(player.vx) > 0.15)
+    ? Math.sin(player.animTime) * 0.4 : 0;
+  const climbSwing = player.onLadder ? Math.sin(player.animTime) * 0.5 : 0;
+  const bob = Math.abs(Math.sin(player.animTime)) * 1.2;
 
-  // Голова
   const headR = w * 0.45;
   const headY = -h * 0.08 - h * 0.5 + bob * 0.3;
   ctx.beginPath();
   ctx.arc(0, headY, headR, 0, Math.PI * 2);
   ctx.stroke();
 
-  // Тело
   const bodyTop = headY + headR;
   const bodyBottom = h * 0.55;
   const bodyMid = (bodyTop + bodyBottom) / 2;
@@ -701,31 +671,28 @@ function drawPlayer() {
   ctx.lineTo(0, bodyBottom);
   ctx.stroke();
 
-  // Ноги
   const legSwing = player.onLadder ? climbSwing : swing;
   ctx.beginPath();
   ctx.moveTo(0, bodyBottom);
-  ctx.lineTo(-w * 0.35 + legSwing * 7, h - 2);
+  ctx.lineTo(-w * 0.35 + legSwing * 6, h - 2);
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(0, bodyBottom);
-  ctx.lineTo(w * 0.35 - legSwing * 7, h - 2);
+  ctx.lineTo(w * 0.35 - legSwing * 6, h - 2);
   ctx.stroke();
 
-  // Руки
   const armY = bodyTop + (bodyMid - bodyTop) * 0.9;
   const armSwing = player.onLadder ? climbSwing : swing;
   const armDrop = player.crouching ? 8 : 14;
   ctx.beginPath();
   ctx.moveTo(0, armY);
-  ctx.lineTo(-w * 0.5 + armSwing * 5, armY + (player.onLadder ? -10 : armDrop));
+  ctx.lineTo(-w * 0.5 + armSwing * 4, armY + (player.onLadder ? -10 : armDrop));
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(0, armY);
-  ctx.lineTo(w * 0.5 - armSwing * 5, armY + (player.onLadder ? 10 : armDrop));
+  ctx.lineTo(w * 0.5 - armSwing * 4, armY + (player.onLadder ? 10 : armDrop));
   ctx.stroke();
 
-  // Глаза — две точки
   ctx.fillStyle = INK;
   ctx.beginPath();
   ctx.arc(-headR * 0.35, headY - 1, 1.5, 0, Math.PI * 2);
@@ -734,7 +701,6 @@ function drawPlayer() {
   ctx.arc(headR * 0.35, headY - 1, 1.5, 0, Math.PI * 2);
   ctx.fill();
 
-  // Улыбка
   ctx.beginPath();
   ctx.arc(0, headY + 2, headR * 0.4, 0.2, Math.PI - 0.2);
   ctx.stroke();
@@ -750,19 +716,15 @@ function loop() {
     updatePlayer();
     updateCamera();
   }
-
   drawPaper();
-
   ctx.save();
   ctx.translate(-camera.x, -camera.y);
-
   for (const p of levelPlatforms) drawPlatform(p);
   for (const l of levelLadders) drawLadder(l);
   for (const s of levelSpikes) drawSpike(s);
   for (const c of levelCoins) drawCoin(c);
   drawGoal();
   drawPlayer();
-
   ctx.restore();
   requestAnimationFrame(loop);
 }
