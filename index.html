@@ -3,26 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🐟 Уплывающая рыбка</title>
+<title>🐟 3D Рыбка</title>
 <style>
   html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
     height: 100%;
-    background: linear-gradient(180deg, #001f3f 0%, #003366 50%, #005580 100%);
+    background: radial-gradient(circle at 50% 30%, #0a4d68 0%, #00203f 60%, #000a14 100%);
     font-family: system-ui, sans-serif;
   }
-  canvas {
-    display: block;
-    cursor: crosshair;
-  }
+  canvas { display: block; cursor: crosshair; }
   #hint {
     position: fixed;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    color: rgba(255,255,255,0.6);
+    color: rgba(255,255,255,0.55);
     font-size: 14px;
     pointer-events: none;
     user-select: none;
@@ -45,12 +42,12 @@ function resize() {
 window.addEventListener('resize', resize);
 resize();
 
-// ---------- Пузырьки на фоне ----------
-const bubbles = Array.from({ length: 40 }, () => ({
+// ---------- Пузырьки ----------
+const bubbles = Array.from({ length: 50 }, () => ({
   x: Math.random() * W,
   y: Math.random() * H,
-  r: 1 + Math.random() * 4,
-  speed: 0.3 + Math.random() * 1.2,
+  r: 1 + Math.random() * 5,
+  speed: 0.2 + Math.random() * 1.0,
   offset: Math.random() * Math.PI * 2
 }));
 
@@ -58,100 +55,125 @@ const bubbles = Array.from({ length: 40 }, () => ({
 const fish = {
   x: W / 2,
   y: H / 2,
-  vx: 2,
-  vy: 0.5,
-  size: 40,
-  angle: 0,
+  vx: 2.5,
+  vy: 1.2,
+  size: 42,
+  // heading — куда рыбка плывёт в мировых координатах (угол)
+  heading: 0,
+  // displayHeading — плавно догоняет heading, чтобы не дёргалась
+  displayHeading: 0,
+  // turnPhase: 0 → рыба смотрит "вбок" (профиль),
+  //           1 → рыба смотрит "на нас/от нас" (вид сверху, сжата по ширине)
+  turnPhase: 0,
   tailPhase: 0,
-  scared: 0,          // таймер испуга
-  maxSpeed: 6
+  scared: 0,
+  maxSpeed: 5.5
 };
 
 // ---------- Взаимодействие ----------
-function distanceToFish(px, py) {
-  // приблизительная зона клика (тело + хвост)
-  const dx = px - fish.x;
-  const dy = py - fish.y;
-  return Math.hypot(dx, dy);
+function distToFish(px, py) {
+  return Math.hypot(px - fish.x, py - fish.y);
 }
 
 function scareFish(px, py) {
   const dx = fish.x - px;
   const dy = fish.y - py;
   const dist = Math.hypot(dx, dy) || 1;
-
-  // уплываем в противоположную сторону от курсора
-  const boost = 14;
+  const boost = 16;
   fish.vx += (dx / dist) * boost;
   fish.vy += (dy / dist) * boost;
-
-  fish.scared = 60; // кадров испуга
+  fish.scared = 70;
 }
 
 canvas.addEventListener('pointerdown', (e) => {
-  if (distanceToFish(e.clientX, e.clientY) < fish.size * 1.6) {
+  if (distToFish(e.clientX, e.clientY) < fish.size * 1.7) {
     scareFish(e.clientX, e.clientY);
   }
 });
 
-// (опционально) рыбка реагирует и на близкое наведение курсора
 canvas.addEventListener('pointermove', (e) => {
-  const d = distanceToFish(e.clientX, e.clientY);
-  if (d < fish.size * 1.2 && fish.scared <= 0) {
+  if (distToFish(e.clientX, e.clientY) < fish.size * 1.3 && fish.scared <= 0) {
     scareFish(e.clientX, e.clientY);
   }
 });
 
 // ---------- Обновление ----------
+let wanderAngle = Math.random() * Math.PI * 2;
+
 function update() {
-  // естественное замедление
-  fish.vx *= 0.97;
-  fish.vy *= 0.97;
-
-  // спокойное плавание, если не напугана
+  // Плавное случайное блуждание — рыбка сама выбирает, куда плыть
   if (fish.scared <= 0) {
-    fish.vx += (Math.random() - 0.5) * 0.15;
-    fish.vy += (Math.random() - 0.5) * 0.1;
+    wanderAngle += (Math.random() - 0.5) * 0.15;
 
-    // небольшое притяжение к центру, чтобы не залипала у краёв
-    fish.vx += (W / 2 - fish.x) * 0.00005;
-    fish.vy += (H / 2 - fish.y) * 0.00005;
+    // подталкиваем скорость в сторону wanderAngle
+    const wanderForce = 0.35;
+    fish.vx += Math.cos(wanderAngle) * wanderForce;
+    fish.vy += Math.sin(wanderAngle) * wanderForce;
+
+    // мягко удерживаем внутри экрана: не притягиваем к центру,
+    // а отталкиваем от самых краёв, чтобы не вылетела
+    const edge = 90;
+    if (fish.x < edge) fish.vx += (edge - fish.x) * 0.02;
+    if (fish.x > W - edge) fish.vx -= (fish.x - (W - edge)) * 0.02;
+    if (fish.y < edge) fish.vy += (edge - fish.y) * 0.02;
+    if (fish.y > H - edge) fish.vy -= (fish.y - (H - edge)) * 0.02;
   } else {
     fish.scared--;
   }
 
-  // ограничение скорости
+  // Затухание
+  fish.vx *= 0.97;
+  fish.vy *= 0.97;
+
+  // Ограничение скорости
   const sp = Math.hypot(fish.vx, fish.vy);
-  const max = fish.scared > 0 ? fish.maxSpeed * 2 : fish.maxSpeed;
+  const max = fish.scared > 0 ? fish.maxSpeed * 2.2 : fish.maxSpeed;
   if (sp > max) {
     fish.vx = (fish.vx / sp) * max;
     fish.vy = (fish.vy / sp) * max;
   }
 
-  fish.x += fish.vx;
-  fish.y += fish.vy;
-
-  // отражение от краёв
+  // Не выходить за экран жёстко
   const margin = fish.size;
   if (fish.x < margin) { fish.x = margin; fish.vx = Math.abs(fish.vx); }
   if (fish.x > W - margin) { fish.x = W - margin; fish.vx = -Math.abs(fish.vx); }
   if (fish.y < margin) { fish.y = margin; fish.vy = Math.abs(fish.vy); }
   if (fish.y > H - margin) { fish.y = H - margin; fish.vy = -Math.abs(fish.vy); }
 
-  // поворот по направлению движения
+  fish.x += fish.vx;
+  fish.y += fish.vy;
+
+  // ---- Логика разворота ----
+  // Куда рыба хочет плыть
   if (sp > 0.2) {
-    const target = Math.atan2(fish.vy, fish.vx);
-    // плавный поворот
-    let diff = target - fish.angle;
+    const targetHeading = Math.atan2(fish.vy, fish.vx);
+
+    // Плавно поворачиваем текущий heading к целевому (кратчайший путь)
+    let diff = targetHeading - fish.displayHeading;
     while (diff > Math.PI) diff -= Math.PI * 2;
     while (diff < -Math.PI) diff += Math.PI * 2;
-    fish.angle += diff * 0.15;
+
+    // Если угол большой (рыба летит "на нас" или "от нас") — 
+    // увеличиваем turnPhase, чтобы она развернулась через "вид сверху"
+    const absDiff = Math.abs(diff);
+
+    // turnPhase растёт, если разворот большой, иначе спадает
+    if (absDiff > Math.PI * 0.55) {
+      fish.turnPhase = Math.min(1, fish.turnPhase + 0.05);
+    } else {
+      fish.turnPhase = Math.max(0, fish.turnPhase - 0.06);
+    }
+
+    // если разворот почти закончен — плавно сбрасываем turnPhase
+    if (absDiff < 0.15) fish.turnPhase *= 0.9;
+
+    fish.displayHeading += diff * 0.12;
   }
 
-  // фаза хвоста — быстрее, когда плывёт быстрее
-  fish.tailPhase += 0.15 + sp * 0.05;
+  // Хвост: быстрее при быстрой скорости
+  fish.tailPhase += 0.15 + sp * 0.06;
 
-  // пузырьки
+  // Пузырьки
   for (const b of bubbles) {
     b.y -= b.speed;
     b.x += Math.sin(b.offset + b.y * 0.02) * 0.3;
@@ -164,7 +186,7 @@ function update() {
 
 // ---------- Отрисовка ----------
 function drawBubbles() {
-  ctx.fillStyle = 'rgba(200, 230, 255, 0.25)';
+  ctx.fillStyle = 'rgba(180, 220, 255, 0.2)';
   for (const b of bubbles) {
     ctx.beginPath();
     ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
@@ -173,81 +195,199 @@ function drawBubbles() {
 }
 
 function drawFish() {
+  const s = fish.size;
+  const scared = fish.scared > 0;
+
   ctx.save();
   ctx.translate(fish.x, fish.y);
-  ctx.rotate(fish.angle);
 
-  const s = fish.size;
-  const tailWag = Math.sin(fish.tailPhase) * 0.5;
+  // Куда смотрит морда. Если heading в левой половине — рисуем зеркально,
+  // чтобы рыба не была "вверх ногами".
+  const facingLeft = Math.cos(fish.displayHeading) < 0;
+  const baseAngle = facingLeft
+    ? fish.displayHeading - Math.PI
+    : fish.displayHeading;
 
-  // Свечение, когда напугана
-  if (fish.scared > 0) {
-    ctx.shadowColor = 'rgba(255, 150, 100, 0.9)';
-    ctx.shadowBlur = 25;
+  ctx.rotate(baseAngle);
+
+  // ---- 3D-эффект разворота ----
+  // turnPhase: 0 → рыба в профиль (широкое тело),
+  //            1 → рыба развернулась к нам/от нас (тело сжато, "толщина" видна)
+  const turn = fish.turnPhase;
+
+  // bodyWidth: 1 → нормальная ширина тела, уходит к 0.15 при развороте
+  const bodyWidth = 1 - turn * 0.85;
+  // "Толщина" тела видна при развороте — добавляем вертикальный масштаб
+  const bodyHeight = 1 + turn * 0.25;
+
+  // Мягкое покачивание хвоста
+  const wag = Math.sin(fish.tailPhase) * 0.5;
+
+  // ---- Тень на "дне" ----
+  ctx.save();
+  ctx.shadowColor = scared
+    ? 'rgba(255, 140, 80, 0.9)'
+    : 'rgba(100, 200, 255, 0.8)';
+  ctx.shadowBlur = scared ? 28 : 20;
+
+  // ---- Хвост (рисуем до тела, чтобы был за ним) ----
+  // При развороте хвост "схлопывается" к центру — становится толщиной
+  const tailSpread = 0.75 * (1 - turn * 0.6);
+  const tailGrad = ctx.createLinearGradient(-s * 0.6, 0, -s * 1.6, 0);
+  if (scared) {
+    tailGrad.addColorStop(0, '#ff7a3d');
+    tailGrad.addColorStop(1, '#ff4d1f');
   } else {
-    ctx.shadowColor = 'rgba(120, 200, 255, 0.6)';
-    ctx.shadowBlur = 15;
+    tailGrad.addColorStop(0, '#ffb347');
+    tailGrad.addColorStop(1, '#e8852a');
+  }
+  ctx.fillStyle = tailGrad;
+
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.55 * bodyWidth, 0);
+  ctx.quadraticCurveTo(
+    -s * 1.2 * bodyWidth,
+    (-s * tailSpread) + wag * 14,
+    -s * 1.7 * bodyWidth,
+    (-s * tailSpread * 0.4) + wag * 20
+  );
+  ctx.quadraticCurveTo(
+    -s * 1.35 * bodyWidth,
+    0,
+    -s * 1.7 * bodyWidth,
+    (s * tailSpread * 0.4) + wag * 20
+  );
+  ctx.quadraticCurveTo(
+    -s * 1.2 * bodyWidth,
+    (s * tailSpread) + wag * 14,
+    -s * 0.55 * bodyWidth,
+    0
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // ---- Верхний плавник ----
+  const finGrad = ctx.createLinearGradient(0, -s * 0.8, 0, 0);
+  if (scared) {
+    finGrad.addColorStop(0, '#ff8a5c');
+    finGrad.addColorStop(1, '#ff5a2a');
+  } else {
+    finGrad.addColorStop(0, '#ffc266');
+    finGrad.addColorStop(1, '#e8852a');
+  }
+  ctx.fillStyle = finGrad;
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.15 * bodyWidth, -s * 0.55 * bodyHeight);
+  ctx.quadraticCurveTo(
+    -s * 0.45 * bodyWidth,
+    -s * 1.15 * bodyHeight,
+    s * 0.05 * bodyWidth,
+    -s * 0.6 * bodyHeight
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // ---- Нижний плавник ----
+  ctx.beginPath();
+  ctx.moveTo(-s * 0.15 * bodyWidth, s * 0.5 * bodyHeight);
+  ctx.quadraticCurveTo(
+    -s * 0.45 * bodyWidth,
+    s * 1.0 * bodyHeight,
+    s * 0.05 * bodyWidth,
+    s * 0.55 * bodyHeight
+  );
+  ctx.closePath();
+  ctx.fill();
+
+  // ---- Тело (объёмное, с градиентом и бликом) ----
+  const bodyGrad = ctx.createRadialGradient(
+    s * 0.2, -s * 0.25, s * 0.1,
+    0, 0, s * 1.1
+  );
+  if (scared) {
+    bodyGrad.addColorStop(0, '#ffd9a8');
+    bodyGrad.addColorStop(0.5, '#ff8a3d');
+    bodyGrad.addColorStop(1, '#c93814');
+  } else {
+    bodyGrad.addColorStop(0, '#fff2c4');
+    bodyGrad.addColorStop(0.5, '#ffb347');
+    bodyGrad.addColorStop(1, '#d16a1f');
+  }
+  ctx.fillStyle = bodyGrad;
+
+  ctx.beginPath();
+  ctx.ellipse(
+    0, 0,
+    s * bodyWidth,
+    s * 0.62 * bodyHeight,
+    0, 0, Math.PI * 2
+  );
+  ctx.fill();
+
+  // Тёмная полоска по спине — усиливает объём
+  ctx.strokeStyle = scared
+    ? 'rgba(120, 30, 0, 0.35)'
+    : 'rgba(120, 60, 0, 0.3)';
+  ctx.lineWidth = s * 0.08;
+  ctx.beginPath();
+  ctx.ellipse(
+    0, -s * 0.15 * bodyHeight,
+    s * bodyWidth * 0.85,
+    s * 0.35 * bodyHeight,
+    0, Math.PI * 0.05, Math.PI * 0.95
+  );
+  ctx.stroke();
+
+  // Блик сверху
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+  ctx.beginPath();
+  ctx.ellipse(
+    s * 0.1 * bodyWidth,
+    -s * 0.28 * bodyHeight,
+    s * 0.5 * bodyWidth,
+    s * 0.15 * bodyHeight,
+    -0.2, 0, Math.PI * 2
+  );
+  ctx.fill();
+
+  // ---- Чешуя (лёгкие блики) ----
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.ellipse(
+      (-0.35 + i * 0.25) * s * bodyWidth,
+      (i % 2 === 0 ? -1 : 1) * s * 0.1 * bodyHeight,
+      s * 0.12 * bodyWidth,
+      s * 0.08 * bodyHeight,
+      0, 0, Math.PI * 2
+    );
+    ctx.fill();
   }
 
-  // Хвост
-  ctx.fillStyle = fish.scared > 0 ? '#ff8a5c' : '#ffb347';
-  ctx.beginPath();
-  ctx.moveTo(-s * 0.7, 0);
-  ctx.lineTo(-s * 1.4, -s * 0.6 + tailWag * 10);
-  ctx.lineTo(-s * 1.4, s * 0.6 + tailWag * 10);
-  ctx.closePath();
-  ctx.fill();
+  // ---- Глаз ----
+  const eyeX = s * 0.6 * bodyWidth;
+  const eyeY = -s * 0.15 * bodyHeight;
 
-  // Тело
-  const grad = ctx.createLinearGradient(-s, 0, s, 0);
-  if (fish.scared > 0) {
-    grad.addColorStop(0, '#ff6b3d');
-    grad.addColorStop(1, '#ffd166');
-  } else {
-    grad.addColorStop(0, '#ff9a3d');
-    grad.addColorStop(1, '#ffd97a');
-  }
-  ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, s, s * 0.6, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Плавник сверху
-  ctx.fillStyle = fish.scared > 0 ? '#ff8a5c' : '#ffb347';
-  ctx.beginPath();
-  ctx.moveTo(-s * 0.2, -s * 0.5);
-  ctx.lineTo(-s * 0.5, -s * 0.9);
-  ctx.lineTo(s * 0.1, -s * 0.55);
-  ctx.closePath();
-  ctx.fill();
-
-  // Плавник снизу
-  ctx.beginPath();
-  ctx.moveTo(-s * 0.2, s * 0.45);
-  ctx.lineTo(-s * 0.5, s * 0.85);
-  ctx.lineTo(s * 0.1, s * 0.5);
-  ctx.closePath();
-  ctx.fill();
-
-  // Глаз
-  ctx.shadowBlur = 0;
+  // белок
   ctx.fillStyle = '#fff';
   ctx.beginPath();
-  ctx.arc(s * 0.55, -s * 0.15, s * 0.16, 0, Math.PI * 2);
+  ctx.arc(eyeX, eyeY, s * 0.15, 0, Math.PI * 2);
   ctx.fill();
 
+  // зрачок
   ctx.fillStyle = '#111';
   ctx.beginPath();
-  ctx.arc(s * 0.6, -s * 0.15, s * 0.08, 0, Math.PI * 2);
+  ctx.arc(eyeX + s * 0.04, eyeY, s * 0.08, 0, Math.PI * 2);
   ctx.fill();
 
-  // Блик
-  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  // блик
+  ctx.fillStyle = '#fff';
   ctx.beginPath();
-  ctx.arc(s * 0.63, -s * 0.2, s * 0.03, 0, Math.PI * 2);
+  ctx.arc(eyeX + s * 0.07, eyeY - s * 0.04, s * 0.025, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.restore();
+  ctx.restore(); // shadow
+  ctx.restore(); // transform
 }
 
 // ---------- Цикл ----------
