@@ -57,7 +57,7 @@
   <div>Падений: <span id="deathCount">0</span></div>
 </div>
 <div id="controls">
-  <b>W</b> — вверх / прыжок · <b>A</b> — вправо · <b>D</b> — влево · <b>S</b> — присед / вниз · <b>R</b> — рестарт
+  <b>W</b> — прыжок / вверх по лестнице · <b>A</b> — шаг вправо · <b>D</b> — шаг влево · <b>S</b> — присед / вниз · <b>R</b> — рестарт
 </div>
 <div id="message"></div>
 
@@ -175,16 +175,15 @@ const levels = [
 ];
 
 // ============================================================
-//  КОНСТАНТЫ  — очень медленно
+//  КОНСТАНТЫ
 // ============================================================
-const GRAVITY      = 0.45;   // было 0.55 — падение мягче
-const MOVE_SPEED   = 1.2;    // было 2.4 — вдвое медленнее
-const CLIMB_SPEED  = 1.4;    // было 2.0
-const JUMP_FORCE   = -9.5;   // было -11 — ниже прыжок
-const CROUCH_SPEED = 0.6;    // было 1.0
+const GRAVITY      = 0.5;
+const STEP_DIST    = 20;   // ✅ размер одного шага (px)
+const STEP_TIME    = 14;   // ✅ кадров на один шаг (анимация)
+const JUMP_FORCE   = -10;
+const CLIMB_SPEED  = 1.4;
 const FULL_H       = 56;
 const CROUCH_H     = 36;
-const FRICTION     = 0.75;   // плавнее остановка
 
 const player = {
   x: 0, y: 0,
@@ -196,6 +195,14 @@ const player = {
   facing: 1,
   animTime: 0,
   spawnX: 0, spawnY: 0,
+
+  // ✅ пошаговое движение
+  stepping: false,       // идёт ли сейчас шаг
+  stepProgress: 0,       // 0..1 прогресс шага
+  stepFromX: 0,          // откуда
+  stepToX: 0,            // куда
+  stepTargetLadder: null,// лестница, к которой шагаем (если есть)
+  keysPressed: {},       // отслеживание "только что нажатых" клавиш
 };
 
 let currentLevel = 0;
@@ -209,16 +216,14 @@ let levelGoal = null;
 let levelWidth = 0, levelHeight = 800;
 
 // ============================================================
-//  ВВОД  — A ↔ D поменяны!
+//  ВВОД
 // ============================================================
 const keys = {};
 const KEY_MAP = {
-  // ✅ A теперь вправо, D теперь влево (по ТЗ)
-  'KeyA': 'right',
-  'KeyD': 'left',
+  'KeyA': 'right',   // ✅ A — шаг вправо
+  'KeyD': 'left',    // ✅ D — шаг влево
   'KeyW': 'up',
   'KeyS': 'down',
-  // стрелки оставляем по их смыслу
   'ArrowUp': 'up',
   'ArrowLeft': 'left',
   'ArrowRight': 'right',
@@ -227,14 +232,26 @@ const KEY_MAP = {
 };
 window.addEventListener('keydown', (e) => {
   const a = KEY_MAP[e.code];
-  if (a) { keys[a] = true; e.preventDefault(); }
+  if (a) {
+    // ✅ отслеживаем момент нажатия — реагируем только на "только что нажал"
+    if (!keys[a]) player.keysPressed[a] = true;
+    keys[a] = true;
+    e.preventDefault();
+  }
   if (e.code === 'KeyR') resetLevel();
 });
 window.addEventListener('keyup', (e) => {
   const a = KEY_MAP[e.code];
-  if (a) { keys[a] = false; e.preventDefault(); }
+  if (a) {
+    keys[a] = false;
+    player.keysPressed[a] = false;
+    e.preventDefault();
+  }
 });
-window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+window.addEventListener('blur', () => {
+  for (const k in keys) keys[k] = false;
+  for (const k in player.keysPressed) player.keysPressed[k] = false;
+});
 
 // ============================================================
 //  УРОВЕНЬ
@@ -273,6 +290,8 @@ function respawnPlayer() {
   player.onLadder = false;
   player.crouching = false;
   player.facing = 1;
+  player.stepping = false;
+  player.stepProgress = 0;
   camera.x = player.x - W / 2;
   camera.y = player.y - H / 2;
 }
@@ -318,33 +337,94 @@ function isOnLadder() {
   }
   return false;
 }
+// ✅ можно ли сделать шаг в указанную X-позицию (без столкновений по X)
+function canStepTo(newX) {
+  const test = { x: newX, y: player.y, w: player.w, h: player.h };
+  for (const p of levelPlatforms) {
+    if (rectsOverlap(test, p)) return false;
+  }
+  return true;
+}
+
+// ============================================================
+//  ШАГ
+// ============================================================
+function startStep(direction) {
+  // direction: +1 вправо, -1 влево
+  if (player.stepping || !player.onGround || player.crouching) return;
+
+  const targetX = player.x + direction * STEP_DIST;
+  if (!canStepTo(targetX)) {
+    // упёрлись в стену — короткий «толчок» на месте
+    player.stepFromX = player.x;
+    player.stepToX = player.x;
+    player.stepProgress = 0;
+    player.stepping = true;
+    return;
+  }
+
+  player.facing = direction;
+  player.stepFromX = player.x;
+  player.stepToX = targetX;
+  player.stepProgress = 0;
+  player.stepping = true;
+}
+
+function updateStep() {
+  if (!player.stepping) return;
+
+  player.stepProgress += 1 / STEP_TIME;
+
+  if (player.stepProgress >= 1) {
+    // завершаем шаг
+    player.x = player.stepToX;
+    player.stepProgress = 0;
+    player.stepping = false;
+    return;
+  }
+
+  // движение по X — плавно, ease-in-out
+  const t = player.stepProgress;
+  const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  player.x = player.stepFromX + (player.stepToX - player.stepFromX) * eased;
+
+  // анимация ног при ходьбе
+  player.animTime += 0.2;
+}
 
 // ============================================================
 //  UPDATE
 // ============================================================
 function updatePlayer() {
-  const left  = keys['left'];
-  const right = keys['right'];
-  const up    = keys['up'];
-  const down  = keys['down'];
+  const leftPressed  = player.keysPressed['left'];
+  const rightPressed = player.keysPressed['right'];
+  const up           = keys['up'];
+  const down         = keys['down'];
+
+  // Сбрасываем флаг "только что нажал" в конце кадра
+  // (обработаем ниже, после использования)
 
   player.onLadder = isOnLadder();
 
   if (player.onLadder) {
+    // ============ ЛЕСТНИЦА ============
+    player.stepping = false;
     player.crouching = false;
     if (up)        player.vy = -CLIMB_SPEED;
     else if (down) player.vy =  CLIMB_SPEED;
     else           player.vy = 0;
 
-    if (left)      { player.vx = -MOVE_SPEED * 0.6; player.facing = -1; }
-    else if (right){ player.vx =  MOVE_SPEED * 0.6; player.facing =  1; }
-    else           { player.vx = 0; }
+    // на лестнице можно сойти в сторону
+    if (leftPressed)       { player.vx = -STEP_DIST / STEP_TIME; player.facing = -1; }
+    else if (rightPressed) { player.vx =  STEP_DIST / STEP_TIME; player.facing =  1; }
+    else                   { player.vx = 0; }
 
     if (up && player.onGround) {
       player.vy = JUMP_FORCE;
       player.onLadder = false;
     }
   } else {
+    // ============ ОБЫЧНОЕ ДВИЖЕНИЕ ============
     player.crouching = down && player.onGround;
 
     if (player.crouching && player.h !== CROUCH_H) {
@@ -364,27 +444,41 @@ function updatePlayer() {
       }
     }
 
-    const speed = player.crouching ? CROUCH_SPEED : MOVE_SPEED;
-    if (left)       { player.vx = -speed; player.facing = -1; }
-    else if (right) { player.vx =  speed; player.facing =  1; }
-    else            { player.vx *= FRICTION; }   // ✅ плавное затухание
+    // ✅ ШАГ: реагируем только на новый клик клавиши
+    if (!player.stepping) {
+      if (rightPressed) startStep(1);
+      else if (leftPressed) startStep(-1);
+    }
 
+    // Обновляем текущий шаг
+    updateStep();
+
+    // Прыжок
     if (up && player.onGround && !player.crouching) {
       player.vy = JUMP_FORCE;
       player.onGround = false;
+      player.stepping = false;
     }
 
+    // Гравитация
     player.vy += GRAVITY;
     if (player.vy > 13) player.vy = 13;
   }
 
-  player.x += player.vx;
-  if (player.x < 0) { player.x = 0; player.vx = 0; }
+  // Вертикальное движение всегда
   player.y += player.vy;
+
+  // Если не шагаем — vx = 0
+  if (!player.stepping && !player.onLadder) player.vx = 0;
+
+  // Применяем vx (используется только на лестнице и для перехода)
+  if (!player.stepping) player.x += player.vx;
+  if (player.x < 0) { player.x = 0; player.vx = 0; }
 
   resolveCollisionsX();
   resolveCollisionsY();
 
+  // Проверки на смерть / монеты / финиш
   if (player.y > levelHeight + 300) { die(); return; }
 
   for (const s of levelSpikes) {
@@ -404,11 +498,8 @@ function updatePlayer() {
   const gr = { x: levelGoal.x - 20, y: levelGoal.y - 80, w: 40, h: 80 };
   if (rectsOverlap(playerRect(), gr)) win();
 
-  if (Math.abs(player.vx) > 0.15 || !player.onGround || player.onLadder) {
-    player.animTime += 0.08;   // ✅ анимация медленнее
-  } else {
-    player.animTime *= 0.9;
-  }
+  // ✅ Сбрасываем "только что нажал" в конце кадра
+  for (const k in player.keysPressed) player.keysPressed[k] = false;
 }
 
 function resolveCollisionsX() {
@@ -417,6 +508,7 @@ function resolveCollisionsX() {
       if (player.vx > 0)      player.x = p.x - player.w;
       else if (player.vx < 0) player.x = p.x + p.w;
       player.vx = 0;
+      player.stepping = false;
     }
   }
 }
@@ -463,8 +555,8 @@ function win() {
 function updateCamera() {
   const tx = player.x + player.w / 2 - W / 2;
   const ty = player.y + player.h / 2 - H / 2;
-  camera.x += (tx - camera.x) * 0.07;
-  camera.y += (ty - camera.y) * 0.07;
+  camera.x += (tx - camera.x) * 0.08;
+  camera.y += (ty - camera.y) * 0.08;
   camera.x = Math.max(0, Math.min(camera.x, Math.max(0, levelWidth - W)));
   camera.y = Math.max(-100, Math.min(camera.y, Math.max(0, levelHeight - H)));
 }
@@ -510,7 +602,6 @@ function handHatch(x, y, w, h, color = INK_FAINT, step = 8) {
 function drawPaper() {
   ctx.fillStyle = PAPER;
   ctx.fillRect(0, 0, W, H);
-
   const cell = 28;
   const offX = (-camera.x * 0.25) % cell;
   const offY = (-camera.y * 0.25) % cell;
@@ -526,7 +617,6 @@ function drawPaper() {
     ctx.lineTo(W, Math.round(y) + 0.5);
   }
   ctx.stroke();
-
   const marginX = 40 - camera.x * 0.15;
   if (marginX > 0 && marginX < W) {
     ctx.strokeStyle = INK_LIGHT;
@@ -652,10 +742,11 @@ function drawPlayer() {
 
   const h = player.h;
   const w = player.w;
-  const swing = (player.onGround && Math.abs(player.vx) > 0.15)
-    ? Math.sin(player.animTime) * 0.4 : 0;
+  // ✅ анимация ног — только при шаге
+  const swing = player.stepping
+    ? Math.sin(player.animTime) * 0.5 : 0;
   const climbSwing = player.onLadder ? Math.sin(player.animTime) * 0.5 : 0;
-  const bob = Math.abs(Math.sin(player.animTime)) * 1.2;
+  const bob = Math.abs(Math.sin(player.animTime)) * 1.5;
 
   const headR = w * 0.45;
   const headY = -h * 0.08 - h * 0.5 + bob * 0.3;
@@ -674,11 +765,11 @@ function drawPlayer() {
   const legSwing = player.onLadder ? climbSwing : swing;
   ctx.beginPath();
   ctx.moveTo(0, bodyBottom);
-  ctx.lineTo(-w * 0.35 + legSwing * 6, h - 2);
+  ctx.lineTo(-w * 0.35 + legSwing * 7, h - 2);
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(0, bodyBottom);
-  ctx.lineTo(w * 0.35 - legSwing * 6, h - 2);
+  ctx.lineTo(w * 0.35 - legSwing * 7, h - 2);
   ctx.stroke();
 
   const armY = bodyTop + (bodyMid - bodyTop) * 0.9;
@@ -686,11 +777,11 @@ function drawPlayer() {
   const armDrop = player.crouching ? 8 : 14;
   ctx.beginPath();
   ctx.moveTo(0, armY);
-  ctx.lineTo(-w * 0.5 + armSwing * 4, armY + (player.onLadder ? -10 : armDrop));
+  ctx.lineTo(-w * 0.5 + armSwing * 5, armY + (player.onLadder ? -10 : armDrop));
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(0, armY);
-  ctx.lineTo(w * 0.5 - armSwing * 4, armY + (player.onLadder ? 10 : armDrop));
+  ctx.lineTo(w * 0.5 - armSwing * 5, armY + (player.onLadder ? 10 : armDrop));
   ctx.stroke();
 
   ctx.fillStyle = INK;
@@ -734,3 +825,4 @@ loop();
 </script>
 </body>
 </html>
+
