@@ -1,66 +1,3 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📓 Тетрадный стикмен</title>
-<style>
-  html, body {
-    margin: 0; padding: 0; overflow: hidden; height: 100%;
-    background: #fdfdfd;
-    font-family: 'Comic Sans MS', 'Segoe Print', cursive;
-    user-select: none;
-  }
-  canvas { display: block; }
-  #ui {
-    position: fixed; top: 16px; left: 16px;
-    color: #1a3a8f;
-    font-size: 17px; font-weight: 700;
-    pointer-events: none; line-height: 1.5;
-  }
-  #controls {
-    position: fixed; bottom: 16px; left: 50%;
-    color: #1a3a8f;
-    font-size: 14px;
-    text-align: center;
-    pointer-events: none;
-    background: rgba(255,255,255,0.9);
-    padding: 8px 18px;
-    border: 2px solid #1a3a8f;
-    border-radius: 2px;
-    white-space: nowrap;
-    transform: translateX(-50%) rotate(-0.5deg);
-  }
-  #controls b { color: #0d2470; }
-  #message {
-    position: fixed; top: 50%; left: 50%;
-    transform: translate(-50%, -50%) rotate(-2deg);
-    color: #1a3a8f;
-    font-size: 48px; font-weight: 800;
-    text-align: center;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  #message.show { opacity: 1; }
-  #message small {
-    display: block; font-size: 20px; font-weight: 400;
-    margin-top: 12px; opacity: 0.7;
-  }
-</style>
-</head>
-<body>
-<canvas id="canvas"></canvas>
-<div id="ui">
-  <div>Уровень: <span id="lvl">1</span> / <span id="lvlTotal">3</span></div>
-  <div>Монет: <span id="coinCount">0</span> / <span id="coinTotal">0</span></div>
-  <div>Падений: <span id="deathCount">0</span></div>
-</div>
-<div id="controls">
-  <b>W</b> — прыжок / вверх по лестнице · <b>A</b> — шаг вправо · <b>D</b> — шаг влево · <b>S</b> — присед / вниз · <b>R</b> — рестарт
-</div>
-<div id="message"></div>
-
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -178,8 +115,8 @@ const levels = [
 //  КОНСТАНТЫ
 // ============================================================
 const GRAVITY      = 0.5;
-const STEP_DIST    = 20;   // ✅ размер одного шага (px)
-const STEP_TIME    = 14;   // ✅ кадров на один шаг (анимация)
+const STEP_DIST    = 20;
+const STEP_TIME    = 14;
 const JUMP_FORCE   = -10;
 const CLIMB_SPEED  = 1.4;
 const FULL_H       = 56;
@@ -196,13 +133,10 @@ const player = {
   animTime: 0,
   spawnX: 0, spawnY: 0,
 
-  // ✅ пошаговое движение
-  stepping: false,       // идёт ли сейчас шаг
-  stepProgress: 0,       // 0..1 прогресс шага
-  stepFromX: 0,          // откуда
-  stepToX: 0,            // куда
-  stepTargetLadder: null,// лестница, к которой шагаем (если есть)
-  keysPressed: {},       // отслеживание "только что нажатых" клавиш
+  stepping: false,
+  stepProgress: 0,
+  stepFromX: 0,
+  stepToX: 0,
 };
 
 let currentLevel = 0;
@@ -216,12 +150,15 @@ let levelGoal = null;
 let levelWidth = 0, levelHeight = 800;
 
 // ============================================================
-//  ВВОД
+//  ВВОД  ✅ FIX: очередь нажатий вместо флага "только что"
 // ============================================================
 const keys = {};
+// очередь шагов: 'left' | 'right' — обрабатывается в updatePlayer
+let stepQueue = [];
+
 const KEY_MAP = {
-  'KeyA': 'right',   // ✅ A — шаг вправо
-  'KeyD': 'left',    // ✅ D — шаг влево
+  'KeyA': 'right',
+  'KeyD': 'left',
   'KeyW': 'up',
   'KeyS': 'down',
   'ArrowUp': 'up',
@@ -230,11 +167,14 @@ const KEY_MAP = {
   'ArrowDown': 'down',
   'Space': 'up',
 };
+
 window.addEventListener('keydown', (e) => {
   const a = KEY_MAP[e.code];
   if (a) {
-    // ✅ отслеживаем момент нажатия — реагируем только на "только что нажал"
-    if (!keys[a]) player.keysPressed[a] = true;
+    // ✅ ставим шаг в очередь ТОЛЬКО при первом нажатии (не при автоповторе)
+    if (!keys[a]) {
+      if (a === 'left' || a === 'right') stepQueue.push(a);
+    }
     keys[a] = true;
     e.preventDefault();
   }
@@ -242,15 +182,11 @@ window.addEventListener('keydown', (e) => {
 });
 window.addEventListener('keyup', (e) => {
   const a = KEY_MAP[e.code];
-  if (a) {
-    keys[a] = false;
-    player.keysPressed[a] = false;
-    e.preventDefault();
-  }
+  if (a) { keys[a] = false; e.preventDefault(); }
 });
 window.addEventListener('blur', () => {
   for (const k in keys) keys[k] = false;
-  for (const k in player.keysPressed) player.keysPressed[k] = false;
+  stepQueue = [];
 });
 
 // ============================================================
@@ -292,6 +228,7 @@ function respawnPlayer() {
   player.facing = 1;
   player.stepping = false;
   player.stepProgress = 0;
+  stepQueue = [];
   camera.x = player.x - W / 2;
   camera.y = player.y - H / 2;
 }
@@ -337,7 +274,6 @@ function isOnLadder() {
   }
   return false;
 }
-// ✅ можно ли сделать шаг в указанную X-позицию (без столкновений по X)
 function canStepTo(newX) {
   const test = { x: newX, y: player.y, w: player.w, h: player.h };
   for (const p of levelPlatforms) {
@@ -350,19 +286,14 @@ function canStepTo(newX) {
 //  ШАГ
 // ============================================================
 function startStep(direction) {
-  // direction: +1 вправо, -1 влево
-  if (player.stepping || !player.onGround || player.crouching) return;
+  if (player.stepping) return;
+  if (player.crouching) return;
 
   const targetX = player.x + direction * STEP_DIST;
   if (!canStepTo(targetX)) {
-    // упёрлись в стену — короткий «толчок» на месте
-    player.stepFromX = player.x;
-    player.stepToX = player.x;
-    player.stepProgress = 0;
-    player.stepping = true;
+    // упёрлись в стену — не двигаемся
     return;
   }
-
   player.facing = direction;
   player.stepFromX = player.x;
   player.stepToX = targetX;
@@ -372,37 +303,26 @@ function startStep(direction) {
 
 function updateStep() {
   if (!player.stepping) return;
-
   player.stepProgress += 1 / STEP_TIME;
 
   if (player.stepProgress >= 1) {
-    // завершаем шаг
     player.x = player.stepToX;
     player.stepProgress = 0;
     player.stepping = false;
     return;
   }
-
-  // движение по X — плавно, ease-in-out
   const t = player.stepProgress;
   const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
   player.x = player.stepFromX + (player.stepToX - player.stepFromX) * eased;
-
-  // анимация ног при ходьбе
-  player.animTime += 0.2;
+  player.animTime += 0.25;
 }
 
 // ============================================================
 //  UPDATE
 // ============================================================
 function updatePlayer() {
-  const leftPressed  = player.keysPressed['left'];
-  const rightPressed = player.keysPressed['right'];
-  const up           = keys['up'];
-  const down         = keys['down'];
-
-  // Сбрасываем флаг "только что нажал" в конце кадра
-  // (обработаем ниже, после использования)
+  const up   = keys['up'];
+  const down = keys['down'];
 
   player.onLadder = isOnLadder();
 
@@ -414,10 +334,12 @@ function updatePlayer() {
     else if (down) player.vy =  CLIMB_SPEED;
     else           player.vy = 0;
 
-    // на лестнице можно сойти в сторону
-    if (leftPressed)       { player.vx = -STEP_DIST / STEP_TIME; player.facing = -1; }
-    else if (rightPressed) { player.vx =  STEP_DIST / STEP_TIME; player.facing =  1; }
-    else                   { player.vx = 0; }
+    // на лестнице A/D тоже шагают вбок, но через очередь
+    if (!player.stepping && stepQueue.length) {
+      const dir = stepQueue.shift();
+      startStep(dir === 'right' ? 1 : -1);
+    }
+    updateStep();
 
     if (up && player.onGround) {
       player.vy = JUMP_FORCE;
@@ -427,6 +349,7 @@ function updatePlayer() {
     // ============ ОБЫЧНОЕ ДВИЖЕНИЕ ============
     player.crouching = down && player.onGround;
 
+    // изменение высоты при приседе
     if (player.crouching && player.h !== CROUCH_H) {
       const diff = FULL_H - CROUCH_H;
       player.y += diff;
@@ -444,41 +367,40 @@ function updatePlayer() {
       }
     }
 
-    // ✅ ШАГ: реагируем только на новый клик клавиши
-    if (!player.stepping) {
-      if (rightPressed) startStep(1);
-      else if (leftPressed) startStep(-1);
+    // ✅ ШАГ: берём из очереди (только если ещё не шагаем)
+    if (!player.stepping && stepQueue.length) {
+      const dir = stepQueue.shift();
+      startStep(dir === 'right' ? 1 : -1);
     }
-
-    // Обновляем текущий шаг
     updateStep();
 
-    // Прыжок
+    // прыжок
     if (up && player.onGround && !player.crouching) {
       player.vy = JUMP_FORCE;
       player.onGround = false;
       player.stepping = false;
+      player.stepProgress = 0;
     }
 
-    // Гравитация
+    // гравитация
     player.vy += GRAVITY;
     if (player.vy > 13) player.vy = 13;
   }
 
-  // Вертикальное движение всегда
+  // Вертикальное движение
   player.y += player.vy;
 
-  // Если не шагаем — vx = 0
-  if (!player.stepping && !player.onLadder) player.vx = 0;
+  // ✅ FIX: НЕ трогаем player.x здесь — им управляет updateStep()
+  // Единственное исключение — на лестнице, если не шагаем и нажата клавиша
+  if (player.onLadder && !player.stepping) {
+    // можно чуть сдвинуться вбок, но мы уже обрабатываем это через шаги
+  }
 
-  // Применяем vx (используется только на лестнице и для перехода)
-  if (!player.stepping) player.x += player.vx;
-  if (player.x < 0) { player.x = 0; player.vx = 0; }
+  if (player.x < 0) { player.x = 0; player.stepping = false; }
 
-  resolveCollisionsX();
-  resolveCollisionsY();
+  resolveCollisionsY();  // сначала по Y (пол/потолок)
 
-  // Проверки на смерть / монеты / финиш
+  // Проверки
   if (player.y > levelHeight + 300) { die(); return; }
 
   for (const s of levelSpikes) {
@@ -497,22 +419,11 @@ function updatePlayer() {
 
   const gr = { x: levelGoal.x - 20, y: levelGoal.y - 80, w: 40, h: 80 };
   if (rectsOverlap(playerRect(), gr)) win();
-
-  // ✅ Сбрасываем "только что нажал" в конце кадра
-  for (const k in player.keysPressed) player.keysPressed[k] = false;
 }
 
 function resolveCollisionsX() {
-  for (const p of levelPlatforms) {
-    if (rectsOverlap(playerRect(), p)) {
-      if (player.vx > 0)      player.x = p.x - player.w;
-      else if (player.vx < 0) player.x = p.x + p.w;
-      player.vx = 0;
-      player.stepping = false;
-    }
-  }
+  // больше не используем (шаги сами проверяют canStepTo)
 }
-
 function resolveCollisionsY() {
   player.onGround = false;
   for (const p of levelPlatforms) {
@@ -742,9 +653,7 @@ function drawPlayer() {
 
   const h = player.h;
   const w = player.w;
-  // ✅ анимация ног — только при шаге
-  const swing = player.stepping
-    ? Math.sin(player.animTime) * 0.5 : 0;
+  const swing = player.stepping ? Math.sin(player.animTime) * 0.5 : 0;
   const climbSwing = player.onLadder ? Math.sin(player.animTime) * 0.5 : 0;
   const bob = Math.abs(Math.sin(player.animTime)) * 1.5;
 
@@ -823,6 +732,4 @@ function loop() {
 loadLevel(0);
 loop();
 </script>
-</body>
-</html>
 
