@@ -221,43 +221,23 @@
     </div>
   </div>
 
-  <!-- Инструкция перед боссом -->
   <div id="bossInstruction" class="overlay">
     <div class="panel boss-instr-panel">
       <h2>🐋 СОМ-ГИГАНТ</h2>
       <div class="sub">Из глубины поднимается речной монстр!</div>
-      
       <div class="instr-block">
         <div class="instr-title">⚔️ Как проходит бой</div>
-        <div class="instr-text">
-          Сом атакует серией ударов. На каждом ударе на экране появится <b>стрелка</b> и <b>полоса времени</b>.
-          Успей нажать правильную кнопку, пока полоса не опустела!
-        </div>
+        <div class="instr-text">Сом атакует серией ударов. На каждом ударе на экране появится <b>стрелка</b> и <b>полоса времени</b>. Успей нажать правильную кнопку, пока полоса не опустела!</div>
       </div>
-      
       <div class="instr-block">
         <div class="instr-title">⌨️ Управление</div>
-        <div class="instr-keys">
-          <div class="instr-key">←</div>
-          <div class="instr-key">↑</div>
-          <div class="instr-key">↓</div>
-          <div class="instr-key">→</div>
-        </div>
-        <div class="instr-text" style="text-align:center;">
-          На ПК — стрелки на клавиатуре.<br>
-          На телефоне — кнопки внизу экрана.
-        </div>
+        <div class="instr-keys"><div class="instr-key">←</div><div class="instr-key">↑</div><div class="instr-key">↓</div><div class="instr-key">→</div></div>
+        <div class="instr-text" style="text-align:center;">На ПК — стрелки на клавиатуре.<br>На телефоне — кнопки внизу экрана.</div>
       </div>
-      
       <div class="instr-block" style="border-color:rgba(255,215,0,0.4);">
         <div class="instr-title" style="color:#ffd700;">💡 Важно</div>
-        <div class="instr-text">
-          • <b>Ошибка или просрочка</b> — сом утащит тебя в омут.<br>
-          • При поражении <b>коллекция рыб обнулится</b> (очки и прокачка останутся).<br>
-          • Купи <b>«Острогу Рыбака»</b> в магазине, чтобы бой стал проще и короче.
-        </div>
+        <div class="instr-text">• <b>Ошибка или просрочка</b> — сом утащит тебя в омут.<br>• При поражении <b>коллекция рыб обнулится</b> (очки и прокачка останутся).<br>• Купи <b>«Острогу Рыбака»</b> в магазине, чтобы бой стал проще и короче.</div>
       </div>
-      
       <button class="boss-start-btn" onclick="startBossFromInstruction(event)">⚔️ В БОЙ!</button>
     </div>
   </div>
@@ -1240,6 +1220,7 @@ function startBossFromInstruction(e) {
   startBossFight();
 }
 
+// [ВАЖНО] Обновленная функция генерации зоны (как в старой версии, но с бонусами дерева)
 function startReeling() {
   state = S.REELING; stateTime = 0;
   reelPos = 0; lastReelSoundTime = 0;
@@ -1251,7 +1232,7 @@ function startReeling() {
   const netBonus    = (TREE_DATA.net.levels[treeUpgrades.net || 0]?.bonus || 0);
   const handleBonus = (TREE_DATA.handle.levels[treeUpgrades.handle || 0]?.bonus || 0);
   
-  // Скорость индикатора
+  // Скорость
   let speedReduction = (upgrades.reel || 0) * 0.15 + bodyBonus + lineBonus + reelBonus;
   if (achievements.trashman) speedReduction += 0.15;
   if (achievements.rodmaster) speedReduction += 0.10;
@@ -1260,31 +1241,28 @@ function startReeling() {
   if (missStreak >= 2) difficultyMultiplier = Math.max(0.5, 1 - (missStreak - 1) * 0.2);
   reelSpeed = (85 + Math.random() * 40) * Math.max(0.2, 1 - speedReduction) * difficultyMultiplier;
   
-  // --- ГЕНЕРАЦИЯ ЗОНЫ (ЗАЩИЩЕННАЯ ВЕРСИЯ) ---
+  // --- ГЕНЕРАЦИЯ ЗОНЫ (ВОЗВРАЩЕН СТАРЫЙ РАЗМЕР) ---
+  // Базовая зона: 18-30 (как в самой первой версии)
+  let baseZone = 18 + Math.random() * 12;
   
-  // 1. Считаем желаемую ширину
-  let baseZone = 22 + Math.random() * 10; 
-  let bonusZone = (upgrades.zone || 0) * 4; 
+  // Бонусы от магазина
+  let bonusZone = (upgrades.zone || 0) * 4;
   if (achievements.trashman) bonusZone += 4;
   
-  let finalZone = baseZone + bonusZone + (keeperBonus * 15) + (netBonus * 10) + (handleBonus * 15);
+  // Бонусы от дерева
+  let finalZone = baseZone + bonusZone + (keeperBonus * 20) + (netBonus * 10) + (handleBonus * 20);
   
-  if (catchStreak >= 3) finalZone *= 0.85;
-  if (missStreak >= 2) finalZone *= 1.2;
+  // Штрафы за серию
+  if (catchStreak >= 3) finalZone *= 0.8;
+  if (missStreak >= 2) finalZone *= 1.3;
   
-  // 2. Жестко ограничиваем ширину (минимум 15, максимум 45)
-  finalZone = Math.max(15, Math.min(45, finalZone));
+  // Ограничиваем максимальную ширину, чтобы не было слишком легко в лейте
+  finalZone = Math.min(50, finalZone);
   
-  // 3. Вычисляем позицию. Оставляем отступы по 10% слева и справа.
-  const minStart = 10;
-  const maxStart = 100 - finalZone - 10; // 100% - ширина - отступ справа
-  
-  // Защита от дурака: если maxStart меньше minStart (такого быть не должно, но на всякий случай)
-  if (maxStart < minStart) {
-    zoneStart = minStart;
-  } else {
-    zoneStart = minStart + Math.random() * (maxStart - minStart);
-  }
+  // Установка позиции с защитой от выхода за края
+  const maxStart = 100 - finalZone - 10;
+  zoneStart = 15 + Math.random() * (maxStart - 15); 
+  zoneStart = Math.max(10, Math.min(zoneStart, maxStart)); 
   
   zoneEnd = zoneStart + finalZone;
   
