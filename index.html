@@ -10,7 +10,6 @@
   #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: #0d1520; }
   canvas { display: block; width: 100%; height: 100%; object-fit: contain; touch-action: none; }
   
-  /* Кнопки в правом верхнем углу с подписями */
   .top-panel { position: absolute; top: 15px; right: 15px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 400px; z-index: 5; }
   .btn { color: white; border: 2px solid; padding: 6px 10px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: transform 0.1s; backdrop-filter: blur(4px); white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 6px; }
   .btn:active { transform: scale(0.92); }
@@ -223,7 +222,6 @@
       </div>
 
       <div id="catalogTabTrophies" style="display: none;">
-        <!-- Легенда о Соме -->
         <div id="somLegend"></div>
 
         <div class="section-title">Статистика</div>
@@ -448,7 +446,6 @@ const TREE_DATA = {
   }
 };
 
-// Шляпы
 const HATS = [
   { id: 'straw', name: '👒 Соломенная', desc: 'За 1000 рыб' },
   { id: 'tophat', name: '🎩 Цилиндр', desc: 'За 1 000 000 капитализации' },
@@ -459,14 +456,11 @@ const HATS = [
   { id: 'cowboy', name: '🤠 Ковбойская', desc: 'За 30 улучшений' }
 ];
 
-// Вспомогательная функция для подсчета улучшений дерева
 function getTotalTreeUpgrades() {
   return Object.values(treeUpgrades).reduce((sum, lvl) => sum + lvl, 0);
 }
 
-// Обновленный список достижений
 const ACHV_LIST = [
-  // Сюжетные
   { 
     id: 'pro', name: '🎣 Рыбак-профи', isBossKey: true, 
     levels: [
@@ -481,7 +475,6 @@ const ACHV_LIST = [
   { id: 'trashman', name: '🗑️ Мусорщик', desc: 'Собрать весь мусор', bonus: '+15% к скорости, +4% к зоне', check: () => TRASH_ONLY.every(f => catalog[f.name] > 0), progress: () => TRASH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + TRASH_ONLY.length, isBossKey: true },
   { id: 'night', name: '🌙 Ночной охотник', desc: 'Поймать 10 рыб ночью', bonus: '+5% к шансу редкой рыбы', check: () => (achievements.nightCount || 0) >= 10, progress: () => Math.min(achievements.nightCount || 0, 10) + '/10', isBossKey: true },
 
-  // Трофейщик
   { id: 'weight', name: '⚖️ Трофейщик', levels: [
       { threshold: 1000, name: 'Первый трофей', desc: 'Поймать рыбу > 1 кг', bonus: '+50 монет', check: () => Object.values(fishRecords).some(w => w >= 1000), progress: () => '...' },
       { threshold: 5000, name: 'Тяжеловес', desc: 'Поймать рыбу > 5 кг', bonus: '+150 монет', check: () => Object.values(fishRecords).some(w => w >= 5000), progress: () => '...' },
@@ -489,7 +482,6 @@ const ACHV_LIST = [
     ] 
   },
 
-  // Эколог
   { id: 'eco', name: '♻️ Эколог', levels: [
       { threshold: 10, name: 'Уборщик', desc: 'Собрать 10 мусора', bonus: '+30 монет', check: () => Object.values(catalog).reduce((a,b) => a + b, 0) >= 10, progress: () => '...' },
       { threshold: 50, name: 'Эко-активист', desc: 'Собрать 50 мусора', bonus: '+100 монет', check: () => Object.values(catalog).reduce((a,b) => a + b, 0) >= 50, progress: () => '...' },
@@ -497,7 +489,6 @@ const ACHV_LIST = [
     ]
   },
 
-  // Делец
   { id: 'money', name: '💰 Делец', levels: [
       { threshold: 1000, name: 'Первая тысяча', desc: 'Накопить 1 000 монет', bonus: '+50 монет', check: () => score >= 1000, progress: () => score + '/1000' },
       { threshold: 10000, name: 'Капиталист', desc: 'Накопить 10 000 монет', bonus: '+200 монет', check: () => score >= 10000, progress: () => score + '/10000' },
@@ -506,7 +497,6 @@ const ACHV_LIST = [
     ]
   },
 
-  // Оружейник (купить N улучшений)
   { id: 'engineer', name: '🔧 Оружейник', levels: [
       { threshold: 5, name: 'Умелец', desc: 'Купить 5 улучшений', bonus: '+100 монет', check: () => getTotalTreeUpgrades() >= 5, progress: () => getTotalTreeUpgrades() + '/5' },
       { threshold: 15, name: 'Мастер удочек', desc: 'Купить 15 улучшений', bonus: '+500 монет', check: () => getTotalTreeUpgrades() >= 15, progress: () => getTotalTreeUpgrades() + '/15' },
@@ -514,14 +504,12 @@ const ACHV_LIST = [
     ]
   },
 
-  // Книгочей
   { id: 'books', name: '📚 Книгочей', secret: true, levels: [
       { threshold: 1, name: 'Книгочей', desc: 'Купить 1 книгу', bonus: '+100 монет', check: () => Object.keys(encyclopedia).length >= 1, progress: () => Object.keys(encyclopedia).length + '/1' },
       { threshold: 6, name: 'Эрудит', desc: 'Купить все 6 книг', bonus: '+500 монет + 🎓', check: () => Object.keys(encyclopedia).length >= 6, progress: () => Object.keys(encyclopedia).length + '/6' }
     ]
   },
 
-  // Неудачник
   { id: 'fail', name: '💀 Неудачник', levels: [
       { threshold: 10, name: 'Первый блин комом', desc: 'Сорвать 10 рыб', bonus: '+50 монет', check: () => gameStats.misses >= 10, progress: () => Math.min(gameStats.misses, 10) + '/10' },
       { threshold: 50, name: 'Невезучий', desc: 'Сорвать 50 рыб', bonus: '+200 монет', check: () => gameStats.misses >= 50, progress: () => Math.min(gameStats.misses, 50) + '/50' },
@@ -534,25 +522,13 @@ const ACHV_LIST = [
 
 // --- Миграция старых достижений ---
 function migrateAchievements() {
-  if (localStorage.getItem('fishMigrated_v1')) return;
-  
-  // Переносим старые флаги в новую структуру
-  if (achievements.collector) { /* уже есть */ }
-  if (achievements.trashman) { /* уже есть */ }
-  if (achievements.night) { /* уже есть */ }
-  
-  // Старые одиночные ачивки превращаем в уровни
-  if (achievements.pro === true) achievements.pro = 3; // 100 рыб = 3 уровень
+  if (localStorage.getItem('fishMigrated_v2')) return;
+  if (achievements.pro === true) achievements.pro = 3;
   if (achievements.millionaire) achievements.money = 4;
-  if (achievements.rodmaster) achievements.engineer = 2; // 15 улучшений (Мастер)
-  
-  if (achievements.leviathan) { /* уже есть */ }
-  
-  // Убираем старые ключи
+  if (achievements.rodmaster) achievements.engineer = 2;
   delete achievements.millionaire;
   delete achievements.rodmaster;
-  
-  localStorage.setItem('fishMigrated_v1', 'true');
+  localStorage.setItem('fishMigrated_v2', 'true');
   saveProgress();
 }
 migrateAchievements();
@@ -1291,7 +1267,6 @@ function checkNewAchievements() {
           achievements[a.id] = currentLevel + 1;
           saveProgress();
           
-          // Выдача шляп
           let hatId = null;
           if (a.id === 'pro' && currentLevel + 1 === 5) hatId = 'straw';
           if (a.id === 'money' && currentLevel + 1 === 4) hatId = 'tophat';
@@ -1463,7 +1438,8 @@ function renderStats() {
       let pct = 0;
       let progressText = '';
       if (isMax) {
-        progressText = 'Максимум';
+        // Выводим X из Y, как просил
+        progressText = `${a.levels.length}/${a.levels.length}`;
         pct = 100;
       } else {
         progressText = nextLevel.progress();
@@ -2278,31 +2254,35 @@ function drawFisherman() {
   for(let x = 30; x < 160; x += 20) { ctx.beginPath(); ctx.moveTo(x, 490); ctx.lineTo(x-5, 510); ctx.stroke(); }
   ctx.restore();
   
-  // --- ТЕЛО ---
-  drawCharacterBody(ctx, 82, 460, character, 1, false, !!activeHat);
+  // --- ТЕЛО ПЕРСОНАЖА ---
+  drawCharacterBody(ctx, 82, 460, character, 1.2, false, !!activeHat);
   
-  // --- РУКА С УДОЧКОЙ ---
-  ctx.strokeStyle = isWoman ? '#d2a679' : '#2c3e50'; ctx.lineWidth = 11; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(70, 440); ctx.lineTo(115, 460); ctx.lineTo(rod.baseX, rod.baseY); ctx.stroke();
+  // --- РУКА С УДОЧКОЙ (только одна, поверх тела) ---
+  ctx.strokeStyle = isWoman ? '#d2a679' : '#2c3e50'; 
+  ctx.lineWidth = 9; 
+  ctx.lineCap = 'round';
+  ctx.beginPath(); 
+  ctx.moveTo(75, 440);
+  ctx.lineTo(115, 460);
+  ctx.lineTo(rod.baseX, rod.baseY);
+  ctx.stroke();
 
-  // --- НОГИ ---
-  ctx.fillStyle = isWoman ? '#d2a679' : '#2c3e50'; 
-  if (isWoman) {
-    ctx.fillRect(68, 490, 12, 25); ctx.fillRect(84, 490, 12, 25);
-  } else {
-    ctx.fillRect(65, 490, 14, 25); ctx.fillRect(85, 490, 14, 25); 
-  }
+  // Обувь (свисает с причала)
   ctx.fillStyle = '#7a5a2a'; 
   ctx.beginPath(); ctx.ellipse(70, 520, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); 
   ctx.beginPath(); ctx.ellipse(95, 520, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
 
+  // Ночная подсветка
   if (weather === 'night') {
-    ctx.fillStyle = 'rgba(255, 220, 100, 0.2)'; ctx.beginPath(); ctx.arc(100, 450, 40, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#ffdd44'; ctx.beginPath(); ctx.arc(100, 450, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255, 220, 100, 0.2)'; 
+    ctx.beginPath(); ctx.arc(100, 450, 40, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffdd44'; 
+    ctx.beginPath(); ctx.arc(100, 450, 6, 0, Math.PI * 2); ctx.fill();
   }
 
   // --- ШЛЯПА ---
   if (activeHat) {
+    // Координата Y поднята, чтобы шляпа села ровно на макушку
     drawHat(ctx, activeHat, 82, 400, isWoman);
   }
 }
