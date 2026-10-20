@@ -10,13 +10,13 @@
   #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: #0d1520; }
   canvas { display: block; width: 100%; height: 100%; object-fit: contain; touch-action: none; }
   
-  .top-panel { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 300px; z-index: 5; }
-  .btn { color: white; border: 2px solid; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: transform 0.1s; backdrop-filter: blur(4px); white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+  .top-panel { position: absolute; top: 15px; right: 15px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 400px; z-index: 5; }
+  .btn { color: white; border: 2px solid; padding: 6px 10px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: transform 0.1s; backdrop-filter: blur(4px); white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 6px; }
   .btn:active { transform: scale(0.92); }
   #catalogBtn { background: rgba(60, 120, 200, 0.85); border-color: rgba(100,180,255,0.5); }
   #shopBtn { background: rgba(60, 180, 100, 0.85); border-color: rgba(100,255,150,0.5); }
-  #soundBtn { background: rgba(200, 180, 60, 0.85); border-color: rgba(255,220,100,0.5); }
-  #fullscreenBtn { background: rgba(120, 80, 200, 0.85); border-color: rgba(180,140,255,0.5); }
+  #soundBtn { background: rgba(200, 180, 60, 0.85); border-color: rgba(255,220,100,0.5); padding: 6px 10px; }
+  #fullscreenBtn { background: rgba(120, 80, 200, 0.85); border-color: rgba(180,140,255,0.5); padding: 6px 10px; }
   #resetBtn { background: rgba(200, 60, 60, 0.85); border-color: rgba(255,100,100,0.5); }
   
   .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; backdrop-filter: blur(6px); z-index: 10; padding: 15px; }
@@ -29,24 +29,9 @@
   
   .fish-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   @media (min-width: 500px) { .fish-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; } }
-  .fish-card { 
-    background: rgba(0,0,0,0.3); 
-    border: 2px solid rgba(255,255,255,0.1); 
-    border-radius: 12px; 
-    padding: 10px; 
-    text-align: center; 
-    transition: all 0.2s; 
-    position: relative;
-    overflow: hidden;
-  }
-  .fish-card.caught { 
-    border-color: rgba(100,255,100,0.5); 
-    background: linear-gradient(180deg, rgba(100,255,100,0.1), rgba(0,0,0,0.3)); 
-  }
-  .fish-card.trash-card.caught { 
-    border-color: rgba(200,150,100,0.5); 
-    background: linear-gradient(180deg, rgba(200,150,100,0.1), rgba(0,0,0,0.3)); 
-  }
+  .fish-card { background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 10px; text-align: center; transition: all 0.2s; position: relative; overflow: hidden; }
+  .fish-card.caught { border-color: rgba(100,255,100,0.5); background: linear-gradient(180deg, rgba(100,255,100,0.1), rgba(0,0,0,0.3)); }
+  .fish-card.trash-card.caught { border-color: rgba(200,150,100,0.5); background: linear-gradient(180deg, rgba(200,150,100,0.1), rgba(0,0,0,0.3)); }
   .fish-card .emoji { font-size: 32px; display: block; margin-bottom: 4px; filter: grayscale(1) opacity(0.3); text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
   .fish-card.caught .emoji, .fish-card.known .emoji { filter: none; }
   .fish-card .name { font-size: 12px; color: #ccc; font-weight: bold; margin-bottom: 2px; }
@@ -54,7 +39,6 @@
   .fish-card .pts { font-size: 11px; color: #ffd700; }
   .fish-card .record { font-size: 11px; color: #ff9966; margin-top: 4px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 2px 4px; border-radius: 4px; display: inline-block; }
   .fish-card.trash-card .pts { color: #ff9966; }
-  
   .fish-card.record-holder { border-color: #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.3); }
   .fish-card.record-holder::before { content: '👑'; position: absolute; top: 5px; right: 5px; font-size: 16px; }
 
@@ -170,9 +154,9 @@
   <div class="top-panel">
     <button id="soundBtn" class="btn" onclick="toggleSound(event)">🔊</button>
     <button id="fullscreenBtn" class="btn" onclick="toggleFullscreen(event)">📺</button>
-    <button id="resetBtn" class="btn" onclick="resetProgress(event)">🗑</button>
-    <button id="catalogBtn" class="btn" onclick="toggleCatalog(event)">📖</button>
-    <button id="shopBtn" class="btn" onclick="toggleShop(event)">🛒</button>
+    <button id="resetBtn" class="btn" onclick="resetProgress(event)">🗑 Сброс</button>
+    <button id="catalogBtn" class="btn" onclick="toggleCatalog(event)">📖 Дневник</button>
+    <button id="shopBtn" class="btn" onclick="toggleShop(event)">🛒 Магазин</button>
   </div>
 
   <div id="qteControls">
@@ -214,7 +198,6 @@
     </div>
   </div>
 
-  <!-- Объединенный Дневник (Каталог + Трофеи) -->
   <div id="catalogOverlay" class="overlay" onclick="if(event.target===this) toggleCatalog(event)">
     <div class="panel">
       <button class="close-btn" onclick="toggleCatalog(event)">×</button>
@@ -225,7 +208,6 @@
         <button class="shop-tab" id="tabTrophies" onclick="switchCatalogTab('trophies')">🏆 Трофеи и Достижения</button>
       </div>
 
-      <!-- Вкладка Уловы -->
       <div id="catalogTabFish" style="display: block;">
         <div class="section-title">🐟 Рыбы</div>
         <div class="fish-grid" id="fishGrid"></div>
@@ -233,30 +215,21 @@
         <div class="fish-grid" id="trashGrid"></div>
       </div>
 
-      <!-- Вкладка Трофеи и Достижения -->
       <div id="catalogTabTrophies" style="display: none;">
+        <div id="somLegend"></div>
         <div class="section-title">Статистика</div>
         <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-val" id="statCaught">0</div>
-            <div class="stat-label">Всего поймано</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-val" id="statWeight">0 кг</div>
-            <div class="stat-label">Общий вес</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-val" id="statStreak">0</div>
-            <div class="stat-label">Рекорд серии</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-val" id="statMiss">0</div>
-            <div class="stat-label">Срывов</div>
-          </div>
+          <div class="stat-card"><div class="stat-val" id="statCaught">0</div><div class="stat-label">Всего поймано</div></div>
+          <div class="stat-card"><div class="stat-val" id="statWeight">0 кг</div><div class="stat-label">Общий вес</div></div>
+          <div class="stat-card"><div class="stat-val" id="statStreak">0</div><div class="stat-label">Рекорд серии</div></div>
+          <div class="stat-card"><div class="stat-val" id="statMiss">0</div><div class="stat-label">Срывов</div></div>
         </div>
 
-        <div class="section-title">🏆 Трофейная комната (Только рыба)</div>
+        <div class="section-title">🏆 Трофейная комната (Рекорды веса)</div>
         <div class="trophy-grid" id="trophyGrid"></div>
+
+        <div class="section-title" style="margin-top: 20px;">👒 Гардероб (Шляпы)</div>
+        <div id="wardrobeGrid" class="fish-grid" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));"></div>
 
         <div class="section-title" style="margin-top: 20px;">Достижения</div>
         <div class="achv-grid" id="achvGrid"></div>
@@ -318,6 +291,9 @@ let treeUpgrades = JSON.parse(localStorage.getItem('fishTreeUpgrades') || '{"bod
 let gameStats = JSON.parse(localStorage.getItem('fishStats') || '{"earned":0, "spent":0, "misses":0, "bestStreak":0, "totalWeight":0}');
 let fishRecords = JSON.parse(localStorage.getItem('fishRecords') || '{}');
 
+let unlockedHats = JSON.parse(localStorage.getItem('fishUnlockedHats') || '[]');
+let activeHat = localStorage.getItem('fishActiveHat') || null;
+
 let catchStreak = 0, missStreak = 0;
 let character = localStorage.getItem('fishCharacter') || null;
 
@@ -327,7 +303,6 @@ let currentWeatherIndex = parseInt(localStorage.getItem('fishWeatherIndex') || '
 let weatherTimer = 0, gameTimeMinutes = 6 * 60;
 const WEATHER_DURATION = 45;
 
-// Плавный переход погоды
 let weatherFadeAlpha = 0; 
 
 function getWeather() { return WEATHERS[currentWeatherIndex]; }
@@ -335,7 +310,7 @@ function getNextWeather() { return WEATHERS[(currentWeatherIndex + 1) % WEATHERS
 function changeWeather() { 
   currentWeatherIndex = (currentWeatherIndex + 1) % WEATHERS.length; 
   weatherTimer = 0; 
-  weatherFadeAlpha = 1.0; // Запускаем эффект "вспышки" или затемнения
+  weatherFadeAlpha = 1.0; 
   localStorage.setItem('fishWeatherIndex', currentWeatherIndex); 
 }
 function updateGameTime(dt) { gameTimeMinutes += dt; if (gameTimeMinutes >= 24 * 60) gameTimeMinutes -= 24 * 60; }
@@ -389,91 +364,119 @@ const FISH_ONLY = FISH_TYPES.filter(f => !f.isTrash);
 const TRASH_ONLY = FISH_TYPES.filter(f => f.isTrash);
 
 const TREE_DATA = {
-  body: {
-    name: 'Тело удилища', icon: '🎣',
-    levels: [
+  body: { name: 'Тело удилища', icon: '🎣', levels: [
       { name: 'Бамбук', desc: 'Классическая палка', cost: 0, bonus: 0, requires: [], row: 0, col: 1 },
       { name: 'Телескоп', desc: 'Стеклопластик', cost: 300, bonus: 0.05, requires: [{branch:'body', level:0}], row: 0, col: 2 },
       { name: 'Карбон', desc: 'Лёгкий карбон', cost: 1200, bonus: 0.10, requires: [{branch:'body', level:1}, {branch:'line', level:1}], row: 0, col: 3 },
       { name: 'Спиннинг', desc: 'Проф. снасть', cost: 3000, bonus: 0.15, requires: [{branch:'body', level:2}, {branch:'reel', level:1}], row: 0, col: 4 },
       { name: 'Фидер', desc: 'Английская снасть', cost: 6000, bonus: 0.20, requires: [{branch:'body', level:3}, {branch:'line', level:2}], row: 0, col: 5 }
-    ]
-  },
-  line: {
-    name: 'Леска', icon: '🧵',
-    levels: [
+    ] },
+  line: { name: 'Леска', icon: '🧵', levels: [
       { name: 'Монофил', desc: 'Обычная леска', cost: 0, bonus: 0, requires: [], row: 1, col: 1 },
       { name: 'Флюорокарбон', desc: 'Менее заметна', cost: 200, bonus: 0.1, requires: [{branch:'line', level:0}], row: 1, col: 2 },
       { name: 'Плетёнка', desc: 'Крепкая', cost: 800, bonus: 0.2, requires: [{branch:'line', level:1}, {branch:'hook', level:1}], row: 1, col: 3 },
       { name: 'Нанофил', desc: 'Очень прочная', cost: 2500, bonus: 0.35, requires: [{branch:'line', level:2}, {branch:'reel', level:2}], row: 1, col: 4 }
-    ]
-  },
-  reel: {
-    name: 'Катушка', icon: '⚙️',
-    levels: [
+    ] },
+  reel: { name: 'Катушка', icon: '⚙️', levels: [
       { name: 'Инерционная', desc: 'Простая катушка', cost: 0, bonus: 0, requires: [], row: 2, col: 1 },
       { name: 'Безынерционная', desc: 'Плавный ход', cost: 400, bonus: 0.15, requires: [{branch:'reel', level:0}], row: 2, col: 2 },
       { name: 'Мультипликаторная', desc: 'Для троллинга', cost: 1800, bonus: 0.3, requires: [{branch:'reel', level:1}], row: 2, col: 3 }
-    ]
-  },
-  hook: {
-    name: 'Крючок', icon: '🪝',
-    levels: [
+    ] },
+  hook: { name: 'Крючок', icon: '🪝', levels: [
       { name: 'Обычный', desc: 'Стандартный', cost: 0, bonus: 0, requires: [], row: 3, col: 1 },
       { name: 'Кованый', desc: 'Не разгибается', cost: 250, bonus: 0.1, requires: [{branch:'hook', level:0}], row: 3, col: 2 },
       { name: 'С кольцом', desc: 'Для крупной', cost: 1000, bonus: 0.25, requires: [{branch:'hook', level:1}], row: 3, col: 3 },
       { name: 'Двойной', desc: 'Двойная зацепка', cost: 3000, bonus: 0.4, requires: [{branch:'hook', level:2}, {branch:'float', level:1}], row: 3, col: 4 }
-    ]
-  },
-  float: {
-    name: 'Поплавок', icon: '🎈',
-    levels: [
+    ] },
+  float: { name: 'Поплавок', icon: '🎈', levels: [
       { name: 'Перо', desc: 'Гусиный', cost: 0, bonus: 0, requires: [], row: 2, col: 4 },
       { name: 'Пластик', desc: 'Яркий', cost: 150, bonus: 0.15, requires: [{branch:'float', level:0}], row: 2, col: 5 }
-    ]
-  },
-  keeper: {
-    name: 'Садок', icon: '🪣',
-    levels: [
+    ] },
+  keeper: { name: 'Садок', icon: '🪣', levels: [
       { name: 'Кукан', desc: 'Для улова', cost: 0, bonus: 0, requires: [], row: 4, col: 1 },
       { name: 'Ведро', desc: 'Удобная ёмкость', cost: 350, bonus: 0.05, requires: [{branch:'keeper', level:0}], row: 4, col: 2 },
       { name: 'Садок', desc: 'Сетчатый садок', cost: 900, bonus: 0.10, requires: [{branch:'keeper', level:1}, {branch:'line', level:1}], row: 4, col: 3 }
-    ]
-  },
-  handle: {
-    name: 'Рукоять', icon: '🖐️',
-    levels: [
+    ] },
+  handle: { name: 'Рукоять', icon: '🖐️', levels: [
       { name: 'Дерево', desc: 'Обычная', cost: 0, bonus: 0, requires: [], row: 5, col: 1 },
       { name: 'Пробка', desc: 'Не скользит', cost: 300, bonus: 0.05, requires: [{branch:'handle', level:0}], row: 5, col: 2 },
       { name: 'Неопрен', desc: 'Мягкая', cost: 800, bonus: 0.10, requires: [{branch:'handle', level:1}], row: 5, col: 3 }
-    ]
-  },
-  net: {
-    name: 'Подсак', icon: '🥅',
-    levels: [
+    ] },
+  net: { name: 'Подсак', icon: '🥅', levels: [
       { name: 'Без подсака', desc: 'Руками', cost: 0, bonus: 0, requires: [], row: 6, col: 1 },
       { name: 'Подсак', desc: 'Помогает', cost: 500, bonus: 0.05, requires: [{branch:'net', level:0}], row: 6, col: 2 },
       { name: 'Большой', desc: 'Для крупной', cost: 1500, bonus: 0.10, requires: [{branch:'net', level:1}, {branch:'keeper', level:1}], row: 6, col: 3 }
-    ]
-  },
-  bait: {
-    name: 'Наживка', icon: '🪱',
-    levels: [
+    ] },
+  bait: { name: 'Наживка', icon: '🪱', levels: [
       { name: 'Без наживки', desc: 'Пустой крючок', cost: 0, bonus: 0, requires: [], row: 7, col: 1 },
       { name: 'Червь', desc: 'Классика', cost: 250, bonus: 0.05, requires: [{branch:'bait', level:0}], row: 7, col: 2 },
       { name: 'Бойл', desc: 'Для карпа', cost: 1000, bonus: 0.10, requires: [{branch:'bait', level:1}, {branch:'hook', level:1}], row: 7, col: 3 }
-    ]
-  }
+    ] }
 };
 
+function getTotalTreeUpgrades() {
+  return Object.values(treeUpgrades).reduce((sum, lvl) => sum + lvl, 0);
+}
+
 const ACHV_LIST = [
-  { id: 'collector', name: '🏆 Коллекционер', desc: 'Поймать всех рыб', bonus: '+10% к монетам', check: () => FISH_ONLY.every(f => catalog[f.name] > 0), progress: () => FISH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + FISH_ONLY.length },
-  { id: 'trashman', name: '🗑️ Мусорщик', desc: 'Собрать весь мусор', bonus: '+15% к скорости вываживания, +4% к удержанию', check: () => TRASH_ONLY.every(f => catalog[f.name] > 0), progress: () => TRASH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + TRASH_ONLY.length },
-  { id: 'pro', name: '🎣 Рыбак-профи', desc: 'Поймать 100 рыб', bonus: '+5% к монетам', check: () => totalCaught >= 100, progress: () => Math.min(totalCaught, 100) + '/100' },
-  { id: 'night', name: '🌙 Ночной охотник', desc: 'Поймать 10 рыб ночью', bonus: '+5% к шансу редкой рыбы ночью', check: () => (achievements.nightCount || 0) >= 10, progress: () => Math.min(achievements.nightCount || 0, 10) + '/10' },
-  { id: 'millionaire', name: '💎 Миллионер', desc: 'Капитализация 1 000 000 монет (баланс + траты)', bonus: '+2% к монетам', check: () => (score + gameStats.spent) >= 1000000, progress: () => Math.min(score + gameStats.spent, 1000000).toLocaleString() + ' / 1 000 000' },
-  { id: 'rodmaster', name: '🎣 Мастер удочек', desc: 'Прокачать 5 базовых веток', bonus: '+10% к скорости вываживания', check: () => ['body', 'line', 'reel', 'hook', 'float'].every(k => treeUpgrades[k] >= TREE_DATA[k].levels.length - 1), progress: () => ['body', 'line', 'reel', 'hook', 'float'].filter(k => treeUpgrades[k] >= TREE_DATA[k].levels.length - 1).length + '/5' },
+  { id: 'pro', name: '🎣 Рыбак-профи', isBossKey: true, levels: [
+      { threshold: 10,  name: 'Новичок',   desc: 'Поймать 10 рыб',   bonus: '+50 монет',          check: () => totalCaught >= 10,  progress: () => Math.min(totalCaught, 10) + '/10' },
+      { threshold: 50,  name: 'Любитель',  desc: 'Поймать 50 рыб',   bonus: '+100 монет',         check: () => totalCaught >= 50,  progress: () => Math.min(totalCaught, 50) + '/50' },
+      { threshold: 100, name: 'Профи',     desc: 'Поймать 100 рыб',  bonus: '+5% к монетам',      check: () => totalCaught >= 100, progress: () => Math.min(totalCaught, 100) + '/100' },
+      { threshold: 500, name: 'Мастер',    desc: 'Поймать 500 рыб',  bonus: '+200 монет',         check: () => totalCaught >= 500, progress: () => Math.min(totalCaught, 500) + '/500' },
+      { threshold: 1000,name: 'Легенда',   desc: 'Поймать 1000 рыб', bonus: '👒 Соломенная шляпа',check: () => totalCaught >= 1000,progress: () => Math.min(totalCaught, 1000) + '/1000' }
+    ] },
+  { id: 'collector', name: '🏆 Коллекционер', desc: 'Поймать всех рыб', bonus: '+10% к монетам', check: () => FISH_ONLY.every(f => catalog[f.name] > 0), progress: () => FISH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + FISH_ONLY.length, isBossKey: true },
+  { id: 'trashman', name: '🗑️ Мусорщик', desc: 'Собрать весь мусор', bonus: '+15% к скорости, +4% к зоне', check: () => TRASH_ONLY.every(f => catalog[f.name] > 0), progress: () => TRASH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + TRASH_ONLY.length, isBossKey: true },
+  { id: 'night', name: '🌙 Ночной охотник', desc: 'Поймать 10 рыб ночью', bonus: '+5% к шансу редкой рыбы', check: () => (achievements.nightCount || 0) >= 10, progress: () => Math.min(achievements.nightCount || 0, 10) + '/10', isBossKey: true },
+
+  { id: 'weight', name: '⚖️ Трофейщик', levels: [
+      { threshold: 1,  name: 'Первый трофей', desc: 'Поймать рыбу > 1 кг', bonus: '+50 монет', check: () => Object.values(fishRecords).some(w => w >= 1000), progress: () => '...' },
+      { threshold: 5,  name: 'Тяжеловес',     desc: 'Поймать рыбу > 5 кг', bonus: '+150 монет', check: () => Object.values(fishRecords).some(w => w >= 5000), progress: () => '...' },
+      { threshold: 15, name: 'Гигант',        desc: 'Поймать рыбу > 15 кг', bonus: '👑 Корона', check: () => Object.values(fishRecords).some(w => w >= 15000), progress: () => '...' }
+    ] },
+
+  { id: 'eco', name: '♻️ Эколог', levels: [
+      { threshold: 10,  name: 'Уборщик',         desc: 'Собрать 10 мусора',  bonus: '+30 монет', check: () => Object.values(catalog).reduce((a,b) => a + b, 0) >= 10, progress: () => '...' },
+      { threshold: 50,  name: 'Эко-активист',    desc: 'Собрать 50 мусора',  bonus: '+100 монет', check: () => Object.values(catalog).reduce((a,b) => a + b, 0) >= 50, progress: () => '...' },
+      { threshold: 200, name: 'Хранитель реки',  desc: 'Собрать 200 мусора', bonus: '⛑️ Каска', check: () => Object.values(catalog).reduce((a,b) => a + b, 0) >= 200, progress: () => '...' }
+    ] },
+
+  { id: 'money', name: '💰 Делец', levels: [
+      { threshold: 1000,    name: 'Первая тысяча', desc: 'Накопить 1 000 монет', bonus: '+50 монет', check: () => score >= 1000, progress: () => score + '/1000' },
+      { threshold: 10000,   name: 'Капиталист',    desc: 'Накопить 10 000 монет', bonus: '+200 монет', check: () => score >= 10000, progress: () => score + '/10000' },
+      { threshold: 100000,  name: 'Магнат',        desc: 'Накопить 100 000 монет', bonus: '+1000 монет', check: () => score >= 100000, progress: () => score + '/100000' },
+      { threshold: 1000000, name: 'Миллионер',     desc: 'Капитализация 1 000 000', bonus: '🎩 Цилиндр', check: () => (score + gameStats.spent) >= 1000000, progress: () => (score + gameStats.spent).toLocaleString() + '/1 000 000' }
+    ] },
+
+  { id: 'engineer', name: '🔧 Оружейник', levels: [
+      { threshold: 5,  name: 'Умелец',       desc: 'Купить 5 улучшений',  bonus: '+100 монет', check: () => getTotalTreeUpgrades() >= 5,  progress: () => getTotalTreeUpgrades() + '/5' },
+      { threshold: 15, name: 'Мастер удочек', desc: 'Купить 15 улучшений', bonus: '+500 монет', check: () => getTotalTreeUpgrades() >= 15, progress: () => getTotalTreeUpgrades() + '/15' },
+      { threshold: 30, name: 'Одержимый',     desc: 'Купить 30 улучшений', bonus: '🤠 Ковбойская шляпа', check: () => getTotalTreeUpgrades() >= 30, progress: () => getTotalTreeUpgrades() + '/30' }
+    ] },
+
+  { id: 'books', name: '📚 Книгочей', secret: true, levels: [
+      { threshold: 1, name: 'Книгочей', desc: 'Купить 1 книгу',    bonus: '+100 монет', check: () => Object.keys(encyclopedia).length >= 1, progress: () => Object.keys(encyclopedia).length + '/1' },
+      { threshold: 6, name: 'Эрудит',   desc: 'Купить все 6 книг', bonus: '🎓 Академическая шапочка', check: () => Object.keys(encyclopedia).length >= 6, progress: () => Object.keys(encyclopedia).length + '/6' }
+    ] },
+
+  { id: 'fail', name: '💀 Неудачник', levels: [
+      { threshold: 10,  name: 'Первый блин комом', desc: 'Сорвать 10 рыб',  bonus: '+50 монет', check: () => gameStats.misses >= 10, progress: () => Math.min(gameStats.misses, 10) + '/10' },
+      { threshold: 50,  name: 'Невезучий',         desc: 'Сорвать 50 рыб',  bonus: '+200 монет', check: () => gameStats.misses >= 50, progress: () => Math.min(gameStats.misses, 50) + '/50' },
+      { threshold: 150, name: 'Проклятый',         desc: 'Сорвать 150 рыб', bonus: '🎃 Тыква', check: () => gameStats.misses >= 150, progress: () => Math.min(gameStats.misses, 150) + '/150' }
+    ] },
+
   { id: 'leviathan', name: '🐋 Убийца Сома-Гиганта', desc: 'Секретное достижение', bonus: '+5000 монет', check: () => bossDefeated, progress: () => bossDefeated ? '✓' : '???', secret: true }
+];
+
+const HATS = [
+  { id: 'straw', name: '👒 Соломенная', achievement: 'pro_5' },
+  { id: 'tophat', name: '🎩 Цилиндр', achievement: 'money_4' },
+  { id: 'crown', name: '👑 Корона', achievement: 'weight_3' },
+  { id: 'grad', name: '🎓 Академическая', achievement: 'books_2' },
+  { id: 'helmet', name: '⛑️ Каска', achievement: 'eco_3' },
+  { id: 'pumpkin', name: '🎃 Тыква', achievement: 'fail_3' },
+  { id: 'cowboy', name: '🤠 Ковбойская', achievement: 'engineer_3' }
 ];
 
 let lastCatch = null;
@@ -498,7 +501,7 @@ let qteTimer = 0;
 let qteMaxTime = 1.0;
 
 // ==================================================================
-// ЧАСТЬ 2: СОХРАНЕНИЕ И АУДИО
+// ЧАСТЬ 2: СОХРАНЕНИЕ, АУДИО И МИГРАЦИЯ
 // ==================================================================
 function saveProgress() {
   localStorage.setItem('fishScore', score);
@@ -518,6 +521,38 @@ function saveProgress() {
   localStorage.setItem('fishWeatherIndex', currentWeatherIndex);
   localStorage.setItem('fishStats', JSON.stringify(gameStats));
   localStorage.setItem('fishRecords', JSON.stringify(fishRecords));
+  localStorage.setItem('fishUnlockedHats', JSON.stringify(unlockedHats));
+  localStorage.setItem('fishActiveHat', activeHat || '');
+}
+
+function migrateAchievements() {
+  let changed = false;
+  for (const a of ACHV_LIST) {
+    if (a.levels) {
+      let currentLvl = achievements[a.id] || 0;
+      let upgraded = false;
+      // Прогоняем все уровни
+      for (let i = currentLvl; i < a.levels.length; i++) {
+        if (a.levels[i].check()) {
+          achievements[a.id] = i + 1;
+          upgraded = true;
+          // Выдаем шляпу, если она привязана к этому уровню
+          const hat = HATS.find(h => h.achievement === `${a.id}_${i + 1}`);
+          if (hat && !unlockedHats.includes(hat.id)) {
+            unlockedHats.push(hat.id);
+            if (!activeHat) activeHat = hat.id;
+          }
+        } else {
+          break; // Если уровень не пройден, дальше нет смысла проверять
+        }
+      }
+      if (upgraded) changed = true;
+    } else if (!achievements[a.id] && a.check()) {
+      achievements[a.id] = true;
+      changed = true;
+    }
+  }
+  if (changed) saveProgress();
 }
 
 function checkBossTrigger() {
@@ -525,7 +560,7 @@ function checkBossTrigger() {
   if (state === S.BOSS_INSTRUCTION || state === S.BOSS_INTRO || state === S.BOSS_QTE) return false;
   const hasCollector = FISH_ONLY.every(f => catalog[f.name] > 0);
   const hasTrashman = TRASH_ONLY.every(f => catalog[f.name] > 0);
-  const hasPro = totalCaught >= 100;
+  const hasPro = (achievements['pro'] || 0) >= 3; // 100 рыб
   const hasNight = (achievements.nightCount || 0) >= 10;
   return hasCollector && hasTrashman && hasPro && hasNight;
 }
@@ -615,8 +650,6 @@ function playSound(type) {
 
 function startAmbientSound() {
   if (!soundEnabled || !audioCtx || bgNoiseNode) return;
-  
-  // Базовый шум воды
   const bufferSize = audioCtx.sampleRate * 2; 
   const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
   const data = buffer.getChannelData(0); 
@@ -635,9 +668,7 @@ function stopAmbientSound() {
 function updateWeatherSound() {
   if (!soundEnabled || !audioCtx) return;
   const weather = getWeather();
-  
   if (weather === 'rain' && !rainNode) {
-    // Включаем шум дождя
     const bufferSize = audioCtx.sampleRate * 2; 
     const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
     const data = buffer.getChannelData(0); 
@@ -648,7 +679,6 @@ function updateWeatherSound() {
     source.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); source.start();
     rainNode = { source, gain };
   } else if (weather !== 'rain' && rainNode) {
-    // Выключаем шум дождя
     try { rainNode.source.stop(); } catch(e) {}
     rainNode = null;
   }
@@ -701,38 +731,150 @@ function drawPreview(canvasId, type) {
   c.width = 120 * dpr; c.height = 120 * dpr;
   c.style.width = '90px'; c.style.height = '90px';
   cCtx.scale(dpr, dpr);
-  drawCharacterBody(cCtx, 60, 80, type, 1.1, true);
+  drawCharacterBody(cCtx, 60, 80, type, 1.1, true, false);
 }
-function drawCharacterBody(cCtx, x, y, type, scale = 1, isPreview = false) {
+function drawCharacterBody(cCtx, x, y, type, scale = 1, isPreview = false, hasHat = false) {
   cCtx.save(); cCtx.translate(x, y); cCtx.scale(scale, scale);
   const isWoman = type === 'fisherwoman';
+  
   if (isPreview) {
     cCtx.fillStyle = '#6a4a2a'; cCtx.beginPath(); cCtx.ellipse(0, 40, 45, 12, 0, 0, Math.PI * 2); cCtx.fill();
     cCtx.fillStyle = '#8a6a3a'; cCtx.beginPath(); cCtx.ellipse(0, 38, 40, 8, 0, 0, Math.PI * 2); cCtx.fill();
   }
-  cCtx.fillStyle = isWoman ? '#c0392b' : '#2a4a6a';
-  cCtx.beginPath(); cCtx.ellipse(0, 10, 20, 35, 0, 0, Math.PI * 2); cCtx.fill();
+
   if (isWoman) {
-    cCtx.fillStyle = '#c0392b'; cCtx.beginPath();
-    cCtx.moveTo(-20, 10); cCtx.lineTo(-25, 45); cCtx.lineTo(25, 45); cCtx.lineTo(20, 10); cCtx.closePath(); cCtx.fill();
-    cCtx.strokeStyle = '#8a2a1a'; cCtx.lineWidth = 1.5;
-    cCtx.beginPath(); cCtx.moveTo(-10, 15); cCtx.lineTo(-12, 42); cCtx.stroke();
-    cCtx.beginPath(); cCtx.moveTo(10, 15); cCtx.lineTo(12, 42); cCtx.stroke();
+    cCtx.fillStyle = '#d2a679';
+    cCtx.beginPath(); cCtx.ellipse(0, 10, 22, 38, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#b07d5a';
+    cCtx.beginPath();
+    cCtx.moveTo(-20, 15); cCtx.lineTo(-30, 45); cCtx.lineTo(30, 45); cCtx.lineTo(20, 15);
+    cCtx.closePath(); cCtx.fill();
+    cCtx.strokeStyle = '#d2a679'; cCtx.lineWidth = 9; cCtx.lineCap = 'round';
+    cCtx.beginPath(); cCtx.moveTo(-15, 5); cCtx.lineTo(-25, 20); cCtx.stroke();
+    cCtx.beginPath(); cCtx.moveTo(15, 5); cCtx.lineTo(25, 20); cCtx.stroke();
   } else {
-    cCtx.fillStyle = '#1a2a3a'; cCtx.beginPath(); cCtx.ellipse(0, 35, 18, 15, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#2c3e50';
+    cCtx.beginPath(); cCtx.ellipse(0, 10, 24, 36, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#1a2a3a';
+    cCtx.fillRect(-18, 30, 36, 20);
+    cCtx.strokeStyle = '#2c3e50'; cCtx.lineWidth = 10; cCtx.lineCap = 'round';
+    cCtx.beginPath(); cCtx.moveTo(-18, 5); cCtx.lineTo(-30, 20); cCtx.stroke();
+    cCtx.beginPath(); cCtx.moveTo(18, 5); cCtx.lineTo(30, 20); cCtx.stroke();
   }
-  cCtx.strokeStyle = isWoman ? '#c0392b' : '#2a4a6a'; cCtx.lineWidth = 10; cCtx.lineCap = 'round';
-  cCtx.beginPath(); cCtx.moveTo(-12, 0); cCtx.lineTo(-25, 15); cCtx.stroke();
-  cCtx.beginPath(); cCtx.moveTo(12, 0); cCtx.lineTo(25, 15); cCtx.stroke();
-  cCtx.fillStyle = '#f0c090'; cCtx.beginPath(); cCtx.arc(0, -25, 20, 0, Math.PI * 2); cCtx.fill();
+
+  cCtx.fillStyle = '#f0c090';
+  cCtx.beginPath(); cCtx.arc(0, -25, 20, 0, Math.PI * 2); cCtx.fill();
+  
   if (isWoman) {
-    cCtx.fillStyle = '#8a5a2a'; cCtx.beginPath(); cCtx.ellipse(0, -20, 24, 28, 0, 0, Math.PI * 2); cCtx.fill();
-    cCtx.fillStyle = '#f0c090'; cCtx.beginPath(); cCtx.ellipse(0, -25, 16, 18, 0, 0, Math.PI * 2); cCtx.fill();
-    cCtx.fillStyle = '#8a5a2a'; cCtx.beginPath(); cCtx.ellipse(0, -5, 6, 15, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#8b4513';
+    cCtx.beginPath(); cCtx.arc(0, -25, 22, Math.PI * 0.8, Math.PI * 2.2); cCtx.fill();
+    cCtx.beginPath(); cCtx.ellipse(-20, -10, 8, 25, 0.2, 0, Math.PI * 2); cCtx.fill();
+    cCtx.beginPath(); cCtx.ellipse(20, -10, 8, 25, -0.2, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#8b4513';
+    cCtx.beginPath(); cCtx.arc(0, -30, 18, Math.PI, 0); cCtx.fill();
   } else {
-    cCtx.fillStyle = '#2a3a2a'; cCtx.beginPath(); cCtx.ellipse(0, -35, 24, 8, 0, 0, Math.PI * 2); cCtx.fill();
-    cCtx.fillStyle = '#3a4a3a'; cCtx.beginPath(); cCtx.ellipse(0, -42, 20, 12, 0, Math.PI, 0); cCtx.fill();
+    cCtx.fillStyle = '#4a3525';
+    cCtx.beginPath(); cCtx.arc(0, -28, 20, Math.PI * 1.1, Math.PI * 1.9); cCtx.fill();
   }
+
+  if (!hasHat) {
+    if (isWoman) {
+      cCtx.fillStyle = '#e74c3c';
+      cCtx.beginPath(); cCtx.arc(15, -40, 6, 0, Math.PI * 2); cCtx.fill();
+      cCtx.fillStyle = '#f1c40f';
+      cCtx.beginPath(); cCtx.arc(15, -40, 3, 0, Math.PI * 2); cCtx.fill();
+    } else {
+      cCtx.fillStyle = '#27ae60';
+      cCtx.beginPath(); cCtx.ellipse(0, -40, 22, 14, 0, Math.PI, 0); cCtx.fill();
+      cCtx.fillStyle = '#2ecc71';
+      cCtx.fillRect(-22, -42, 44, 5);
+    }
+  }
+
+  cCtx.restore();
+}
+
+function drawHat(cCtx, hatId, x, y, isWoman) {
+  cCtx.save();
+  cCtx.translate(x, y);
+  
+  if (hatId === 'straw') {
+    cCtx.fillStyle = '#e0c080';
+    cCtx.beginPath(); cCtx.ellipse(0, -5, 38, 10, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#d0b070';
+    cCtx.beginPath(); cCtx.ellipse(0, -18, 22, 14, 0, Math.PI, 0); cCtx.fill();
+    cCtx.fillStyle = '#c0392b';
+    cCtx.fillRect(-20, -12, 40, 4);
+  } else if (hatId === 'tophat') {
+    cCtx.fillStyle = '#111';
+    cCtx.beginPath(); cCtx.ellipse(0, -5, 32, 8, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillRect(-16, -45, 32, 40);
+    cCtx.fillStyle = '#ffd700';
+    cCtx.fillRect(-16, -15, 32, 5);
+  } else if (hatId === 'crown') {
+    cCtx.fillStyle = '#ffd700';
+    cCtx.beginPath();
+    cCtx.moveTo(-28, -10);
+    cCtx.lineTo(-28, -32);
+    cCtx.lineTo(-15, -22);
+    cCtx.lineTo(0, -40);
+    cCtx.lineTo(15, -22);
+    cCtx.lineTo(28, -32);
+    cCtx.lineTo(28, -10);
+    cCtx.closePath();
+    cCtx.fill();
+    cCtx.fillStyle = '#ff0000';
+    cCtx.beginPath(); cCtx.arc(0, -22, 4, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#00aaff';
+    cCtx.beginPath(); cCtx.arc(-16, -18, 3, 0, Math.PI * 2); cCtx.fill();
+    cCtx.beginPath(); cCtx.arc(16, -18, 3, 0, Math.PI * 2); cCtx.fill();
+  } else if (hatId === 'grad') {
+    cCtx.fillStyle = '#111';
+    cCtx.beginPath(); 
+    cCtx.moveTo(-32, -15); 
+    cCtx.lineTo(0, -32); 
+    cCtx.lineTo(32, -15); 
+    cCtx.lineTo(0, 2); 
+    cCtx.closePath(); 
+    cCtx.fill();
+    cCtx.beginPath(); cCtx.ellipse(0, -15, 20, 10, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#ffd700';
+    cCtx.beginPath(); cCtx.arc(26, -15, 5, 0, Math.PI * 2); cCtx.fill();
+    cCtx.strokeStyle = '#ffd700'; cCtx.lineWidth = 3;
+    cCtx.beginPath(); cCtx.moveTo(26, -15); cCtx.lineTo(35, 8); cCtx.stroke();
+    cCtx.fillStyle = '#ffd700';
+    cCtx.beginPath(); cCtx.arc(35, 8, 4, 0, Math.PI * 2); cCtx.fill();
+  } else if (hatId === 'helmet') {
+    cCtx.fillStyle = '#ffcc00';
+    cCtx.beginPath(); cCtx.ellipse(0, -12, 28, 22, 0, Math.PI, 0); cCtx.fill();
+    cCtx.fillStyle = '#ffaa00';
+    cCtx.beginPath(); cCtx.ellipse(0, -5, 32, 6, 0, 0, Math.PI * 2); cCtx.fill();
+  } else if (hatId === 'pumpkin') {
+    cCtx.fillStyle = '#ff8800';
+    cCtx.beginPath(); cCtx.ellipse(0, -18, 24, 20, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.strokeStyle = '#cc6600'; cCtx.lineWidth = 1.5;
+    for (let i = -12; i <= 12; i += 12) {
+      cCtx.beginPath(); cCtx.ellipse(i, -18, 6, 20, 0, 0, Math.PI * 2); cCtx.stroke();
+    }
+    cCtx.fillStyle = '#228b22';
+    cCtx.fillRect(-4, -40, 8, 10);
+  } else if (hatId === 'cowboy') {
+    cCtx.fillStyle = '#8B4513';
+    cCtx.beginPath(); cCtx.ellipse(0, -8, 42, 10, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#A0522D';
+    cCtx.beginPath();
+    cCtx.moveTo(-22, -8);
+    cCtx.lineTo(-18, -28);
+    cCtx.quadraticCurveTo(0, -35, 18, -28);
+    cCtx.lineTo(22, -8);
+    cCtx.closePath();
+    cCtx.fill();
+    cCtx.fillStyle = '#333';
+    cCtx.fillRect(-22, -14, 44, 5);
+    cCtx.fillStyle = '#ffd700';
+    cCtx.fillRect(-4, -14, 8, 5);
+  }
+  
   cCtx.restore();
 }
 
@@ -962,16 +1104,18 @@ function renderShop() {
     
     if (harpoonInShop && !hasHarpoon) {
        html += `
-        <div class="tree-branch" style="border-color:rgba(255,100,100,0.5); background:rgba(255,100,100,0.1); margin-top:15px;">
-          <div class="tree-branch-title" style="color:#ff8888;">🔱 Спецснаряжение</div>
+        <div class="tree-branch" style="border-color:rgba(255,100,100,0.8); background:rgba(255,100,100,0.15); margin-top:15px; border-width: 3px; box-shadow: 0 0 15px rgba(255,50,50,0.3);">
+          <div class="tree-branch-title" style="color:#ff4444; font-size:14px; text-shadow: 0 0 5px rgba(255,0,0,0.5);">🔱 СПЕЦСНАРЯЖЕНИЕ</div>
           <div class="tree-nodes">
-            <div class="tree-node" style="border-color:rgba(255,100,100,0.5);">
-              <div class="node-icon">🔱</div>
-              <div class="node-info">
-                <div class="node-name">Острога Рыбака</div>
-                <div class="node-desc">Позволяет победить Сома-Гиганта во втором бою</div>
+            <div class="tree-node" style="border-color:rgba(255,100,100,0.8); background: rgba(50,20,20,0.8); display:flex; flex-direction:column; padding:10px;">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                <div class="node-icon" style="font-size:32px; text-shadow: 0 0 10px red;">🔱</div>
+                <div class="node-info">
+                  <div class="node-name" style="color:#ff8888; font-size:14px;">Острога Рыбака</div>
+                  <div class="node-desc" style="color:#aaa; font-size:11px;">Позволяет победить Сома-Гиганта во втором бою</div>
+                </div>
               </div>
-              <button class="buy-btn" onclick="buyHarpoon()" ${score >= 1000 ? '' : 'disabled'}>Купить (1000)</button>
+              <button class="buy-btn" style="background: #d32f2f; border-color: #ff8888; width:100%; padding:10px; font-size:14px;" onclick="buyHarpoon()" ${score >= 1000 ? '' : 'disabled'}>Купить (1000 💰)</button>
             </div>
           </div>
         </div>`;
@@ -980,13 +1124,15 @@ function renderShop() {
         <div class="tree-branch" style="border-color:rgba(100,255,100,0.5); background:rgba(100,255,100,0.1); margin-top:15px;">
           <div class="tree-branch-title" style="color:#88ff88;">🔱 Спецснаряжение</div>
           <div class="tree-nodes">
-            <div class="tree-node unlocked">
-              <div class="node-icon">✅</div>
-              <div class="node-info">
-                <div class="node-name">Острога Рыбака</div>
-                <div class="node-desc">Куплена и готова к бою!</div>
+            <div class="tree-node unlocked" style="display:flex; justify-content:space-between; align-items:center; padding:10px;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <div class="node-icon" style="font-size:24px;">✅</div>
+                <div class="node-info">
+                  <div class="node-name" style="color:#fff;">Острога Рыбака</div>
+                  <div class="node-desc" style="color:#88ff88; font-size:11px;">Трофей. Готова к бою!</div>
+                </div>
               </div>
-              <button class="buy-btn owned-btn" disabled>✓ Есть</button>
+              <button class="buy-btn" style="background:#444; cursor:default;" disabled>✓ Есть</button>
             </div>
           </div>
         </div>`;
@@ -1128,7 +1274,7 @@ function drawTreeLines(CELL_W, CELL_H, START_X, START_Y) {
 }
 
 // ==================================================================
-// ЧАСТЬ 5: ДНЕВНИК (КАТАЛОГ + СТАТИСТИКА)
+// ЧАСТЬ 5: ДНЕВНИК, ДОСТИЖЕНИЯ, ГАРДЕРОБ
 // ==================================================================
 let currentCatalogTab = 'fish';
 
@@ -1151,25 +1297,46 @@ function addToCatalog(name) {
   saveProgress();
   checkNewAchievements();
 }
+
 function checkNewAchievements() {
+  let hasNew = false;
   for (const a of ACHV_LIST) {
-    if (!achievements[a.id] && a.check()) {
+    if (a.levels) {
+      let currentLvl = achievements[a.id] || 0;
+      // Проверяем каждый следующий уровень
+      if (currentLvl < a.levels.length && a.levels[currentLvl].check()) {
+        achievements[a.id] = currentLvl + 1;
+        saveProgress();
+        hasNew = true;
+        
+        // Шляпы
+        const hat = HATS.find(h => h.achievement === `${a.id}_${currentLvl + 1}`);
+        if (hat && !unlockedHats.includes(hat.id)) {
+          unlockedHats.push(hat.id);
+          if (!activeHat) activeHat = hat.id;
+        }
+        showAchievementToast(`${a.levels[currentLvl].name}`);
+      }
+    } else if (!achievements[a.id] && a.check()) {
       achievements[a.id] = true;
       saveProgress();
-      if (!a.secret || bossMet) {
-        showAchievementToast(a.name);
-        playSound('achv');
-        vibrate([100, 50, 100, 50, 200]);
-      }
+      hasNew = true;
+      if (!a.secret || bossMet) showAchievementToast(a.name);
     }
   }
+  if (hasNew) {
+    playSound('achv');
+    vibrate([100, 50, 100, 50, 200]);
+  }
 }
+
 function showAchievementToast(text) {
   const el = document.getElementById('achvToast');
   el.innerHTML = `🏆 Достижение!<br><span style="font-size:11px;">${text}</span>`;
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 3000);
 }
+
 function toggleCatalog(e) {
   if (e) e.stopPropagation();
   const overlay = document.getElementById('catalogOverlay');
@@ -1227,40 +1394,115 @@ function renderStats() {
   document.getElementById('statStreak').textContent = gameStats.bestStreak;
   document.getElementById('statMiss').textContent = gameStats.misses;
 
+  // Легенда
+  const legendEl = document.getElementById('somLegend');
+  if (bossDefeated) {
+    legendEl.innerHTML = `<div style="text-align:center; color:#ffd700; font-weight:bold; padding:10px; background:rgba(255,215,0,0.1); border-radius:8px; border:1px solid #ffd700; margin-bottom:15px;">🏆 Сом-Гигант повержен. Река снова спокойна.</div>`;
+  } else {
+    legendEl.innerHTML = `<div style="padding:10px; background:rgba(0,0,0,0.3); border-radius:8px; border-left:4px solid #ff4444; margin-bottom:15px; font-size:12px; color:#ddd;">
+      <b>Легенда о Соме:</b> Ходят слухи, что в этой реке обитает Сом-Гигант. Он появляется, когда рыбак соберёт всю коллекцию рыб, очистит реку от мусора, поймает 100 рыб и 10 раз выйдет на ночную рыбалку. Будь готов к встрече.
+    </div>`;
+  }
+
+  // Трофеи
   const trophyGrid = document.getElementById('trophyGrid');
   let html = '';
   let hasRecords = false;
   
-  // Отображаем только рыб, мусор исключаем
   for (const f of FISH_ONLY) {
     if (fishRecords[f.name]) {
       hasRecords = true;
       const weight = fishRecords[f.name];
       const isGold = weight >= (f.maxW - (f.maxW - f.minW) * 0.1);
       
-      html += `
-        <div class="trophy-card ${isGold ? 'gold' : ''}">
+      html += `<div class="trophy-card ${isGold ? 'gold' : ''}">
           <div class="t-emoji">${f.emoji}</div>
           <div class="t-name">${f.name}</div>
           <div class="t-weight">${weight} г</div>
           <div class="t-label">${isGold ? '⭐ Золотой трофей' : 'Рекорд'}</div>
-        </div>
-      `;
+        </div>`;
     }
+  }
+
+  if (bossDefeated) {
+    hasRecords = true;
+    html += `
+      <div class="trophy-card" style="border-color: #ff4444; background: rgba(255,0,0,0.1); box-shadow: 0 0 15px rgba(255,0,0,0.3);">
+        <div class="t-emoji" style="font-size:36px;">🐋</div>
+        <div class="t-name" style="color:#ff4444;">Сом-Гигант</div>
+        <div class="t-weight" style="color:#ffd700;">25 000 г</div>
+        <div class="t-label" style="color:#ffaa88;">⭐ Легендарный трофей</div>
+        <div style="font-size:10px; color:#ccc; margin-top:5px; line-height:1.2;">Повержен в неравном бою.</div>
+      </div>`;
   }
   
   if (!hasRecords) html = '<div style="grid-column: 1/-1; text-align:center; color:#888; padding:20px;">Пока нет рекордов. Ловите рыбу!</div>';
   trophyGrid.innerHTML = html;
 
+  // Гардероб
+  const wardrobeGrid = document.getElementById('wardrobeGrid');
+  if (wardrobeGrid) {
+    wardrobeGrid.innerHTML = HATS.map(h => {
+      const isUnlocked = unlockedHats.includes(h.id);
+      const isActive = activeHat === h.id;
+      
+      return `<div class="fish-card ${isUnlocked ? 'caught' : ''} ${isActive ? 'record-holder' : ''}" style="cursor:${isUnlocked ? 'pointer' : 'default'}; text-align:center; padding:8px;" onclick="${isUnlocked ? `selectHat('${h.id}')` : ''}">
+        <div style="font-size:28px; margin-bottom:4px;">${h.name.split(' ')[0]}</div>
+        <div class="name" style="font-size:10px;">${isUnlocked ? h.name.substring(2) : '???'}</div>
+        ${isActive ? '<div style="font-size:10px; color:#ffd700; font-weight:bold;">✓ Надето</div>' : (isUnlocked ? '<div style="font-size:10px; color:#7fff7f;">Нажми</div>' : '<div style="font-size:10px; color:#666;">Закрыто</div>')}
+      </div>`;
+    }).join('');
+  }
+
   // Достижения
-  document.getElementById('achvGrid').innerHTML = ACHV_LIST.map(a => {
+  const achvGrid = document.getElementById('achvGrid');
+  
+  const sortedAchv = [...ACHV_LIST].sort((a, b) => (b.isBossKey ? 1 : 0) - (a.isBossKey ? 1 : 0));
+  
+  achvGrid.innerHTML = sortedAchv.map(a => {
+    if (a.levels) {
+      let currentLvl = achievements[a.id] || 0;
+      const isMax = currentLvl >= a.levels.length;
+      const nextLevel = isMax ? null : a.levels[currentLvl];
+      const prevLevel = currentLvl > 0 ? a.levels[currentLvl - 1] : null;
+      
+      let pct = 0;
+      let progressText = '';
+      if (isMax) {
+        progressText = 'Максимум';
+        pct = 100;
+      } else {
+        progressText = nextLevel.progress();
+        const match = progressText.match(/(\d+)/);
+        if (match) {
+            const currentVal = parseInt(match[1]);
+            const target = nextLevel.threshold;
+            const prevTarget = prevLevel ? prevLevel.threshold : 0;
+            pct = Math.max(0, Math.min(100, ((currentVal - prevTarget) / (target - prevTarget)) * 100));
+        }
+      }
+
+      if (a.secret && !bossMet) {
+         return `<div class="achv secret">
+          <div class="title">❓ Секретное достижение</div>
+          <div class="desc">Продолжайте играть, чтобы узнать...</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+        </div>`;
+      }
+
+      return `<div class="achv ${isMax ? 'done' : ''}">
+          <div class="title">${a.isBossKey ? '🔴 ' : ''}${a.name} (Ур. ${currentLvl}/${a.levels.length})</div>
+          <div class="desc">${isMax ? 'Все уровни пройдены!' : `Следующий: ${nextLevel.name} (${nextLevel.desc})`}</div>
+          <div class="desc" style="margin-top:2px;">Прогресс: ${progressText}</div>
+          <div class="bonus">${isMax ? '✓ ' + a.levels[a.levels.length-1].bonus : `Далее: ${nextLevel.bonus}`}</div>
+          ${!isMax ? `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>` : ''}
+        </div>`;
+    }
+    
     const done = achievements[a.id];
     const isSecret = a.secret && !bossMet;
     let pct = 0;
-    if (a.id === 'pro') pct = Math.min(totalCaught, 100);
-    else if (a.id === 'night') pct = Math.min((achievements.nightCount||0), 10) * 10;
-    else if (a.id === 'millionaire') pct = Math.min((score + gameStats.spent)/1000000*100, 100);
-    else if (a.id === 'rodmaster') pct = ['body', 'line', 'reel', 'hook', 'float'].filter(k => treeUpgrades[k] >= TREE_DATA[k].levels.length - 1).length / 5 * 100;
+    if (a.id === 'night') pct = Math.min((achievements.nightCount||0), 10) * 10;
     else if (a.id === 'collector') pct = FISH_ONLY.filter(f => catalog[f.name] > 0).length / FISH_ONLY.length * 100;
     else if (a.id === 'trashman') pct = TRASH_ONLY.filter(f => catalog[f.name] > 0).length / TRASH_ONLY.length * 100;
     else if (a.id === 'leviathan') pct = bossDefeated ? 100 : 0;
@@ -1272,13 +1514,25 @@ function renderStats() {
         <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
       </div>`;
     }
+
+    let titlePrefix = a.isBossKey ? '🔴 ' : '';
     
     return `<div class="achv ${done ? 'done' : ''} ${a.secret ? 'secret' : ''}">
-        <div class="title">${a.name}</div><div class="desc">${a.desc}</div>
+        <div class="title">${titlePrefix}${a.name}</div><div class="desc">${a.desc}</div>
         <div class="desc" style="margin-top:2px;">Прогресс: ${a.progress()}</div>
         ${done ? `<div class="bonus">✓ ${a.bonus}</div>` : `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>`}
       </div>`;
   }).join('');
+}
+
+function selectHat(hatId) {
+  if (!unlockedHats.includes(hatId)) return;
+  if (activeHat === hatId) activeHat = null;
+  else activeHat = hatId;
+  
+  localStorage.setItem('fishActiveHat', activeHat || '');
+  playSound('buy');
+  renderStats();
 }
 
 // ==================================================================
@@ -1298,6 +1552,7 @@ function resetProgress(e) {
   treeUpgrades = {body:0, line:0, float:0, hook:0, keeper:0, reel:0, handle:0, net:0, bait:0};
   gameStats = {earned:0, spent:0, misses:0, bestStreak:0, totalWeight:0};
   fishRecords = {};
+  unlockedHats = []; activeHat = null;
   catchStreak = 0; missStreak = 0;
   character = null;
   currentWeatherIndex = 0; weatherTimer = 0;
@@ -1729,7 +1984,6 @@ function update(dt) {
   updateGameTime(dt);
   const t = performance.now() / 1000;
   
-  // Плавное затухание эффекта смены погоды
   if (weatherFadeAlpha > 0) {
     weatherFadeAlpha -= dt * 1.5;
     if (weatherFadeAlpha < 0) weatherFadeAlpha = 0;
@@ -1864,18 +2118,13 @@ function drawTrashBody(x, y, size, color, emoji) {
   ctx.restore();
 }
 
-// Отрисовка экипировки на берегу (на причале)
 function drawGear(t) {
-  // Подсак (лежит на досках справа от рыбака)
   const netLvl = treeUpgrades.net || 0;
   if (netLvl > 0) {
     ctx.save();
-    // СДВИГАЕМ ВПРАВО, ЧТОБЫ БЫЛО ВИДНО
     ctx.translate(145, 495); 
-    // Ручка
     ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(30, -10); ctx.stroke();
-    // Сетка
     ctx.fillStyle = 'rgba(100, 150, 200, 0.6)';
     ctx.beginPath();
     if (netLvl === 1) { 
@@ -1888,21 +2137,17 @@ function drawGear(t) {
     ctx.restore();
   }
 
-  // Садок (стоит на краю причала, свисает в воду)
   const keeperLvl = treeUpgrades.keeper || 0;
   if (keeperLvl > 0) {
     ctx.save();
-    // СДВИГАЕМ ВПРАВО И ВНИЗ, ЧТОБЫ БЫЛО ВИДНО
     ctx.translate(160, 505); 
-    // Веревка
     ctx.strokeStyle = '#ddd'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(0, 5); ctx.stroke();
-    // Сетка / Ведро
-    if (keeperLvl === 1) { // Ведро
+    if (keeperLvl === 1) { 
       ctx.fillStyle = 'rgba(150, 150, 150, 0.9)';
       ctx.beginPath(); ctx.rect(-8, 5, 16, 20); ctx.fill();
       ctx.strokeStyle = '#777'; ctx.lineWidth = 1; ctx.strokeRect(-8, 5, 16, 20);
-    } else { // Садок (сетка)
+    } else { 
       ctx.fillStyle = 'rgba(200, 200, 200, 0.4)';
       ctx.beginPath(); ctx.ellipse(0, 15, 12, 18, 0, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1; ctx.stroke();
@@ -2016,7 +2261,6 @@ function drawEnvironment(t) {
     for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc((i * 200 + t * 10) % W, 350 + i * 40, 150, 0, Math.PI * 2); ctx.fill(); }
   }
 
-  // Плавный переход (вспышка)
   if (weatherFadeAlpha > 0) {
     ctx.fillStyle = `rgba(255, 255, 255, ${weatherFadeAlpha * 0.4})`;
     ctx.fillRect(0, 0, W, H);
@@ -2027,76 +2271,40 @@ function drawFisherman() {
   const weather = getWeather();
   const isWoman = character === 'fisherwoman';
   
-  // --- РИСУЕМ ПРИЧАЛ (ПОМОСТ) ---
   ctx.save();
-  // Тени под водой
   ctx.fillStyle = 'rgba(0,0,0,0.3)';
   ctx.beginPath(); ctx.ellipse(90, 515, 80, 20, 0, 0, Math.PI * 2); ctx.fill();
   
-  // Сваи (столбы)
-  ctx.fillStyle = '#4a3010'; // Темное дерево для свай
+  ctx.fillStyle = '#4a3010'; 
   ctx.fillRect(20, 500, 10, 30);
   ctx.fillRect(150, 500, 10, 30);
   
-  // Сам помост (доски)
-  ctx.fillStyle = '#8a6a3a'; // Светлое дерево
+  ctx.fillStyle = '#8a6a3a'; 
   ctx.beginPath();
-  ctx.moveTo(10, 490); // Левый край
-  ctx.lineTo(170, 490); // Правый край
-  ctx.lineTo(165, 510); // Нижний правый (перспектива)
-  ctx.lineTo(15, 510);  // Нижний левый
+  ctx.moveTo(10, 490); 
+  ctx.lineTo(170, 490); 
+  ctx.lineTo(165, 510); 
+  ctx.lineTo(15, 510);  
   ctx.closePath();
   ctx.fill();
   
-  // Линии досок
   ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = 1.5;
   for(let x = 30; x < 160; x += 20) {
     ctx.beginPath(); ctx.moveTo(x, 490); ctx.lineTo(x-5, 510); ctx.stroke();
   }
   ctx.restore();
   
-  // --- РИСУЕМ РЫБАКА ---
-  // (Теперь он сидит на высоте y=490, а не 480)
-  ctx.fillStyle = isWoman ? '#c0392b' : '#2a4a6a';
-  ctx.beginPath(); ctx.ellipse(82, 460, 28, 40, 0, 0, Math.PI * 2); ctx.fill(); // Тело
+  // Тело
+  drawCharacterBody(ctx, 82, 480, character, 1, false, !!activeHat);
   
-  // Рука с удочкой
-  ctx.strokeStyle = isWoman ? '#c0392b' : '#2a4a6a'; ctx.lineWidth = 11; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(70, 440); ctx.lineTo(115, 460); ctx.lineTo(rod.baseX, rod.baseY); ctx.stroke();
-  
-  // Голова
-  ctx.fillStyle = '#f0c090'; ctx.beginPath(); ctx.arc(82, 400, 23, 0, Math.PI * 2); ctx.fill();
-  
-  // Одежда/Детали
-  if (isWoman) {
-    ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.moveTo(62, 460); ctx.lineTo(52, 490); ctx.lineTo(112, 490); ctx.lineTo(102, 460); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = '#8a2a1a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(72, 470); ctx.lineTo(68, 490); ctx.stroke(); ctx.beginPath(); ctx.moveTo(92, 470); ctx.lineTo(96, 490); ctx.stroke();
-    // Волосы
-    ctx.fillStyle = '#8a5a2a'; ctx.beginPath(); ctx.ellipse(82, 400, 28, 32, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#f0c090'; ctx.beginPath(); ctx.ellipse(82, 400, 18, 22, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#8a5a2a'; ctx.beginPath(); ctx.ellipse(82, 430, 8, 20, 0, 0, Math.PI * 2); ctx.fill();
-  } else {
-    ctx.fillStyle = '#1a2a3a'; ctx.fillRect(65, 475, 18, 20); ctx.fillRect(88, 475, 18, 20); // Штаны
-    // Кепка
-    ctx.fillStyle = '#2a3a2a'; ctx.beginPath(); ctx.ellipse(82, 388, 28, 8, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#3a4a3a'; ctx.beginPath(); ctx.ellipse(82, 378, 22, 14, 0, Math.PI, 0); ctx.fill();
+  if (activeHat) {
+    drawHat(ctx, activeHat, 82, 430, isWoman);
   }
-  
-  // Ноги (свисают с причала)
-  ctx.fillStyle = isWoman ? '#c0392b' : '#2a4a6a'; 
-  if (isWoman) {
-    ctx.fillRect(68, 490, 12, 25); // Левая нога
-    ctx.fillRect(84, 490, 12, 25); // Правая нога
-  } else {
-    ctx.fillRect(65, 490, 14, 25); 
-    ctx.fillRect(85, 490, 14, 25); 
-  }
-  // Обувь
-  ctx.fillStyle = '#7a5a2a'; 
-  ctx.beginPath(); ctx.ellipse(70, 520, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); 
-  ctx.beginPath(); ctx.ellipse(95, 520, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
 
-  // Ночная подсветка
+  // Рука с удочкой
+  ctx.strokeStyle = isWoman ? '#d2a679' : '#2c3e50'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(70, 440); ctx.lineTo(115, 460); ctx.lineTo(rod.baseX, rod.baseY); ctx.stroke();
+
   if (weather === 'night') {
     ctx.fillStyle = 'rgba(255, 220, 100, 0.2)'; ctx.beginPath(); ctx.arc(100, 450, 40, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#ffdd44'; ctx.beginPath(); ctx.arc(100, 450, 6, 0, Math.PI * 2); ctx.fill();
@@ -2120,7 +2328,6 @@ function drawWeatherTimer() {
 }
 
 function drawUI() {
-  // Основной блок
   let boxHeight = 120;
   if (catchStreak >= 3 || missStreak >= 2) boxHeight += 20;
   
@@ -2143,7 +2350,6 @@ function drawUI() {
   
   drawWeatherTimer();
   
-  // Панель баффов (иконки)
   let buffY = 190;
   if (baitCount > 0) {
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.roundRect(15, buffY, 80, 30, 8); ctx.fill();
@@ -2242,11 +2448,33 @@ function drawSwipeIndicator() {
   ctx.beginPath(); ctx.arc(swipe.curX, swipe.curY, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 100, 0.8)'; ctx.fill();
 }
 
+let hintCounter = 0;
+
 function drawHints() {
   ctx.font = 'bold 18px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
   let hint = '', color = '#fff';
+  
+  if (state === S.IDLE) {
+    if (!bossDefeated) {
+      if (hintCounter % 4 === 0) {
+        const rumors = [
+          "Местные говорят, на дне живёт гигантский сом...",
+          "Вода сегодня странно тихая. Будто кто-то на глубине наблюдает.",
+          "Старик с причала обмолвился: 'Собери всю рыбу — и он придёт'",
+          "Если очистить реку от мусора, гигант потеряет укрытие.",
+          "Сом выходит только ночью. Тот, кто ловил в темноте, видел его тень."
+        ];
+        hint = rumors[Math.floor(Math.random() * rumors.length)];
+        color = '#ffdd44';
+      } else {
+        hint = '👆 Нажми на воду или свайпни вниз';
+      }
+    } else {
+      hint = '👆 Нажми на воду или свайпни вниз';
+    }
+  }
+  
   switch (state) {
-    case S.IDLE: hint = '👆 Нажми на воду или свайпни вниз'; break;
     case S.WAITING: hint = '⏳ Ждём поклёвки...'; break;
     case S.BITE: hint = '❗ КЛЮЁТ! Скорее нажми!'; color = '#ffdd44'; break;
     case S.RETURNING: hint = '✨ Тянешь улов...'; break;
@@ -2257,6 +2485,9 @@ function drawHints() {
     case S.BOSS_DEATH: hint = '💀 СОМ УТАЩИЛ ТЕБЯ В ОМУТ!'; color = '#ff4444'; break;
     case S.BOSS_WIN: hint = '🏆 ТЫ ОДОЛЕЛ РЕЧНОГО МОНСТРА!'; color = '#ffd700'; break;
   }
+
+  if (state === S.IDLE && !bossDefeated) hintCounter++;
+
   if (hint && state !== S.BOSS_INSTRUCTION) {
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.roundRect(W/2 - 230, H - 55, 460, 38, 10); ctx.fill();
     ctx.fillStyle = color; ctx.fillText(hint, W/2, H - 30);
@@ -2464,8 +2695,8 @@ function draw() {
   }
   
   drawFisherman();
-  drawGear(t); // Отрисовка экипировки
-  drawRod(); // Отрисовка кастомизированной удочки
+  drawGear(t); 
+  drawRod(); 
   
   if (swipe.active) drawSwipeIndicator();
   
@@ -2496,6 +2727,10 @@ if (!CanvasRenderingContext2D.prototype.roundRect) {
 }
 
 let lastTime = performance.now();
+
+// Миграция достижений при загрузке
+migrateAchievements();
+
 function loop(now) {
   const dt = Math.min(0.05, (now - lastTime) / 1000);
   lastTime = now;
