@@ -5,12 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>🎣 Рыбалка на речке</title>
 <style>
+  /* ==================== 1. БАЗОВЫЕ СТИЛИ ==================== */
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #0d1520; font-family: 'Segoe UI', sans-serif; user-select: none; touch-action: none; }
   #game-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: #0d1520; }
   canvas { display: block; width: 100%; height: 100%; object-fit: contain; touch-action: none; }
   @media (orientation: portrait) and (max-width: 768px) { canvas { object-fit: cover; } }
   
+  /* ==================== 2. КНОПКИ УПРАВЛЕНИЯ ==================== */
   .top-panel { position: absolute; top: 10px; right: 10px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 220px; z-index: 5; }
   .btn { color: white; border: 2px solid; padding: 6px 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; transition: transform 0.1s; backdrop-filter: blur(4px); white-space: nowrap; }
   .btn:active { transform: scale(0.92); }
@@ -20,12 +22,14 @@
   #fullscreenBtn { background: rgba(120, 80, 200, 0.85); border-color: rgba(180,140,255,0.5); }
   #resetBtn { background: rgba(200, 60, 60, 0.85); border-color: rgba(255,100,100,0.5); }
   
+  /* ==================== 3. ОВЕРЛЕИ И МОДАЛЬНЫЕ ОКНА ==================== */
   .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; backdrop-filter: blur(6px); z-index: 10; padding: 15px; }
   .overlay.show { display: flex; }
   .panel { background: linear-gradient(180deg, #2a3a4a, #1a2a3a); border: 2px solid rgba(100,180,255,0.4); border-radius: 16px; padding: 15px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.8); position: relative; }
   .panel h2 { color: #aaddff; margin: 0 0 12px; text-align: center; font-size: 18px; }
   .close-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 18px; font-weight: bold; display: flex; justify-content: center; align-items: center; }
   
+  /* ==================== 4. КАТАЛОГ ==================== */
   .section-title { color: #aaddff; font-size: 12px; font-weight: bold; margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(100,180,255,0.2); padding-bottom: 4px; }
   .fish-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
   @media (min-width: 500px) { .fish-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; } }
@@ -41,6 +45,7 @@
   .fish-card .desc { font-size: 10px; color: #999; margin-top: 4px; line-height: 1.2; display: none; }
   .fish-card.caught .desc, .fish-card.known .desc { display: block; }
 
+  /* ==================== 5. ДОСТИЖЕНИЯ ==================== */
   .achv-grid { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 8px; }
   @media (min-width: 500px) { .achv-grid { grid-template-columns: 1fr 1fr; gap: 8px; } }
   .achv { padding: 8px; border-radius: 8px; background: rgba(255,215,0,0.05); border: 2px dashed rgba(255,215,0,0.3); }
@@ -55,6 +60,7 @@
   .achv .progress-bar { height: 4px; background: rgba(0,0,0,0.3); border-radius: 2px; margin-top: 4px; overflow: hidden; }
   .achv .progress-fill { height: 100%; background: #ffd700; border-radius: 2px; }
 
+  /* ==================== 6. МАГАЗИН ==================== */
   .shop-tabs { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
   .shop-tab { flex: 1; min-width: 70px; padding: 6px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 6px; color: #aaa; font-weight: bold; font-size: 11px; cursor: pointer; }
   .shop-tab.active { background: rgba(100,180,255,0.15); border-color: #aaddff; color: #fff; }
@@ -71,12 +77,14 @@
   .shop-item.equipped { border-color: #ffd700; background: rgba(255,215,0,0.1); }
   .shop-item.harpoon { border-color: rgba(255,100,100,0.5); background: rgba(255,100,100,0.1); }
 
+  /* ==================== 7. ТОСТЫ И УВЕДОМЛЕНИЯ ==================== */
   #achvToast, #toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: bold; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; text-align: center; border: 2px solid #fff; z-index: 20; width: 90%; max-width: 350px; }
   #achvToast { background: linear-gradient(180deg, #ffd700, #ffa000); color: #1a1a1a; }
   #achvToast.show, #toast.show { opacity: 1; transform: translateX(-50%) translateY(10px); }
   #toast { top: 50%; transform: translate(-50%, -50%); border-color: #4CAF50; background: rgba(0,0,0,0.9); width: auto; padding: 12px 24px; }
   #toast.show { transform: translate(-50%, -50%) scale(1.05); }
 
+  /* ==================== 8. ЭКРАН ВЫБОРА ПЕРСОНАЖА ==================== */
   #charSelect { background: rgba(10, 15, 25, 0.95); }
   .char-select-panel { text-align: center; }
   .char-select-panel h2 { font-size: 24px; margin-bottom: 8px; color: #fff; }
@@ -88,6 +96,7 @@
   .char-card .char-name { color: #fff; font-weight: bold; font-size: 15px; }
   .char-card .char-desc { color: #888; font-size: 11px; margin-top: 2px; }
 
+  /* ==================== 9. QTE УПРАВЛЕНИЕ (МОБИЛКА) ==================== */
   #qteControls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: none; gap: 15px; z-index: 15; touch-action: none; }
   #qteControls.show { display: flex; }
   .qte-btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(200, 40, 40, 0.8); border: 3px solid #ff6666; color: #fff; font-size: 30px; font-weight: bold; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(255,60,60,0.5); user-select: none; cursor: pointer; }
@@ -156,11 +165,19 @@
 </div>
 
 <script>
+// ==================================================================
+// ЧАСТЬ 1: КОНСТАНТЫ И ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+// ==================================================================
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const W = 900, H = 600;
 
-// ===== ПРОГРЕСС =====
+// Состояния игры
+const S = { IDLE: 'idle', CASTING: 'casting', WAITING: 'waiting', BITE: 'bite', REELING: 'reeling', RETURNING: 'returning', RESULT: 'result', BOSS_INTRO: 'boss_intro', BOSS_QTE: 'boss_qte', BOSS_DEATH: 'boss_death', BOSS_WIN: 'boss_win' };
+let state = S.IDLE;
+let stateTime = 0;
+
+// Прогресс
 let score = parseInt(localStorage.getItem('fishScore') || '0');
 let bestScore = parseInt(localStorage.getItem('fishBest') || '0');
 let totalCaught = parseInt(localStorage.getItem('fishTotal') || '0');
@@ -174,15 +191,12 @@ let achievements = JSON.parse(localStorage.getItem('fishNewAchievements') || '{}
 let bossDefeated = localStorage.getItem('fishBossDefeated') === 'true';
 let hasHarpoon = localStorage.getItem('fishHasHarpoon') === 'true';
 let harpoonInShop = localStorage.getItem('fishHarpoonInShop') === 'true';
-let bossMet = localStorage.getItem('fishBossMet') === 'true'; // Встречал ли игрок босса
+let bossMet = localStorage.getItem('fishBossMet') === 'true';
 
 let catchStreak = 0, missStreak = 0;
 let character = localStorage.getItem('fishCharacter') || null;
 
-const S = { IDLE: 'idle', CASTING: 'casting', WAITING: 'waiting', BITE: 'bite', REELING: 'reeling', RETURNING: 'returning', RESULT: 'result', BOSS_INTRO: 'boss_intro', BOSS_QTE: 'boss_qte', BOSS_DEATH: 'boss_death', BOSS_WIN: 'boss_win' };
-let state = S.IDLE;
-let stateTime = 0;
-
+// Время и погода
 const WEATHERS = ['day', 'sunset', 'night', 'rain', 'fog'];
 const WEATHER_ICONS = { day: '☀️', sunset: '🌅', night: '🌙', rain: '🌧️', fog: '🌫️' };
 let currentWeatherIndex = 0, weatherTimer = 0, gameTimeMinutes = 6 * 60;
@@ -194,7 +208,7 @@ function changeWeather() { currentWeatherIndex = (currentWeatherIndex + 1) % WEA
 function updateGameTime(dt) { gameTimeMinutes += dt; if (gameTimeMinutes >= 24 * 60) gameTimeMinutes -= 24 * 60; }
 function formatTime() { const h = Math.floor(gameTimeMinutes / 60) % 24; const m = Math.floor(gameTimeMinutes) % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; }
 
-// ДАННЫЕ
+// Данные
 const FISH_DESCRIPTIONS = {
   'Окунь':         { where: 'Мелководье', when: 'День, закат', how: 'Клюёт часто. Идеален для новичков.' },
   'Карась':        { where: 'Заводи', when: 'День', how: 'Медленно берёт, но стабильно.' },
@@ -212,6 +226,7 @@ const FISH_DESCRIPTIONS = {
   'Шина':          { where: 'Дно', when: 'Любое', how: 'Крупный мусор.' },
   'Банка':         { where: 'Дно', when: 'Любое', how: 'Мелкий мусор.' }
 };
+
 const BOOKS = [
   { id: 'bookОкунь',    name: '📕 Справочник окуня',    cost: 50,  opens: ['Окунь', 'Ёрш', 'Плотва'] },
   { id: 'bookКарась',   name: '📕 Справочник карася',   cost: 80,  opens: ['Карась', 'Лещ'] },
@@ -220,6 +235,7 @@ const BOOKS = [
   { id: 'bookЗолотая',  name: '📕 Справочник золотой',  cost: 400, opens: ['Золотая рыбка', 'Карп'] },
   { id: 'bookМусор',    name: '📕 Справочник мусора',   cost: 60,  opens: ['Ботинок', 'Бутылка', 'Шина', 'Банка'] }
 ];
+
 const FISH_TYPES = [
   { name: 'Окунь',         color: '#e8a020', size: 25, pts: 10,  baseWeight: 30, emoji: '🐟', isTrash: false, isRare: false },
   { name: 'Карась',        color: '#d4b048', size: 30, pts: 15,  baseWeight: 25, emoji: '🐠', isTrash: false, isRare: false },
@@ -239,12 +255,14 @@ const FISH_TYPES = [
 ];
 const FISH_ONLY = FISH_TYPES.filter(f => !f.isTrash);
 const TRASH_ONLY = FISH_TYPES.filter(f => f.isTrash);
+
 const ROD_SKINS = {
   bamboo: { name: 'Бамбуковая', emoji: '🎋', price: 0, bonus: 0, color1: '#8B4513', color2: '#a06030', lineColor: 'rgba(255,255,255,0.4)', glow: false },
   spinning: { name: 'Спиннинг', emoji: '🎣', price: 500, bonus: 0.02, color1: '#2a3a4a', color2: '#4a5a6a', lineColor: 'rgba(200,220,255,0.5)', glow: false },
   carbon: { name: 'Карбоновая', emoji: '⚫', price: 1500, bonus: 0.05, color1: '#1a1a1a', color2: '#3a3a3a', lineColor: 'rgba(180,180,200,0.6)', glow: false },
   gold: { name: 'Золотая', emoji: '👑', price: 5000, bonus: 0.10, color1: '#b8860b', color2: '#ffd700', lineColor: 'rgba(255,215,0,0.7)', glow: true }
 };
+
 const ACHV_LIST = [
   { id: 'collector', name: '🏆 Коллекционер', desc: 'Поймать всех рыб', bonus: '+10% к очкам', check: () => FISH_ONLY.every(f => catalog[f.name] > 0), progress: () => FISH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + FISH_ONLY.length },
   { id: 'trashman', name: '🗑️ Мусорщик', desc: 'Собрать весь мусор', bonus: '+1 ур. ко всем прокачкам', check: () => TRASH_ONLY.every(f => catalog[f.name] > 0), progress: () => TRASH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + TRASH_ONLY.length },
@@ -255,7 +273,7 @@ const ACHV_LIST = [
   { id: 'leviathan', name: '🐋 Убийца Левиафана', desc: 'Секретное достижение', bonus: '+5000 очков', check: () => bossDefeated, progress: () => bossDefeated ? '✓' : '???', secret: true }
 ];
 
-// ПЕРЕМЕННЫЕ ИГРЫ
+// Переменные игры
 let lastCatch = null;
 let particles = [], rippleEffects = [], floatingTexts = [], bubbles = [], rainDrops = [];
 let reelPos = 0, zoneStart = 0, zoneEnd = 0, reelSpeed = 85;
@@ -268,7 +286,7 @@ for (let i = 0; i < 12; i++) bgFish.push({ x: Math.random()*W, y: 340+Math.rando
 for (let i = 0; i < 20; i++) bubbles.push({ x: Math.random()*W, y: 340+Math.random()*250, size: 1+Math.random()*3, speed: 0.2+Math.random()*0.5, depth: Math.random() });
 for (let i = 0; i < 80; i++) rainDrops.push({ x: Math.random()*W, y: Math.random()*H, speed: 400+Math.random()*400, len: 10+Math.random()*20 });
 
-// БОСС
+// Босс
 const BOSS_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
 let boss = null;
 let qteSequence = [];
@@ -276,6 +294,9 @@ let qteIndex = 0;
 let qteTimer = 0;
 let qteMaxTime = 1.0;
 
+// ==================================================================
+// ЧАСТЬ 2: СОХРАНЕНИЕ И ЗАГРУЗКА
+// ==================================================================
 function saveProgress() {
   localStorage.setItem('fishScore', score);
   localStorage.setItem('fishBest', bestScore);
@@ -301,11 +322,13 @@ function checkBossTrigger() {
   const hasNight = (achievements.nightCount || 0) >= 10;
   return hasCollector && hasTrashman && hasPro && hasNight;
 }
-
-// ===== АУДИО =====
+ // ==================================================================
+// ЧАСТЬ 3: АУДИО СИСТЕМА (Web Audio API)
+// ==================================================================
 let audioCtx = null;
 let soundEnabled = localStorage.getItem('fishSoundEnabled') !== 'false';
 let bgNoiseNode = null;
+
 function initAudio() {
   if (audioCtx) return;
   try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
@@ -408,7 +431,9 @@ function ensureAudioStarted() {
 }
 document.getElementById('soundBtn').textContent = soundEnabled ? '🔊' : '🔇';
 
-// УТИЛИТЫ
+// ==================================================================
+// ЧАСТЬ 4: УТИЛИТЫ И АДАПТАЦИЯ
+// ==================================================================
 function vibrate(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
 function toggleFullscreen(e) {
   if (e) e.stopPropagation();
@@ -423,7 +448,6 @@ function toggleFullscreen(e) {
 }
 document.addEventListener('fullscreenchange', () => setTimeout(resizeCanvas, 100));
 
-// ПЕРСОНАЖ
 function drawPreview(canvasId, type) {
   const c = document.getElementById(canvasId);
   const cCtx = c.getContext('2d');
@@ -476,7 +500,6 @@ function selectCharacter(type, e) {
   ensureAudioStarted();
 }
 
-// АДАПТАЦИЯ
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
   canvas.width = W * dpr;
@@ -488,7 +511,9 @@ window.addEventListener('resize', resizeCanvas);
 window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 200));
 resizeCanvas();
 
-// МАГАЗИН
+// ==================================================================
+// ЧАСТЬ 5: МАГАЗИН
+// ==================================================================
 const SHOP_ITEMS = [
   { id: 'reel', name: '⚡ Скорость', desc: 'Замедляет индикатор', max: 5, baseCost: 50, costMult: 2 },
   { id: 'zone', name: '🎯 Зона', desc: 'Шире зелёная зона', max: 5, baseCost: 60, costMult: 2 },
@@ -595,7 +620,9 @@ function renderShop() {
   }
 }
 
-// КАТАЛОГ
+// ==================================================================
+// ЧАСТЬ 6: КАТАЛОГ И ДОСТИЖЕНИЯ
+// ==================================================================
 function addToCatalog(name) {
   if (!catalog[name]) catalog[name] = 0;
   catalog[name]++;
@@ -677,7 +704,9 @@ function renderCatalog() {
   }).join('');
 }
 
-// ВСПОМОГАТЕЛЬНЫЕ
+// ==================================================================
+// ЧАСТЬ 7: ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ==================================================================
 function addParticles(x, y, color, count, spread = 4) {
   for (let i = 0; i < count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*spread*2, vy: (Math.random()-0.5)*spread*2-1, life: 1, color, size: 2+Math.random()*4 });
 }
@@ -721,32 +750,41 @@ function getCanvasCoords(e) {
   return { x: (clientX - rect.left - offsetX) / scale, y: (clientY - rect.top - offsetY) / scale };
 }
 
-// УПРАВЛЕНИЕ
+// ==================================================================
+// ЧАСТЬ 8: ВВОД (ИСПРАВЛЕНИЕ БАГА С ВЫВАЖИВАНИЕМ)
+// ==================================================================
 let touchTimeout = null;
 let swipe = { active: false, startX: 0, startY: 0, curX: 0, curY: 0 };
 
+// ГЛАВНАЯ ФУНКЦИЯ ОБРАБОТКИ КЛИКОВ
 function handleInput(e) {
   ensureAudioStarted();
   if (document.querySelector('.overlay.show')) return;
-  if (state === S.BOSS_QTE) { return; } // QTE не реагирует на клики холста
-  if (e.type === 'touchstart') {
+  
+  // ВАЖНО: если кликнули во время QTE, передаём в handleQteKey (для мышки)
+  if (state === S.BOSS_QTE) return;
+  
+  if (e.type === 'touchstart' && e.touches && e.touches.length > 0) {
     e.preventDefault();
     if (touchTimeout) return;
     touchTimeout = setTimeout(() => { touchTimeout = null; }, 200);
   }
+  
   const { x, y } = getCanvasCoords(e);
   bobber.mx = x; bobber.my = y;
   handleAction(x, y);
 }
+
 function handleAction(mx, my) {
   if (state === S.IDLE) castRod(mx, my);
   else if (state === S.BITE) startReeling();
-  else if (state === S.REELING) checkReel();
+  else if (state === S.REELING) checkReel();  // <-- Исправлено, теперь срабатывает
   else if (state === S.RESULT && stateTime > 0.8) resetToIdle();
   else if (state === S.BOSS_INTRO && stateTime > 2.5) { state = S.BOSS_QTE; startQte(); }
   else if (state === S.BOSS_DEATH && stateTime > 3) { state = S.IDLE; stateTime = 0; }
   else if (state === S.BOSS_WIN && stateTime > 3) { state = S.IDLE; stateTime = 0; }
 }
+
 function handleSwipeStart(e) {
   ensureAudioStarted();
   if (state === S.BOSS_QTE) return;
@@ -771,674 +809,33 @@ function handleSwipeEnd(e) {
   else handleInput(e);
 }
 
+// ВЕШАЕМ СОБЫТИЯ
 canvas.addEventListener('mousedown', handleInput);
+canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); handleInput(e); }); // ПКМ
 canvas.addEventListener('touchstart', handleSwipeStart, { passive: false });
 canvas.addEventListener('touchmove', handleSwipeMove, { passive: false });
 canvas.addEventListener('touchend', handleSwipeEnd, { passive: false });
 
+// КЛАВИАТУРА
 window.addEventListener('keydown', (e) => {
   if (state === S.BOSS_QTE) {
     if (BOSS_KEYS.includes(e.key)) { handleQteKey(e.key); e.preventDefault(); }
     return;
   }
+  
+  // ИСПРАВЛЕНИЕ: Space/Enter теперь работают везде
   if (e.code === 'Space' || e.code === 'Enter') {
     e.preventDefault();
     ensureAudioStarted();
     if (document.querySelector('.overlay.show')) return;
-    if (state === S.IDLE) handleAction(bobber.mx, bobber.my);
-    else handleAction(0, 0);
+    
+    // Если в мини-игре (зелёная зона) — проверяем попадание
+    if (state === S.REELING) { checkReel(); return; }
+    // Если клюёт — подсекаем
+    if (state === S.BITE) { startReeling(); return; }
+    // Иначе забрасываем
+    if (state === S.IDLE) { handleAction(bobber.mx, bobber.my); return; }
+    // Иначе продолжаем
+    handleAction(0, 0);
   }
 });
-
-// ===== ЛОГИКА РЫБАЛКИ =====
-function castRod(mx, my) {
-  if (checkBossTrigger() && !bossDefeated) {
-    startBossFight();
-    return;
-  }
-  bobber.x = rod.tipX; bobber.y = rod.tipY;
-  bobber.tx = Math.max(300, Math.min(W - 60, mx));
-  bobber.ty = Math.max(340, Math.min(H - 60, my));
-  const dx = bobber.tx - bobber.x, dy = bobber.ty - bobber.y;
-  const dist = Math.hypot(dx, dy);
-  const flightTime = Math.max(0.3, dist / 900);
-  bobber.vx = dx / flightTime; bobber.vy = dy / flightTime - 400 * flightTime;
-  state = S.CASTING; stateTime = 0;
-  playSound('cast'); vibrate(30);
-}
-function startReeling() {
-  state = S.REELING; stateTime = 0;
-  reelPos = 0; lastReelSoundTime = 0;
-  let speedReduction = (upgrades.reel || 0) * 0.15;
-  if (achievements.trashman) speedReduction += 0.15;
-  if (achievements.rodmaster) speedReduction += 0.10;
-  let difficultyMultiplier = 1;
-  if (catchStreak >= 3) difficultyMultiplier = 1 + (catchStreak - 2) * 0.15;
-  if (missStreak >= 2) difficultyMultiplier = Math.max(0.5, 1 - (missStreak - 1) * 0.2);
-  reelSpeed = (85 + Math.random() * 40) * Math.max(0.2, 1 - speedReduction) * difficultyMultiplier;
-  zoneStart = 35 + Math.random() * 25;
-  let baseZone = 18 + Math.random() * 12;
-  let bonusZone = (upgrades.zone || 0) * 4;
-  if (achievements.trashman) bonusZone += 4;
-  let finalZone = baseZone + bonusZone;
-  if (catchStreak >= 3) finalZone *= 0.8;
-  if (missStreak >= 2) finalZone *= 1.3;
-  zoneEnd = Math.min(95, zoneStart + finalZone);
-  addParticles(bobber.x, bobber.y, '#fff', 15);
-  addRipple(bobber.x, bobber.y);
-  vibrate(80);
-}
-function checkReel() {
-  if (reelPos >= zoneStart && reelPos <= zoneEnd) {
-    catchStreak++; missStreak = 0;
-    const fish = pickFish();
-    lastCatch = fish;
-    let points = fish.pts;
-    if (achievements.collector) points = Math.floor(points * 1.1);
-    if (achievements.pro) points = Math.floor(points * 1.05);
-    if (achievements.millionaire) points = Math.floor(points * 1.02);
-    score += points; totalCaught++;
-    if (score > bestScore) bestScore = score;
-    if (hasBait) hasBait = false;
-    addToCatalog(fish.name);
-    state = S.RETURNING; stateTime = 0;
-    addParticles(bobber.x, bobber.y, fish.color, 25, 6);
-    addRipple(bobber.x, bobber.y);
-    addFloatingText(`+${points}`, bobber.x, bobber.y - 20, fish.color);
-    if (fish.isRare) { playSound('rare'); vibrate([50, 30, 50, 30, 100]); }
-    else { playSound('catch'); vibrate(50); }
-  } else {
-    catchStreak = 0; missStreak++;
-    state = S.RESULT; stateTime = 0;
-    addFloatingText('Сорвалась!', bobber.x, bobber.y - 20, '#ff6666');
-    playSound('miss'); vibrate([50, 50, 50]);
-  }
-}
-function resetToIdle() { state = S.IDLE; stateTime = 0; lastCatch = null; }
-
-// ===== БОСС ЛОГИКА =====
-function startBossFight() {
-  state = S.BOSS_INTRO; stateTime = 0;
-  boss = { x: W / 2, y: 800, targetY: 350, shake: 0 };
-  bossMet = true;
-  saveProgress();
-  playSound('roar');
-  vibrate([200, 100, 200, 100, 300]);
-  document.getElementById('qteControls').classList.remove('show');
-}
-
-function startQte() {
-  qteIndex = 0;
-  qteSequence = [];
-  const isSecondFight = hasHarpoon;
-  const length = isSecondFight ? 5 : 8;
-  const baseTime = isSecondFight ? 1.8 : 0.45;
-  
-  for (let i = 0; i < length; i++) {
-    qteSequence.push({
-      key: BOSS_KEYS[Math.floor(Math.random() * BOSS_KEYS.length)],
-      time: baseTime
-    });
-  }
-  qteMaxTime = baseTime;
-  qteTimer = qteMaxTime;
-  document.getElementById('qteControls').classList.add('show');
-}
-
-function handleQteKey(key) {
-  if (state !== S.BOSS_QTE) return;
-  if (qteSequence[qteIndex] && qteSequence[qteIndex].key === key) {
-    qteIndex++;
-    qteTimer = qteSequence[qteIndex] ? qteSequence[qteIndex].time : 0;
-    playSound('buy');
-    vibrate(30);
-    if (qteIndex >= qteSequence.length) winBossFight();
-  } else {
-    loseBossFight();
-  }
-}
-
-// Обработчик нажатий на кнопки QTE
-document.querySelectorAll('.qte-btn').forEach(btn => {
-  btn.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); if (state === S.BOSS_QTE) handleQteKey(btn.dataset.key); });
-  btn.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); if (state === S.BOSS_QTE) handleQteKey(btn.dataset.key); }, { passive: false });
-});
-
-function winBossFight() {
-  state = S.BOSS_WIN; stateTime = 0;
-  bossDefeated = true;
-  score += 5000;
-  playSound('achv');
-  saveProgress();
-  document.getElementById('qteControls').classList.remove('show');
-  showAchievementToast('Убийца Левиафана!');
-  vibrate([100, 50, 100, 50, 300]);
-}
-
-function loseBossFight() {
-  state = S.BOSS_DEATH; stateTime = 0;
-  playSound('hurt');
-  document.getElementById('qteControls').classList.remove('show');
-  vibrate([200, 100, 200]);
-  
-  // СБРОС ТОЛЬКО КОЛЛЕКЦИИ РЫБ
-  FISH_ONLY.forEach(f => { delete catalog[f.name]; });
-  achievements.collector = false;
-  harpoonInShop = true;
-  
-  saveProgress();
-}
-
-// ===== ОБНОВЛЕНИЕ =====
-function update(dt) {
-  stateTime += dt;
-  weatherTimer += dt;
-  updateGameTime(dt);
-  const t = performance.now() / 1000;
-  
-  if (state !== S.BOSS_INTRO && state !== S.BOSS_QTE && state !== S.BOSS_DEATH && state !== S.BOSS_WIN) {
-    if (weatherTimer > WEATHER_DURATION) changeWeather();
-  }
-  
-  // Анимация босса
-  if (boss) {
-    if (state === S.BOSS_INTRO) {
-      boss.y += (boss.targetY - boss.y) * 0.05;
-      boss.shake = Math.sin(t * 30) * 5;
-      if (boss.y > boss.targetY + 5) boss.y = boss.targetY;
-    } else if (state === S.BOSS_DEATH) {
-      boss.y += 200 * dt;
-    } else if (state === S.BOSS_WIN) {
-      boss.y -= 100 * dt;
-    }
-  }
-
-  // QTE таймер
-  if (state === S.BOSS_QTE) {
-    qteTimer -= dt;
-    if (qteTimer <= 0) loseBossFight();
-  }
-  
-  for (const f of bgFish) {
-    f.x += f.speed * f.dir; f.wobble += dt * 3; f.y += Math.sin(f.wobble) * 0.3;
-    if (f.x > W + 40) { f.x = -40; f.y = 340 + Math.random() * 230; }
-    if (f.x < -40) { f.x = W + 40; f.y = 340 + Math.random() * 230; }
-  }
-  for (const b of bubbles) {
-    b.y -= b.speed; b.x += Math.sin(t + b.y * 0.05) * 0.3;
-    if (b.y < 320) { b.y = H; b.x = Math.random() * W; }
-  }
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 8 * dt; p.life -= dt * 1.5;
-    if (p.life <= 0) particles.splice(i, 1);
-  }
-  for (let i = rippleEffects.length - 1; i >= 0; i--) {
-    const r = rippleEffects[i]; r.radius += dt * 60; r.life -= dt * 1.2;
-    if (r.life <= 0) rippleEffects.splice(i, 1);
-  }
-  for (let i = floatingTexts.length - 1; i >= 0; i--) {
-    const ft = floatingTexts[i]; ft.y += ft.vy * dt; ft.vy *= 0.95; ft.life -= dt * 1.2;
-    if (ft.life <= 0) floatingTexts.splice(i, 1);
-  }
-  
-  if (getWeather() === 'rain') {
-    for (const r of rainDrops) {
-      r.y += r.speed * dt;
-      if (r.y > H) { r.y = -20; r.x = Math.random() * W; }
-    }
-  }
-  
-  if (state === S.CASTING) {
-    bobber.x += bobber.vx * dt; bobber.y += bobber.vy * dt; bobber.vy += 800 * dt;
-    if (bobber.y >= bobber.ty && bobber.vy > 0) {
-      bobber.y = bobber.ty; state = S.WAITING; stateTime = 0;
-      bobber.waitSeed = 1.5 + Math.random() * 4;
-      addRipple(bobber.x, bobber.y); addParticles(bobber.x, bobber.y, '#aaddff', 10);
-      playSound('splash'); vibrate(30);
-    }
-  } else if (state === S.WAITING) {
-    bobber.phase += dt * 2;
-    if (stateTime > (bobber.waitSeed || 3)) {
-      state = S.BITE; stateTime = 0;
-      addParticles(bobber.x, bobber.y, '#fff', 20); addRipple(bobber.x, bobber.y);
-      playSound('bite'); vibrate([100, 50, 100]);
-    }
-  } else if (state === S.BITE) {
-    if (stateTime > 0.9) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); missStreak++; }
-  } else if (state === S.REELING) {
-    reelPos += reelSpeed * dt;
-    if (performance.now() - lastReelSoundTime > 120) { playSound('reel'); lastReelSoundTime = performance.now(); }
-    if (reelPos > 100) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); missStreak++; catchStreak = 0; }
-  } else if (state === S.RETURNING) {
-    const progress = Math.min(1, stateTime / 0.8);
-    const ease = 1 - Math.pow(1 - progress, 3);
-    bobber.x = bobber.tx + (rod.tipX - bobber.tx) * ease;
-    bobber.y = bobber.ty + (rod.tipY - bobber.ty) * ease;
-    if (progress >= 1) { state = S.RESULT; stateTime = 0; }
-  } else if (state === S.RESULT) {
-    if (stateTime > 2) resetToIdle();
-  }
-}
-
-// ===== РИСОВАНИЕ =====
-function drawFishBody(x, y, size, color, dir = 1, alpha = 1) {
-  ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1); ctx.globalAlpha = alpha;
-  ctx.fillStyle = color;
-  ctx.beginPath(); ctx.ellipse(0, 0, size, size * 0.45, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(-size * 0.9, 0); ctx.lineTo(-size * 1.5, -size * 0.5); ctx.lineTo(-size * 1.5, size * 0.5); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(size * 0.5, -size * 0.1, size * 0.1, 0, Math.PI * 2); ctx.fill();
-  ctx.restore();
-}
-function drawTrashBody(x, y, size, color, emoji) {
-  ctx.save(); ctx.translate(x, y);
-  ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(0, 0, size * 0.8, size * 0.6, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 0, size * 0.6, size * 0.4, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.font = `${size * 1.2}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(emoji, 0, 0);
-  ctx.restore();
-}
-function drawBobber(x, y) {
-  const skin = ROD_SKINS[equippedRod] || ROD_SKINS.bamboo;
-  ctx.strokeStyle = skin.lineColor; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(rod.tipX, rod.tipY); ctx.quadraticCurveTo((rod.tipX+x)/2, Math.min(rod.tipY,y)-30, x, y); ctx.stroke();
-  if (getWeather() === 'night' || skin.glow) { ctx.shadowColor = skin.glow ? '#ffd700' : '#ffff88'; ctx.shadowBlur = 15; }
-  ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x, y - 22); ctx.stroke();
-  ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.arc(x, y, 9, Math.PI, 0); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI); ctx.fill();
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
-  ctx.shadowBlur = 0;
-}
-
-function drawEnvironment(t) {
-  const weather = getWeather();
-  const skyGrad = ctx.createLinearGradient(0, 0, 0, 320);
-  if (weather === 'day') { skyGrad.addColorStop(0, '#87CEEB'); skyGrad.addColorStop(1, '#ffd9a0'); }
-  else if (weather === 'sunset') { skyGrad.addColorStop(0, '#ff7e5f'); skyGrad.addColorStop(1, '#ffe29a'); }
-  else if (weather === 'night') { skyGrad.addColorStop(0, '#0b1021'); skyGrad.addColorStop(1, '#2a3a5a'); }
-  else if (weather === 'rain') { skyGrad.addColorStop(0, '#4a5a6a'); skyGrad.addColorStop(1, '#8a9aaa'); }
-  else if (weather === 'fog') { skyGrad.addColorStop(0, '#b0b8c0'); skyGrad.addColorStop(1, '#e0e8f0'); }
-  ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, W, 320);
-  
-  if (weather === 'day' || weather === 'sunset') {
-    const sunGrad = ctx.createRadialGradient(750, 100, 10, 750, 100, 100);
-    sunGrad.addColorStop(0, weather === 'sunset' ? 'rgba(255,150,50,1)' : 'rgba(255,250,200,1)');
-    sunGrad.addColorStop(1, 'rgba(255,220,100,0)');
-    ctx.fillStyle = sunGrad; ctx.beginPath(); ctx.arc(750, 100, 100, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#fff8d0'; ctx.beginPath(); ctx.arc(750, 100, 35, 0, Math.PI * 2); ctx.fill();
-  } else if (weather === 'night') {
-    ctx.fillStyle = '#f0f0ff'; ctx.beginPath(); ctx.arc(750, 100, 40, 0, Math.PI * 2); ctx.fill();
-    for (let i = 0; i < 30; i++) {
-      const sx = (i * 37 + Math.sin(i) * 20) % W; const sy = (i * 23) % 200;
-      ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.sin(t * 2 + i) * 0.3})`; ctx.fillRect(sx, sy, 2, 2);
-    }
-  }
-  if (weather !== 'night' && weather !== 'fog') {
-    ctx.fillStyle = weather === 'rain' ? 'rgba(100,110,120,0.5)' : 'rgba(255,255,255,0.6)';
-    for (const [cx, cy, sc] of [[200, 80, 1], [500, 130, 0.8]]) {
-      const offset = (t * 5 * sc) % (W + 200) - 100;
-      ctx.beginPath(); ctx.arc(offset, cy, 25 * sc, 0, Math.PI * 2); ctx.arc(offset + 25 * sc, cy + 5, 30 * sc, 0, Math.PI * 2); ctx.arc(offset + 55 * sc, cy, 22 * sc, 0, Math.PI * 2); ctx.fill();
-    }
-  }
-  ctx.fillStyle = weather === 'night' ? '#1a2a1a' : weather === 'sunset' ? '#5a4a3a' : '#6a8a5a';
-  ctx.beginPath(); ctx.moveTo(0, 320); for (let x = 0; x <= W; x += 40) ctx.lineTo(x, 290 + Math.sin(x * 0.008) * 25); ctx.lineTo(W, 320); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = weather === 'night' ? '#0a1a0a' : weather === 'sunset' ? '#4a3a2a' : '#4a6a3a';
-  ctx.beginPath(); ctx.moveTo(0, 320); for (let x = 0; x <= W; x += 40) ctx.lineTo(x, 305 + Math.sin(x * 0.012 + 2) * 18); ctx.lineTo(W, 320); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = weather === 'night' ? '#0a150a' : weather === 'sunset' ? '#3a2a1a' : '#2a4a2a';
-  for (const tx of [50, 130, 210, 800, 870]) {
-    ctx.beginPath(); ctx.moveTo(tx, 315); ctx.lineTo(tx - 15, 315); ctx.lineTo(tx, 260); ctx.lineTo(tx + 15, 315); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(tx, 290); ctx.lineTo(tx - 12, 290); ctx.lineTo(tx, 240); ctx.lineTo(tx + 12, 290); ctx.fill();
-  }
-  const waterGrad = ctx.createLinearGradient(0, 320, 0, H);
-  if (weather === 'day') { waterGrad.addColorStop(0, '#3a7ca8'); waterGrad.addColorStop(1, '#1a3a5a'); }
-  else if (weather === 'sunset') { waterGrad.addColorStop(0, '#8a5a4a'); waterGrad.addColorStop(1, '#2a1a3a'); }
-  else if (weather === 'night') { waterGrad.addColorStop(0, '#0a1a3a'); waterGrad.addColorStop(1, '#050a15'); }
-  else if (weather === 'rain') { waterGrad.addColorStop(0, '#4a5a6a'); waterGrad.addColorStop(1, '#1a2a3a'); }
-  else if (weather === 'fog') { waterGrad.addColorStop(0, '#8a9aaa'); waterGrad.addColorStop(1, '#3a4a5a'); }
-  ctx.fillStyle = waterGrad; ctx.fillRect(0, 320, W, H - 320);
-  ctx.strokeStyle = weather === 'night' ? 'rgba(100,150,200,0.15)' : 'rgba(150,200,255,0.25)'; ctx.lineWidth = 2;
-  for (let i = 0; i < 8; i++) {
-    const wy = 340 + i * 35; ctx.beginPath();
-    for (let x = 0; x <= W; x += 10) { const y = wy + Math.sin(x * 0.02 + t * 1.5 + i) * 3; if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke();
-  }
-  if (weather === 'day' || weather === 'sunset') {
-    for (let i = 0; i < 25; i++) {
-      const bx = 400 + Math.sin(t * 0.5 + i * 1.7) * 380; const by = 340 + (i * 23) % 240;
-      const alpha = 0.1 + Math.sin(t * 2 + i) * 0.08;
-      ctx.fillStyle = `rgba(255, 250, 200, ${Math.max(0, alpha)})`; ctx.fillRect(bx, by, 20 + Math.sin(t + i) * 10, 2);
-    }
-  }
-  for (const f of bgFish) drawFishBody(f.x, f.y, f.size, f.color, f.dir, weather === 'night' ? 0.2 : 0.4 + f.depth * 0.4);
-  for (const b of bubbles) { ctx.fillStyle = `rgba(200, 230, 255, ${0.3 * b.depth})`; ctx.beginPath(); ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2); ctx.fill(); }
-  if (weather === 'rain') {
-    ctx.strokeStyle = 'rgba(180, 200, 220, 0.4)'; ctx.lineWidth = 1.5;
-    for (const r of rainDrops) { ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x - 2, r.y + r.len); ctx.stroke(); }
-    for (let i = 0; i < 5; i++) {
-      const rx = (i * 173 + t * 50) % W; const ry = 340 + (i * 67) % 250; const rr = (t * 100 + i * 30) % 30;
-      if (rr > 0) { ctx.strokeStyle = `rgba(200, 220, 240, ${1 - rr/30})`; ctx.beginPath(); ctx.ellipse(rx, ry, rr, rr * 0.3, 0, 0, Math.PI * 2); ctx.stroke(); }
-    }
-  }
-  if (weather === 'fog') {
-    ctx.fillStyle = 'rgba(200, 210, 220, 0.4)';
-    for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc((i * 200 + t * 10) % W, 350 + i * 40, 150, 0, Math.PI * 2); ctx.fill(); }
-  }
-}
-
-function drawFisherman() {
-  const weather = getWeather();
-  const isWoman = character === 'fisherwoman';
-  ctx.fillStyle = '#6a4a2a'; ctx.beginPath(); ctx.ellipse(82, 490, 60, 18, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#8a6a3a'; ctx.beginPath(); ctx.ellipse(82, 487, 52, 12, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#5a3a1a'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(50, 490); ctx.lineTo(30, 520); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(114, 490); ctx.lineTo(134, 520); ctx.stroke();
-  ctx.fillStyle = '#7a5a2a'; ctx.beginPath(); ctx.ellipse(30, 525, 10, 4, -0.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(134, 525, 10, 4, 0.5, 0, Math.PI * 2); ctx.fill();
-  if (isWoman) {
-    ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.moveTo(62, 460); ctx.lineTo(52, 500); ctx.lineTo(112, 500); ctx.lineTo(102, 460); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = '#8a2a1a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(72, 470); ctx.lineTo(68, 495); ctx.stroke(); ctx.beginPath(); ctx.moveTo(92, 470); ctx.lineTo(96, 495); ctx.stroke();
-  } else {
-    ctx.fillStyle = '#1a2a3a'; ctx.fillRect(65, 480, 18, 30); ctx.fillRect(88, 480, 18, 30);
-  }
-  ctx.fillStyle = isWoman ? '#c0392b' : '#2a4a6a'; ctx.beginPath(); ctx.ellipse(82, 460, 28, 40, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = isWoman ? '#c0392b' : '#2a4a6a'; ctx.lineWidth = 11; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(70, 440); ctx.lineTo(115, 460); ctx.lineTo(rod.baseX, rod.baseY); ctx.stroke();
-  ctx.fillStyle = '#f0c090'; ctx.beginPath(); ctx.arc(82, 400, 23, 0, Math.PI * 2); ctx.fill();
-  if (isWoman) {
-    ctx.fillStyle = '#8a5a2a'; ctx.beginPath(); ctx.ellipse(82, 400, 28, 32, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#f0c090'; ctx.beginPath(); ctx.ellipse(82, 400, 18, 22, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#8a5a2a'; ctx.beginPath(); ctx.ellipse(82, 430, 8, 20, 0, 0, Math.PI * 2); ctx.fill();
-  } else {
-    ctx.fillStyle = '#2a3a2a'; ctx.beginPath(); ctx.ellipse(82, 388, 28, 8, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#3a4a3a'; ctx.beginPath(); ctx.ellipse(82, 378, 22, 14, 0, Math.PI, 0); ctx.fill();
-  }
-  if (weather === 'night') {
-    ctx.fillStyle = 'rgba(255, 220, 100, 0.2)'; ctx.beginPath(); ctx.arc(100, 450, 40, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#ffdd44'; ctx.beginPath(); ctx.arc(100, 450, 6, 0, Math.PI * 2); ctx.fill();
-  }
-}
-
-function drawSundial(x, y, radius) {
-  ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.arc(x, y, radius + 8, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = 'rgba(255,215,0,0.4)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, radius + 8, 0, Math.PI * 2); ctx.stroke();
-  ctx.fillStyle = '#c8b888'; ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#e0d0a0'; ctx.beginPath(); ctx.arc(x, y, radius - 4, 0, Math.PI * 2); ctx.fill();
-  for (let i = 0; i < 12; i++) {
-    const angle = (i / 12) * Math.PI * 2 - Math.PI / 2; const innerR = radius - 12; const outerR = i % 3 === 0 ? radius - 3 : radius - 7;
-    ctx.strokeStyle = i % 3 === 0 ? '#6a5a3a' : '#8a7a5a'; ctx.lineWidth = i % 3 === 0 ? 2.5 : 1.5;
-    ctx.beginPath(); ctx.moveTo(x + Math.cos(angle) * innerR, y + Math.sin(angle) * innerR); ctx.lineTo(x + Math.cos(angle) * outerR, y + Math.sin(angle) * outerR); ctx.stroke();
-  }
-  const hourAngle = ((gameTimeMinutes / 60) / 24) * Math.PI * 2 - Math.PI / 2; const shadowLen = radius - 10;
-  ctx.strokeStyle = 'rgba(60,40,20,0.7)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(hourAngle) * shadowLen, y + Math.sin(hourAngle) * shadowLen); ctx.stroke();
-  ctx.fillStyle = '#5a4a2a'; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.font = 'bold 13px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(formatTime(), x, y + radius + 20);
-  ctx.font = '12px "Segoe UI", sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.fillText(`${WEATHER_ICONS[getWeather()]} ${Math.max(0, Math.ceil(WEATHER_DURATION - weatherTimer))}с → ${WEATHER_ICONS[getNextWeather()]}`, x, y + radius + 36);
-}
-
-function drawUI() {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'; ctx.beginPath(); ctx.roundRect(15, 15, 250, 110, 10); ctx.fill();
-  ctx.font = 'bold 20px "Segoe UI", sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
-  ctx.fillText(`💰 Очки: ${score}`, 30, 45);
-  ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700'; ctx.fillText(`🏆 Рекорд: ${bestScore}`, 30, 70);
-  ctx.fillStyle = '#aaddff'; ctx.fillText(`🎣 Поймано: ${totalCaught}`, 30, 90);
-  if (hasBait) { ctx.fillStyle = '#ff9966'; ctx.fillText(`🪱 Наживка: ×3 к редким!`, 30, 110); }
-  if (catchStreak >= 3) { ctx.fillStyle = '#ff9966'; ctx.font = 'bold 12px "Segoe UI"'; ctx.fillText(`🔥 Серия ${catchStreak}!`, 30, 130); }
-  else if (missStreak >= 2) { ctx.fillStyle = '#99ff99'; ctx.font = 'bold 12px "Segoe UI"'; ctx.fillText(`🍀 Удача рыбака`, 30, 130); }
-  drawSundial(W - 80, 75, 40);
-  if (lastCatch && (state === S.RESULT || state === S.RETURNING)) {
-    const panelW = 240;
-    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.roundRect(W - panelW - 15, 160, panelW, 60, 10); ctx.fill();
-    ctx.font = 'bold 20px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = lastCatch.color;
-    ctx.fillText(`${lastCatch.emoji} ${lastCatch.name}`, W - panelW/2 - 15, 190);
-    ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = lastCatch.isTrash ? '#ff8888' : '#fff';
-    let points = lastCatch.pts;
-    if (achievements.collector) points = Math.floor(points * 1.1);
-    if (achievements.pro) points = Math.floor(points * 1.05);
-    ctx.fillText(lastCatch.isTrash ? '🗑 Мусор...' : `+${points} очков`, W - panelW/2 - 15, 210);
-  }
-}
-
-function drawReelUI() {
-  const barW = 500, barH = 32, barX = (W - barW) / 2, barY = H - 130;
-  ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.beginPath(); ctx.roundRect(barX - 25, barY - 55, barW + 50, barH + 100, 16); ctx.fill();
-  ctx.strokeStyle = 'rgba(100,200,100,0.5)'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.font = 'bold 22px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText('🎣 Кликни в зелёной зоне!', W/2, barY - 22);
-  ctx.fillStyle = '#222'; ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 8); ctx.fill();
-  const zx = barX + (zoneStart / 100) * barW, zw = ((zoneEnd - zoneStart) / 100) * barW;
-  const grad = ctx.createLinearGradient(zx, barY, zx + zw, barY); grad.addColorStop(0, '#4CAF50'); grad.addColorStop(0.5, '#7fff7f'); grad.addColorStop(1, '#4CAF50');
-  ctx.fillStyle = grad; ctx.beginPath(); ctx.roundRect(zx, barY, zw, barH, 6); ctx.fill();
-  ctx.strokeStyle = '#aaffaa'; ctx.lineWidth = 2; ctx.strokeRect(zx, barY, zw, barH);
-  const ix = barX + (reelPos / 100) * barW;
-  ctx.shadowColor = '#fff'; ctx.shadowBlur = 20; ctx.fillStyle = '#fff'; ctx.fillRect(ix - 3, barY - 8, 6, barH + 16); ctx.shadowBlur = 0;
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(ix, barY - 12); ctx.lineTo(ix - 6, barY - 20); ctx.lineTo(ix + 6, barY - 20); ctx.closePath(); ctx.fill();
-}
-
-function drawSwipeIndicator() {
-  if (!swipe.active) return;
-  const dx = swipe.curX - swipe.startX; const dy = swipe.curY - swipe.startY;
-  if (Math.hypot(dx, dy) < 20) return;
-  ctx.strokeStyle = 'rgba(255, 255, 100, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 8]);
-  ctx.beginPath(); ctx.moveTo(rod.tipX, rod.tipY); ctx.quadraticCurveTo((rod.tipX + swipe.curX)/2, Math.min(rod.tipY, swipe.curY) - 50, swipe.curX, swipe.curY); ctx.stroke();
-  ctx.setLineDash([]); ctx.strokeStyle = 'rgba(255, 255, 100, 0.8)'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.arc(swipe.curX, swipe.curY, 20, 0, Math.PI * 2); ctx.stroke();
-  ctx.beginPath(); ctx.arc(swipe.curX, swipe.curY, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 100, 0.8)'; ctx.fill();
-}
-
-function drawHints() {
-  ctx.font = 'bold 18px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
-  let hint = '', color = '#fff';
-  switch (state) {
-    case S.IDLE: hint = '👆 Нажми на воду или свайпни вниз'; break;
-    case S.WAITING: hint = '⏳ Ждём поклёвки...'; break;
-    case S.BITE: hint = '❗ КЛЮЁТ! Скорее нажми!'; color = '#ffdd44'; break;
-    case S.RETURNING: hint = '✨ Тянешь улов...'; break;
-    case S.RESULT: hint = '👉 Нажми, чтобы продолжить'; break;
-    case S.BOSS_INTRO: hint = '🐋 ОГРОМНЫЙ КИТ ВЫНЫРИВАЕТ!'; color = '#ff4444'; break;
-    case S.BOSS_QTE: hint = '⌨️ НАЖИМАЙ КНОПКИ!'; color = '#ffdd44'; break;
-    case S.BOSS_DEATH: hint = '💀 КИТ СЪЕЛ ТВОЮ КОЛЛЕКЦИЮ РЫБ!'; color = '#ff4444'; break;
-    case S.BOSS_WIN: hint = '🏆 ТЫ УБИЛ ЛЕВИАФАНА!'; color = '#ffd700'; break;
-  }
-  if (hint) {
-    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.roundRect(W/2 - 230, H - 55, 460, 38, 10); ctx.fill();
-    ctx.fillStyle = color; ctx.fillText(hint, W/2, H - 30);
-  }
-}
-
-// ===== РИСОВАНИЕ БОССА =====
-function drawBoss() {
-  if (!boss) return;
-  
-  let shakeX = 0, shakeY = 0;
-  if (state === S.BOSS_INTRO) { shakeX = (Math.random() - 0.5) * 10; shakeY = (Math.random() - 0.5) * 10; }
-  
-  ctx.save();
-  ctx.translate(shakeX, shakeY);
-  
-  // Тело кита
-  ctx.fillStyle = '#1a1a2e';
-  ctx.beginPath(); ctx.ellipse(boss.x, boss.y, 250, 100, 0, 0, Math.PI * 2); ctx.fill();
-  
-  // Брюхо
-  ctx.fillStyle = '#2a3a5a';
-  ctx.beginPath(); ctx.ellipse(boss.x, boss.y + 30, 200, 50, 0, 0, Math.PI * 2); ctx.fill();
-  
-  // Глаз
-  ctx.fillStyle = '#ff0000'; ctx.beginPath(); ctx.arc(boss.x - 100, boss.y - 20, 20, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#ffff00'; ctx.beginPath(); ctx.arc(boss.x - 100, boss.y - 20, 8, 0, Math.PI * 2); ctx.fill();
-  
-  // Пасть
-  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(boss.x + 150, boss.y + 10, 80, 40, -0.3, 0, Math.PI); ctx.fill();
-  
-  // Зубы
-  ctx.fillStyle = '#fff';
-  for (let i = 0; i < 8; i++) {
-    ctx.beginPath(); ctx.moveTo(boss.x + 80 + i * 18, boss.y - 10); ctx.lineTo(boss.x + 90 + i * 18, boss.y + 10); ctx.lineTo(boss.x + 100 + i * 18, boss.y - 10); ctx.closePath(); ctx.fill();
-  }
-  
-  // Плавники
-  ctx.fillStyle = '#1a1a2e';
-  ctx.beginPath(); ctx.moveTo(boss.x - 100, boss.y + 50); ctx.lineTo(boss.x - 200, boss.y + 120); ctx.lineTo(boss.x - 80, boss.y + 80); ctx.fill();
-  
-  // Хвост
-  ctx.beginPath(); ctx.moveTo(boss.x - 200, boss.y); ctx.lineTo(boss.x - 350, boss.y - 80); ctx.lineTo(boss.x - 350, boss.y + 80); ctx.closePath(); ctx.fill();
-  
-  // Волны вокруг
-  ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 4;
-  ctx.beginPath(); ctx.ellipse(boss.x, boss.y + 80, 280, 40, 0, 0, Math.PI * 2); ctx.stroke();
-  
-  ctx.restore();
-}
-
-function drawBossQte() {
-  if (state !== S.BOSS_QTE || !qteSequence[qteIndex]) return;
-  
-  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, W, H);
-  
-  ctx.font = 'bold 28px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
-  ctx.fillText(`Атака ${qteIndex + 1} / ${qteSequence.length}`, W/2, 100);
-  
-  const timerWidth = 400; const timerX = (W - timerWidth) / 2;
-  ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(timerX, 130, timerWidth, 20);
-  ctx.fillStyle = qteTimer / qteMaxTime > 0.5 ? '#4CAF50' : qteTimer / qteMaxTime > 0.25 ? '#ffa000' : '#ff3333';
-  ctx.fillRect(timerX, 130, timerWidth * (qteTimer / qteMaxTime), 20);
-  
-  const key = qteSequence[qteIndex].key;
-  const symbols = { 'ArrowUp': '↑', 'ArrowDown': '↓', 'ArrowLeft': '←', 'ArrowRight': '→' };
-  
-  ctx.font = 'bold 200px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffdd44';
-  ctx.shadowColor = '#ff4444'; ctx.shadowBlur = 40;
-  ctx.fillText(symbols[key], W/2, H/2 + 60); ctx.shadowBlur = 0;
-  
-  ctx.font = 'bold 24px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
-  ctx.fillText('Нажми правильную кнопку!', W/2, H/2 + 180);
-}
-
-// ===== ГЛАВНЫЙ ЦИКЛ =====
-function draw() {
-  const t = performance.now() / 1000;
-  ctx.clearRect(0, 0, W, H);
-  
-  if (state === S.BOSS_INTRO || state === S.BOSS_QTE || state === S.BOSS_DEATH || state === S.BOSS_WIN) {
-    drawEnvironment(t);
-    if (boss) drawBoss();
-    
-    if (state === S.BOSS_QTE) drawBossQte();
-    
-    if (state === S.BOSS_DEATH) {
-      ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, W, H);
-      
-      ctx.font = 'bold 44px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ff4444';
-      ctx.fillText('КИТ ПОБЕДИЛ!', W/2, 120);
-      
-      ctx.font = 'bold 28px "Segoe UI", sans-serif'; ctx.fillStyle = '#ff8888';
-      ctx.fillText('❌ Потеряно:', W/2, 190);
-      
-      ctx.font = '22px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
-      ctx.fillText('Коллекция рыб', W/2, 225);
-      ctx.fillText('Достижение «Коллекционер»', W/2, 255);
-      
-      ctx.font = 'bold 28px "Segoe UI", sans-serif'; ctx.fillStyle = '#88ff88';
-      ctx.fillText('✅ Сохранено:', W/2, 310);
-      
-      ctx.font = '22px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
-      ctx.fillText('Очки, прокачка, удочки, мусор', W/2, 345);
-      
-      ctx.fillStyle = 'rgba(255, 215, 0, 0.2)'; ctx.beginPath(); ctx.roundRect(W/2 - 300, 390, 600, 100, 16); ctx.fill();
-      ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 3; ctx.stroke();
-      ctx.font = 'bold 22px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700';
-      ctx.fillText('💡 Совет:', W/2, 425);
-      ctx.font = '18px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
-      ctx.fillText('Купите «Гарпун Левиафана» в магазине,', W/2, 455);
-      ctx.fillText('чтобы победить Кита в следующий раз!', W/2, 480);
-      
-      if (stateTime > 3) {
-        ctx.font = '16px "Segoe UI", sans-serif'; ctx.fillStyle = '#aaa';
-        ctx.fillText('Кликни, чтобы продолжить', W/2, 560);
-      }
-    }
-    
-    if (state === S.BOSS_WIN) {
-      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, W, H);
-      ctx.font = 'bold 44px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd700';
-      ctx.fillText('ЛЕВИАФАН ПОВЕРЖЕН!', W/2, H/2 - 60);
-      ctx.font = '28px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
-      ctx.fillText('+5000 очков', W/2, H/2);
-      ctx.fillStyle = '#aaffaa'; ctx.font = '22px "Segoe UI", sans-serif';
-      ctx.fillText('Кит больше никогда не появится.', W/2, H/2 + 50);
-      if (stateTime > 3) {
-        ctx.font = '16px "Segoe UI", sans-serif'; ctx.fillStyle = '#aaa';
-        ctx.fillText('Кликни, чтобы продолжить', W/2, H/2 + 120);
-      }
-    }
-    
-    drawHints();
-    return;
-  }
-  
-  drawEnvironment(t);
-  
-  for (const r of rippleEffects) {
-    ctx.strokeStyle = `rgba(200, 230, 255, ${r.life * 0.6})`; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.ellipse(r.x, r.y, r.radius, r.radius * 0.3, 0, 0, Math.PI * 2); ctx.stroke();
-  }
-  
-  if (state !== S.IDLE) {
-    let by = bobber.y;
-    if (state === S.WAITING) by += Math.sin(bobber.phase * 2) * 3;
-    else if (state === S.BITE) by += Math.sin(t * 30) * 6;
-    else if ((state === S.RETURNING || state === S.RESULT) && lastCatch) {
-      if (lastCatch.isTrash) drawTrashBody(bobber.x, by + 22, lastCatch.size * 0.7, lastCatch.color, lastCatch.emoji);
-      else drawFishBody(bobber.x, by + 22, lastCatch.size * 0.8, lastCatch.color, 1, 1);
-    }
-    drawBobber(bobber.x, by);
-  }
-  
-  drawFisherman();
-  
-  const skin = ROD_SKINS[equippedRod] || ROD_SKINS.bamboo;
-  if (skin.glow) { ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 10; }
-  ctx.strokeStyle = skin.color1; ctx.lineWidth = 6; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(rod.baseX, rod.baseY); ctx.quadraticCurveTo(140, 420, rod.tipX, rod.tipY); ctx.stroke();
-  ctx.strokeStyle = skin.color2; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(140, 420); ctx.quadraticCurveTo(165, 400, rod.tipX, rod.tipY); ctx.stroke();
-  ctx.shadowBlur = 0;
-  
-  if (swipe.active) drawSwipeIndicator();
-  
-  for (const p of particles) { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); }
-  ctx.globalAlpha = 1;
-  
-  for (const ft of floatingTexts) {
-    ctx.globalAlpha = Math.min(1, ft.life * 2); ctx.font = 'bold 24px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
-    ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 4; ctx.strokeText(ft.text, ft.x, ft.y);
-    ctx.fillStyle = ft.color; ctx.fillText(ft.text, ft.x, ft.y);
-  }
-  ctx.globalAlpha = 1;
-  
-  drawUI();
-  if (state === S.REELING) drawReelUI();
-  drawHints();
-}
-
-if (!CanvasRenderingContext2D.prototype.roundRect) {
-  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-    if (typeof r === 'number') r = { tl: r, tr: r, br: r, bl: r };
-    this.beginPath(); this.moveTo(x + r.tl, y); this.lineTo(x + w - r.tr, y);
-    this.quadraticCurveTo(x + w, y, x + w, y + r.tr); this.lineTo(x + w, y + h - r.br);
-    this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h); this.lineTo(x + r.bl, y + h);
-    this.quadraticCurveTo(x, y + h, x, y + h - r.bl); this.lineTo(x, y + r.tl);
-    this.quadraticCurveTo(x, y, x + r.tl, y); this.closePath(); return this;
-  };
-}
-
-let lastTime = performance.now();
-function loop(now) {
-  const dt = Math.min(0.05, (now - lastTime) / 1000);
-  lastTime = now;
-  update(dt);
-  draw();
-  requestAnimationFrame(loop);
-}
-requestAnimationFrame(loop);
-</script>
-</body>
-</html>
