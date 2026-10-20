@@ -73,7 +73,6 @@
   .bait-buy-row { display: flex; gap: 4px; }
   .bait-buy-row .buy-btn { min-width: 44px; padding: 6px 4px; }
 
-  /* Дерево улучшений в стиле "танков" */
   .tech-tree-container {
     position: relative;
     width: 100%;
@@ -177,7 +176,6 @@
   .qte-btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(200, 40, 40, 0.8); border: 3px solid #ff6666; color: #fff; font-size: 30px; font-weight: bold; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(255,60,60,0.5); user-select: none; cursor: pointer; }
   .qte-btn:active { transform: scale(0.9); background: #ff4444; }
 
-  /* Экран инструкции перед боссом */
   #bossInstruction { background: rgba(5, 8, 15, 0.95); }
   .boss-instr-panel { text-align: center; border-color: rgba(255,100,100,0.6); box-shadow: 0 0 60px rgba(255,50,50,0.4); }
   .boss-instr-panel h2 { color: #ff6666; font-size: 26px; margin-bottom: 6px; text-shadow: 0 0 20px rgba(255,0,0,0.6); }
@@ -305,12 +303,13 @@ let character = localStorage.getItem('fishCharacter') || null;
 
 const WEATHERS = ['day', 'sunset', 'night', 'rain', 'fog'];
 const WEATHER_ICONS = { day: '☀️', sunset: '🌅', night: '🌙', rain: '🌧️', fog: '🌫️' };
-let currentWeatherIndex = 0, weatherTimer = 0, gameTimeMinutes = 6 * 60;
+let currentWeatherIndex = parseInt(localStorage.getItem('fishWeatherIndex') || '0') % WEATHERS.length;
+let weatherTimer = 0, gameTimeMinutes = 6 * 60;
 const WEATHER_DURATION = 45;
 
 function getWeather() { return WEATHERS[currentWeatherIndex]; }
 function getNextWeather() { return WEATHERS[(currentWeatherIndex + 1) % WEATHERS.length]; }
-function changeWeather() { currentWeatherIndex = (currentWeatherIndex + 1) % WEATHERS.length; weatherTimer = 0; }
+function changeWeather() { currentWeatherIndex = (currentWeatherIndex + 1) % WEATHERS.length; weatherTimer = 0; localStorage.setItem('fishWeatherIndex', currentWeatherIndex); }
 function updateGameTime(dt) { gameTimeMinutes += dt; if (gameTimeMinutes >= 24 * 60) gameTimeMinutes -= 24 * 60; }
 function formatTime() { const h = Math.floor(gameTimeMinutes / 60) % 24; const m = Math.floor(gameTimeMinutes) % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; }
 
@@ -361,7 +360,7 @@ const FISH_TYPES = [
 const FISH_ONLY = FISH_TYPES.filter(f => !f.isTrash);
 const TRASH_ONLY = FISH_TYPES.filter(f => f.isTrash);
 
-// ДЕРЕВО УДОЧКИ С ПЕРЕКРЕСТИЯМИ
+// ДЕРЕВО УДОЧКИ — теперь со всеми ветками, которые использует код
 const TREE_DATA = {
   body: {
     name: 'Тело удилища', icon: '🎣',
@@ -404,6 +403,38 @@ const TREE_DATA = {
     levels: [
       { name: 'Перо', desc: 'Гусиный поплавок', cost: 0, bonus: 0, requires: [], row: 2, col: 4 },
       { name: 'Пластик', desc: 'Яркий и прочный', cost: 150, bonus: 0.15, requires: [{branch:'float', level:0}], row: 2, col: 5 }
+    ]
+  },
+  keeper: {
+    name: 'Садок', icon: '🪣',
+    levels: [
+      { name: 'Кукан', desc: 'Куда складывать улов', cost: 0, bonus: 0, requires: [], row: 4, col: 1 },
+      { name: 'Ведро', desc: 'Удобная ёмкость', cost: 350, bonus: 0.05, requires: [{branch:'keeper', level:0}], row: 4, col: 2 },
+      { name: 'Садок', desc: 'Сетчатый садок', cost: 900, bonus: 0.10, requires: [{branch:'keeper', level:1}, {branch:'line', level:1}], row: 4, col: 3 }
+    ]
+  },
+  handle: {
+    name: 'Рукоять', icon: '🖐️',
+    levels: [
+      { name: 'Дерево', desc: 'Обычная рукоять', cost: 0, bonus: 0, requires: [], row: 5, col: 1 },
+      { name: 'Пробка', desc: 'Не скользит', cost: 300, bonus: 0.05, requires: [{branch:'handle', level:0}], row: 5, col: 2 },
+      { name: 'Неопрен', desc: 'Мягкая и удобная', cost: 800, bonus: 0.10, requires: [{branch:'handle', level:1}], row: 5, col: 3 }
+    ]
+  },
+  net: {
+    name: 'Подсак', icon: '🥅',
+    levels: [
+      { name: 'Без подсака', desc: 'Ловишь руками', cost: 0, bonus: 0, requires: [], row: 6, col: 1 },
+      { name: 'Подсак', desc: 'Помогает вытаскивать', cost: 500, bonus: 0.05, requires: [{branch:'net', level:0}], row: 6, col: 2 },
+      { name: 'Большой подсак', desc: 'Для крупной рыбы', cost: 1500, bonus: 0.10, requires: [{branch:'net', level:1}, {branch:'keeper', level:1}], row: 6, col: 3 }
+    ]
+  },
+  bait: {
+    name: 'Наживка', icon: '🪱',
+    levels: [
+      { name: 'Без наживки', desc: 'Пустой крючок', cost: 0, bonus: 0, requires: [], row: 7, col: 1 },
+      { name: 'Червь', desc: 'Классика', cost: 250, bonus: 0.05, requires: [{branch:'bait', level:0}], row: 7, col: 2 },
+      { name: 'Бойл', desc: 'Для карпа', cost: 1000, bonus: 0.10, requires: [{branch:'bait', level:1}, {branch:'hook', level:1}], row: 7, col: 3 }
     ]
   }
 };
@@ -454,10 +485,12 @@ function saveProgress() {
   localStorage.setItem('fishHarpoonInShop', harpoonInShop);
   localStorage.setItem('fishBossMet', bossMet);
   localStorage.setItem('fishTreeUpgrades', JSON.stringify(treeUpgrades));
+  localStorage.setItem('fishWeatherIndex', currentWeatherIndex);
 }
 
 function checkBossTrigger() {
-  if (bossDefeated || state === S.BOSS_INSTRUCTION || state === S.BOSS_INTRO || state === S.BOSS_QTE) return false;
+  if (bossDefeated) return false;
+  if (state === S.BOSS_INSTRUCTION || state === S.BOSS_INTRO || state === S.BOSS_QTE) return false;
   const hasCollector = FISH_ONLY.every(f => catalog[f.name] > 0);
   const hasTrashman = TRASH_ONLY.every(f => catalog[f.name] > 0);
   const hasPro = totalCaught >= 100;
@@ -713,8 +746,8 @@ function getBonusText(branch, level) {
     case 'body':
     case 'line':
     case 'reel':    return `−${pct}% к скорости индикатора`;
-    case 'handle':
-    case 'keeper':  return `+${Math.round(b * 20)} к ширине зоны`;
+    case 'keeper':
+    case 'handle':  return `+${Math.round(b * 20)} к ширине зоны`;
     case 'net':     return `+${Math.round(b * 10)} к зоне, −${pct}% мусора`;
     case 'hook':    return `+${pct}% к шансу редкой рыбы`;
     case 'float':   return `+${pct}% ко времени реакции`;
@@ -730,7 +763,14 @@ function switchShopTab(tab) {
   document.getElementById('tabBooks').classList.toggle('active', tab === 'books');
   renderShop();
 }
-function toggleShop(e) { if (e) e.stopPropagation(); const overlay = document.getElementById('shopOverlay'); overlay.classList.toggle('show'); if (overlay.classList.contains('show')) renderShop(); else document.getElementById('catalogOverlay').classList.remove('show'); }
+function toggleShop(e) {
+  if (e) e.stopPropagation();
+  const overlay = document.getElementById('shopOverlay');
+  overlay.classList.toggle('show');
+  hideTreeTooltip();
+  if (overlay.classList.contains('show')) renderShop();
+  else document.getElementById('catalogOverlay').classList.remove('show');
+}
 
 function renderShop() {
   document.getElementById('shopScore').textContent = score;
@@ -863,7 +903,7 @@ function renderShop() {
     }
 
     container.innerHTML = html;
-    setTimeout(() => drawTreeLines(CELL_W, CELL_H, START_X, START_Y), 10);
+    requestAnimationFrame(() => drawTreeLines(CELL_W, CELL_H, START_X, START_Y));
   } else if (currentShopTab === 'books') {
     container.innerHTML = BOOKS.map(book => {
       const owned = encyclopedia[book.id];
@@ -880,8 +920,10 @@ function renderShop() {
 
 function handleTreeClick(branch, levelIdx) {
   const branchData = TREE_DATA[branch];
+  if (!branchData) return;
   const currentLevel = treeUpgrades[branch] || 0;
   
+  if (levelIdx < 0 || levelIdx >= branchData.levels.length) return;
   if (levelIdx <= currentLevel) return;
   if (levelIdx !== currentLevel + 1) return;
   
@@ -963,6 +1005,7 @@ function drawTreeLines(CELL_W, CELL_H, START_X, START_Y) {
 
       level.requires.forEach(req => {
         const reqLevel = TREE_DATA[req.branch].levels[req.level];
+        if (!reqLevel) return;
         const fromX = START_X + reqLevel.col * CELL_W + NODE_W / 2;
         const fromY = START_Y + reqLevel.row * CELL_H + NODE_H / 2;
 
@@ -1022,7 +1065,14 @@ function showAchievementToast(text) {
   el.classList.add('show');
   setTimeout(() => el.classList.remove('show'), 3000);
 }
-function toggleCatalog(e) { if (e) e.stopPropagation(); const overlay = document.getElementById('catalogOverlay'); overlay.classList.toggle('show'); if (overlay.classList.contains('show')) renderCatalog(); else document.getElementById('shopOverlay').classList.remove('show'); }
+function toggleCatalog(e) {
+  if (e) e.stopPropagation();
+  const overlay = document.getElementById('catalogOverlay');
+  overlay.classList.toggle('show');
+  hideTreeTooltip();
+  if (overlay.classList.contains('show')) renderCatalog();
+  else document.getElementById('shopOverlay').classList.remove('show');
+}
 function isFishKnown(fishName) {
   if (catalog[fishName] > 0) return true;
   for (const book of BOOKS) { if (encyclopedia[book.id] && book.opens.includes(fishName)) return true; }
@@ -1093,11 +1143,12 @@ function resetProgress(e) {
   encyclopedia = {}; achievements = {}; bossDefeated = false; hasHarpoon = false; harpoonInShop = false; bossMet = false;
   treeUpgrades = {body:0, line:0, float:0, hook:0, keeper:0, reel:0, handle:0, net:0, bait:0};
   catchStreak = 0; missStreak = 0;
+  character = null;
+  currentWeatherIndex = 0; weatherTimer = 0;
   localStorage.clear();
   const toast = document.getElementById('toast');
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 1500);
-  character = null;
   document.getElementById('charSelect').classList.add('show');
 }
 
@@ -1143,8 +1194,8 @@ function handleAction(mx, my) {
   else if (state === S.REELING) checkReel();
   else if (state === S.RESULT && stateTime > 0.8) resetToIdle();
   else if (state === S.BOSS_INTRO && stateTime > 2.5) { state = S.BOSS_QTE; startQte(); }
-  else if (state === S.BOSS_DEATH && stateTime > 3) { state = S.IDLE; stateTime = 0; }
-  else if (state === S.BOSS_WIN && stateTime > 3) { state = S.IDLE; stateTime = 0; }
+  else if (state === S.BOSS_DEATH && stateTime > 3) { state = S.IDLE; stateTime = 0; boss = null; }
+  else if (state === S.BOSS_WIN && stateTime > 3) { state = S.IDLE; stateTime = 0; boss = null; }
 }
 
 function handleSwipeStart(e) {
@@ -1241,36 +1292,22 @@ function startReeling() {
   reelSpeed = (85 + Math.random() * 40) * Math.max(0.2, 1 - speedReduction) * difficultyMultiplier;
   
   // --- ГЕНЕРАЦИЯ ЗОНЫ ---
-  // Базовая ширина (от 25% до 35% шкалы)
   let baseZone = 25 + Math.random() * 10;
-  
-  // Бонусы (каждый уровень прокачки дает +5% к ширине)
   let bonusZone = (upgrades.zone || 0) * 5;
   if (achievements.trashman) bonusZone += 5;
-  
-  // Бонусы от дерева (сделал их ощутимыми)
   let treeBonus = (keeperBonus * 20) + (netBonus * 10) + (handleBonus * 20);
-  
-  // Итоговая ширина
   let finalZone = baseZone + bonusZone + treeBonus;
-  
-  // Штрафы за серию
   if (catchStreak >= 3) finalZone *= 0.85;
   if (missStreak >= 2) finalZone *= 1.2;
-  
-  // Защита: зона не может быть меньше 15% и больше 60%
   finalZone = Math.max(15, Math.min(60, finalZone));
   
-  // Позиция: от 10% до (100% - ширина - 10%)
   const minStart = 10;
   const maxStart = 100 - finalZone - 10;
-  
   if (maxStart < minStart) {
-    zoneStart = 50 - (finalZone / 2); // По центру, если зона слишком широкая
+    zoneStart = 50 - (finalZone / 2);
   } else {
     zoneStart = minStart + Math.random() * (maxStart - minStart);
   }
-  
   zoneEnd = zoneStart + finalZone;
   
   addParticles(bobber.x, bobber.y, '#fff', 15);
@@ -1291,8 +1328,8 @@ function pickFish() {
     if (f.isTrash) {
       weight *= trashMult * (1 - netBonus) * (1 - baitBonus);
       if (allTrashCollected) {
-        const luckReduction = 1 - (upgrades.luck || 0) * 0.15;
-        weight *= Math.max(0.05, luckReduction);
+        const luckReduction = Math.max(0.25, 1 - (upgrades.luck || 0) * 0.15);
+        weight *= luckReduction;
       } else {
         weight = Math.max(1, weight);
       }
@@ -1341,10 +1378,10 @@ function checkReel() {
     catchStreak++; missStreak = 0;
     const fish = pickFish();
     lastCatch = fish;
+    // Сохраняем начисленные очки, чтобы UI и начисление не расходились
+    lastCatch.points = calcPoints(fish);
     
-    const points = calcPoints(fish);
-    
-    score += points; totalCaught++;
+    score += lastCatch.points; totalCaught++;
     if (score > bestScore) bestScore = score;
     if (baitCount > 0) { baitCount--; saveProgress(); }
     
@@ -1352,7 +1389,7 @@ function checkReel() {
     state = S.RETURNING; stateTime = 0;
     addParticles(bobber.x, bobber.y, fish.color, 25, 6);
     addRipple(bobber.x, bobber.y);
-    addFloatingText(`+${points}`, bobber.x, bobber.y - 20, fish.color);
+    addFloatingText(`+${lastCatch.points}`, bobber.x, bobber.y - 20, fish.color);
     if (fish.isRare) { playSound('rare'); vibrate([50, 30, 50, 30, 100]); }
     else { playSound('catch'); vibrate(50); }
   } else {
@@ -1382,7 +1419,8 @@ function startQte() {
   qteSequence = [];
   const isSecondFight = hasHarpoon;
   const length = isSecondFight ? 5 : 8;
-  const baseTime = isSecondFight ? 1.8 : 0.45;
+  // Смягчено: 0.65 с на реакцию в первом бою вместо 0.45
+  const baseTime = isSecondFight ? 1.8 : 0.65;
   
   for (let i = 0; i < length; i++) {
     qteSequence.push({
@@ -1434,6 +1472,7 @@ function loseBossFight() {
   FISH_ONLY.forEach(f => { delete catalog[f.name]; });
   achievements.collector = false;
   harpoonInShop = true;
+  catchStreak = 0; missStreak = 0;
   
   saveProgress();
 }
@@ -1721,7 +1760,7 @@ function drawUI() {
     ctx.font = 'bold 20px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = lastCatch.color;
     ctx.fillText(`${lastCatch.emoji} ${lastCatch.name}`, W - panelW/2 - 15, 190);
     ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = lastCatch.isTrash ? '#ff8888' : '#fff';
-    const pts = calcPoints(lastCatch);
+    const pts = lastCatch.points ?? calcPoints(lastCatch);
     ctx.fillText(lastCatch.isTrash ? '🗑 Мусор...' : `+${pts} очков`, W - panelW/2 - 15, 210);
   }
 }
@@ -1745,15 +1784,9 @@ function drawReelUI() {
   ctx.roundRect(barX, barY, barW, barH, 8); 
   ctx.fill();
   
-  // Безопасная отрисовка зоны
   let start = Number(zoneStart) || 0;
   let end = Number(zoneEnd) || 0;
-  
-  // Если зона сломалась (NaN или меньше нуля) — ставим её в центр
-  if (isNaN(start) || isNaN(end) || end <= start) {
-    start = 40;
-    end = 60;
-  }
+  if (isNaN(start) || isNaN(end) || end <= start) { start = 40; end = 60; }
 
   const zx = barX + (start / 100) * barW;
   const zw = ((end - start) / 100) * barW;
@@ -1763,19 +1796,17 @@ function drawReelUI() {
     grad.addColorStop(0, '#4CAF50'); 
     grad.addColorStop(0.5, '#7fff7f'); 
     grad.addColorStop(1, '#4CAF50');
-    
     ctx.fillStyle = grad; 
     ctx.beginPath(); 
     ctx.roundRect(zx, barY, zw, barH, 6); 
     ctx.fill();
-    
     ctx.strokeStyle = '#aaffaa'; 
     ctx.lineWidth = 2; 
     ctx.strokeRect(zx, barY, zw, barH);
   }
   
-  // Индикатор
-  const ix = barX + (Math.max(0, Math.min(100, reelPos)) / 100) * barW;
+  const safePos = Number.isFinite(reelPos) ? Math.max(0, Math.min(100, reelPos)) : 0;
+  const ix = barX + (safePos / 100) * barW;
   
   ctx.shadowColor = '#fff'; 
   ctx.shadowBlur = 20; 
@@ -1825,7 +1856,7 @@ function drawHints() {
 }
 
 // ==================================================================
-// РИСОВАНИЕ БОССА (СОМ-ГИГАНТ)
+// РИСОВАНИЕ БОССА (СОМ-ГИГАНТ) — без анимации хвоста (по условию)
 // ==================================================================
 function drawBoss() {
   if (!boss) return;
