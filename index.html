@@ -360,7 +360,7 @@ const FISH_TYPES = [
 const FISH_ONLY = FISH_TYPES.filter(f => !f.isTrash);
 const TRASH_ONLY = FISH_TYPES.filter(f => f.isTrash);
 
-// ДЕРЕВО УДОЧКИ — теперь со всеми ветками, которые использует код
+// ДЕРЕВО УДОЧКИ — со всеми ветками, которые использует код
 const TREE_DATA = {
   body: {
     name: 'Тело удилища', icon: '🎣',
@@ -451,7 +451,9 @@ const ACHV_LIST = [
 
 let lastCatch = null;
 let particles = [], rippleEffects = [], floatingTexts = [], bubbles = [], rainDrops = [];
-let reelPos = 0, zoneStart = 0, zoneEnd = 0, reelSpeed = 85;
+// prevReelPos нужен для проверки отрезка пути индикатора
+let reelPos = 0, prevReelPos = 0, zoneStart = 0, zoneEnd = 0, reelSpeed = 85;
+const REEL_TOLERANCE = 2.5; // допуск в % шкалы — компенсирует кадровый шаг и задержку ввода
 let lastReelSoundTime = 0;
 const rod = { baseX: 100, baseY: 480, tipX: 180, tipY: 380 };
 const bobber = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0, phase: 0, mx: 600, my: 450 };
@@ -1273,7 +1275,7 @@ function startBossFromInstruction(e) {
  
 function startReeling() {
   state = S.REELING; stateTime = 0;
-  reelPos = 0; lastReelSoundTime = 0;
+  reelPos = 0; prevReelPos = 0; lastReelSoundTime = 0;
   
   const bodyBonus   = (TREE_DATA.body.levels[treeUpgrades.body || 0]?.bonus || 0);
   const lineBonus   = (TREE_DATA.line.levels[treeUpgrades.line || 0]?.bonus || 0);
@@ -1373,12 +1375,16 @@ function calcPoints(fish) {
   return points;
 }
 
+// Проверка попадания: отрезок [prevReelPos, reelPos] с допуском пересекает зону
 function checkReel() {
-  if (reelPos >= zoneStart && reelPos <= zoneEnd) {
+  const lo = Math.min(prevReelPos, reelPos) - REEL_TOLERANCE;
+  const hi = Math.max(prevReelPos, reelPos) + REEL_TOLERANCE;
+  const hit = hi >= zoneStart && lo <= zoneEnd;
+
+  if (hit) {
     catchStreak++; missStreak = 0;
     const fish = pickFish();
     lastCatch = fish;
-    // Сохраняем начисленные очки, чтобы UI и начисление не расходились
     lastCatch.points = calcPoints(fish);
     
     score += lastCatch.points; totalCaught++;
@@ -1556,6 +1562,8 @@ function update(dt) {
     const biteWindow = 0.9 + floatBonus * 1.5;
     if (stateTime > biteWindow) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); missStreak++; }
   } else if (state === S.REELING) {
+    // Запоминаем позицию до шага, чтобы клик мог засчитать весь путь индикатора
+    prevReelPos = reelPos;
     reelPos += reelSpeed * dt;
     if (performance.now() - lastReelSoundTime > 120) { playSound('reel'); lastReelSoundTime = performance.now(); }
     if (reelPos > 100) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); missStreak++; catchStreak = 0; }
