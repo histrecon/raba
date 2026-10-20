@@ -1294,14 +1294,14 @@ function startReeling() {
   reelSpeed = (85 + Math.random() * 40) * Math.max(0.2, 1 - speedReduction) * difficultyMultiplier;
   
   // --- ГЕНЕРАЦИЯ ЗОНЫ ---
-  let baseZone = 20 + Math.random() * 8;
-  let bonusZone = (upgrades.zone || 0) * 3;
-  if (achievements.trashman) bonusZone += 3;
-  let treeBonus = (keeperBonus * 60) + (netBonus * 30) + (handleBonus * 60);
+  let baseZone = 15 + Math.random() * 7;                    // 15–22%
+  let bonusZone = (upgrades.zone || 0) * 3;                 // +3% за уровень (макс +15%)
+  if (achievements.trashman) bonusZone += 3;                // +3% за «Мусорщика»
+  let treeBonus = (keeperBonus * 90) + (netBonus * 45) + (handleBonus * 90); // до +33.75%
   let finalZone = baseZone + bonusZone + treeBonus;
   if (catchStreak >= 3) finalZone *= 0.85;
   if (missStreak >= 2) finalZone *= 1.2;
-  finalZone = Math.max(15, Math.min(70, finalZone));
+  finalZone = Math.max(15, Math.min(75, finalZone));        // потолок 75%
   
   const minStart = 10;
   const maxStart = 100 - finalZone - 10;
