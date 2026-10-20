@@ -70,28 +70,91 @@
   .shop-item.equipped { border-color: #ffd700; background: rgba(255,215,0,0.1); }
   .shop-item.harpoon { border-color: rgba(255,100,100,0.5); background: rgba(255,100,100,0.1); }
 
-  /* [NEW] Кнопки покупки наживки пачками */
+  /* Кнопки покупки наживки пачками */
   .bait-buy-row { display: flex; gap: 4px; }
   .bait-buy-row .buy-btn { min-width: 44px; padding: 6px 4px; }
 
-  /* Дерево улучшений */
-  .tree-branch { margin-bottom: 12px; background: rgba(0,0,0,0.15); border-radius: 8px; padding: 10px; border: 1px solid rgba(100,180,255,0.1); }
-  .tree-branch-title { font-size: 14px; font-weight: bold; color: #aaddff; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(100,180,255,0.2); padding-bottom: 6px; }
-  .tree-nodes { display: flex; flex-direction: column; gap: 6px; }
-  .tree-node { display: flex; align-items: center; gap: 10px; padding: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; transition: all 0.2s; }
-  .tree-node.unlocked { border-color: rgba(100,255,100,0.4); background: rgba(100,255,100,0.05); }
-  .tree-node.locked { opacity: 0.5; }
-  .tree-node.next { border-color: #ffd700; background: rgba(255,215,0,0.1); }
-  .tree-node .node-icon { font-size: 24px; width: 40px; text-align: center; }
-  .tree-node .node-info { flex: 1; }
-  .tree-node .node-name { color: #fff; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 6px; }
-  .tree-node .node-level { font-size: 10px; color: #aaa; font-weight: normal; }
-  .tree-node .node-desc { color: #aaa; font-size: 10px; margin-top: 2px; }
-  .tree-node .node-bonus { color: #7fff7f; font-size: 11px; margin-top: 2px; font-weight: bold; }
-  .tree-node .node-req { color: #ff9966; font-size: 10px; margin-top: 2px; font-style: italic; }
-  .tree-node .buy-btn { background: #4CAF50; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; min-width: 70px; }
-  .tree-node .buy-btn:disabled { background: #555; cursor: not-allowed; opacity: 0.6; }
-  .tree-node .buy-btn.owned-btn { background: transparent; color: #7fff7f; border: 2px solid #7fff7f; cursor: default; }
+  /* [NEW] Дерево улучшений в стиле "танков" (Абсолютное позиционирование) */
+  .tech-tree-container {
+    position: relative;
+    width: 100%;
+    height: 480px;
+    overflow: auto;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    border: 1px solid rgba(100,180,255,0.1);
+    padding: 15px;
+  }
+  .tech-canvas {
+    position: relative;
+    width: 780px; 
+    height: 450px; 
+  }
+  .tech-lines {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+  .tech-node {
+    position: absolute;
+    width: 110px;
+    height: 90px;
+    background: rgba(30, 40, 50, 0.9);
+    border: 2px solid #4a5a6a;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+    z-index: 2;
+  }
+  .tech-node:hover {
+    border-color: #aaddff;
+    transform: scale(1.05);
+    z-index: 3;
+  }
+  .tech-node.unlocked {
+    border-color: #ffd700;
+    background: linear-gradient(180deg, #b8860b, #8b6508);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+  }
+  .tech-node.available {
+    border-color: #fff;
+    background: rgba(40, 60, 80, 0.9);
+  }
+  .tech-node.locked {
+    opacity: 0.6;
+    cursor: not-allowed;
+    filter: grayscale(0.8);
+  }
+  .tech-node .node-icon-large { font-size: 32px; margin-bottom: 4px; }
+  .tech-node .node-name-small { font-size: 11px; color: #fff; text-align: center; line-height: 1.1; padding: 0 4px; }
+  .tech-node .node-price { font-size: 12px; font-weight: bold; color: #ffd700; margin-top: 4px; display: flex; align-items: center; gap: 2px; }
+  .tech-node .node-price .star { color: #00ccff; }
+  .tech-node .node-status { position: absolute; bottom: -10px; right: -10px; width: 24px; height: 24px; border-radius: 50%; background: #fff; color: #000; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+  .tech-node.available .node-status { background: #4CAF50; color: #fff; }
+  .tech-node.unlocked .node-status { display: none; }
+
+  .tech-tooltip {
+    position: fixed;
+    background: rgba(15, 25, 35, 0.95);
+    border: 1px solid #aaddff;
+    border-radius: 6px;
+    padding: 10px;
+    width: 220px;
+    z-index: 100;
+    pointer-events: none;
+    display: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+  }
+  .tech-tooltip.show { display: block; }
+  .tech-tooltip h4 { color: #fff; margin-bottom: 4px; font-size: 14px; }
+  .tech-tooltip .tt-bonus { color: #7fff7f; font-size: 11px; margin: 4px 0; }
+  .tech-tooltip .tt-desc { color: #aaa; font-size: 11px; line-height: 1.3; }
 
   #achvToast, #toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: bold; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; text-align: center; border: 2px solid #fff; z-index: 20; width: 90%; max-width: 350px; }
   #achvToast { background: linear-gradient(180deg, #ffd700, #ffa000); color: #1a1a1a; }
@@ -239,7 +302,6 @@ const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
 const W = 900, H = 600;
 
-// [NEW] Добавлен BOSS_INSTRUCTION
 const S = { IDLE: 'idle', CASTING: 'casting', WAITING: 'waiting', BITE: 'bite', REELING: 'reeling', RETURNING: 'returning', RESULT: 'result', BOSS_INSTRUCTION: 'boss_instruction', BOSS_INTRO: 'boss_intro', BOSS_QTE: 'boss_qte', BOSS_DEATH: 'boss_death', BOSS_WIN: 'boss_win' };
 let state = S.IDLE;
 let stateTime = 0;
@@ -249,7 +311,6 @@ let bestScore = parseInt(localStorage.getItem('fishBest') || '0');
 let totalCaught = parseInt(localStorage.getItem('fishTotal') || '0');
 let catalog = JSON.parse(localStorage.getItem('fishCatalog') || '{}');
 let upgrades = JSON.parse(localStorage.getItem('fishUpgrades') || '{"reel":0, "zone":0, "luck":0}');
-// [CHANGE] hasBait -> baitCount
 let baitCount = parseInt(localStorage.getItem('fishBaitCount') || '0');
 let encyclopedia = JSON.parse(localStorage.getItem('fishEncyclopedia') || '{}');
 let achievements = JSON.parse(localStorage.getItem('fishNewAchievements') || '{}');
@@ -321,91 +382,55 @@ const FISH_TYPES = [
 const FISH_ONLY = FISH_TYPES.filter(f => !f.isTrash);
 const TRASH_ONLY = FISH_TYPES.filter(f => f.isTrash);
 
-// РЕАЛИСТИЧНОЕ ДЕРЕВО УДОЧКИ
+// РЕАЛИСТИЧНОЕ ДЕРЕВО УДОЧКИ С ПЕРЕКРЕСТИЯМИ
 const TREE_DATA = {
   body: {
     name: 'Тело удилища', icon: '🎣',
     levels: [
-      { name: 'Бамбук', desc: 'Классическая бамбуковая палка', cost: 0, bonus: 0, requires: null },
-      { name: 'Телескоп', desc: 'Стеклопластик, удобно носить', cost: 300, bonus: 0.05, requires: null },
-      { name: 'Карбон', desc: 'Лёгкий и прочный карбон', cost: 1200, bonus: 0.10, requires: { branch: 'line', level: 1 } },
-      { name: 'Спиннинг', desc: 'Профессиональная снасть', cost: 3000, bonus: 0.15, requires: { branch: 'reel', level: 2 } },
-      { name: 'Фидер', desc: 'Английская донная снасть', cost: 6000, bonus: 0.20, requires: { branch: 'line', level: 2 } }
+      { name: 'Бамбук', desc: 'Классическая бамбуковая палка', cost: 0, bonus: 0, requires: [], row: 0, col: 1 },
+      { name: 'Телескоп', desc: 'Стеклопластик, удобно носить', cost: 300, bonus: 0.05, requires: [{branch:'body', level:0}], row: 0, col: 2 },
+      { name: 'Карбон', desc: 'Лёгкий и прочный карбон', cost: 1200, bonus: 0.10, requires: [{branch:'body', level:1}, {branch:'line', level:1}], row: 0, col: 3 },
+      { name: 'Спиннинг', desc: 'Профессиональная снасть', cost: 3000, bonus: 0.15, requires: [{branch:'body', level:2}, {branch:'reel', level:1}], row: 0, col: 4 },
+      { name: 'Фидер', desc: 'Английская донная снасть', cost: 6000, bonus: 0.20, requires: [{branch:'body', level:3}, {branch:'line', level:2}], row: 0, col: 5 }
     ]
   },
   line: {
     name: 'Леска', icon: '🧵',
     levels: [
-      { name: 'Монофил', desc: 'Обычная леска', cost: 0, bonus: 0, requires: null },
-      { name: 'Флюорокарбон', desc: 'Менее заметна в воде', cost: 200, bonus: 0.1, requires: null },
-      { name: 'Плетёнка', desc: 'Крепкая и прочная', cost: 800, bonus: 0.2, requires: { branch: 'reel', level: 1 } },
-      { name: 'Нанофил', desc: 'Тонкая, но невероятно прочная', cost: 2500, bonus: 0.35, requires: { branch: 'reel', level: 2 } }
-    ]
-  },
-  float: {
-    name: 'Поплавок', icon: '🎈',
-    levels: [
-      { name: 'Перо', desc: 'Классический гусиный поплавок', cost: 0, bonus: 0, requires: null },
-      { name: 'Пластик', desc: 'Яркий и прочный', cost: 150, bonus: 0.15, requires: null },
-      { name: 'Светящийся', desc: 'Виден даже ночью', cost: 600, bonus: 0.3, requires: null },
-      { name: 'Эхолот', desc: 'Показывает рыбу под водой', cost: 2000, bonus: 0.5, requires: { branch: 'hook', level: 2 } }
-    ]
-  },
-  hook: {
-    name: 'Крючок', icon: '🪝',
-    levels: [
-      { name: 'Обычный', desc: 'Стандартный крючок', cost: 0, bonus: 0, requires: null },
-      { name: 'Кованый', desc: 'Не разгибается', cost: 250, bonus: 0.1, requires: null },
-      { name: 'С кольцом', desc: 'Для крупной рыбы', cost: 1000, bonus: 0.25, requires: { branch: 'line', level: 1 } },
-      { name: 'Двойной', desc: 'Двойная зацепка', cost: 3000, bonus: 0.4, requires: { branch: 'line', level: 2 } }
-    ]
-  },
-  keeper: {
-    name: 'Садок', icon: '🧺',
-    levels: [
-      { name: 'Сетка', desc: 'Простая сетка', cost: 0, bonus: 0, requires: null },
-      { name: 'Ведро', desc: 'Вместительное ведро', cost: 200, bonus: 0.1, requires: null },
-      { name: 'Садок', desc: 'Профессиональный садок', cost: 800, bonus: 0.2, requires: null },
-      { name: 'Морозильник', desc: 'Сохраняет улов свежим', cost: 2500, bonus: 0.3, requires: { branch: 'body', level: 2 } }
+      { name: 'Монофил', desc: 'Обычная леска', cost: 0, bonus: 0, requires: [], row: 1, col: 1 },
+      { name: 'Флюорокарбон', desc: 'Менее заметна', cost: 200, bonus: 0.1, requires: [{branch:'line', level:0}], row: 1, col: 2 },
+      { name: 'Плетёнка', desc: 'Крепкая и прочная', cost: 800, bonus: 0.2, requires: [{branch:'line', level:1}, {branch:'hook', level:1}], row: 1, col: 3 },
+      { name: 'Нанофил', desc: 'Невероятно прочная', cost: 2500, bonus: 0.35, requires: [{branch:'line', level:2}, {branch:'reel', level:2}], row: 1, col: 4 }
     ]
   },
   reel: {
     name: 'Катушка', icon: '⚙️',
     levels: [
-      { name: 'Инерционная', desc: 'Простая катушка', cost: 0, bonus: 0, requires: null },
-      { name: 'Безынерционная', desc: 'Плавный ход', cost: 400, bonus: 0.15, requires: null },
-      { name: 'Мультипликаторная', desc: 'Для троллинга', cost: 1800, bonus: 0.3, requires: { branch: 'body', level: 1 } }
+      { name: 'Инерционная', desc: 'Простая катушка', cost: 0, bonus: 0, requires: [], row: 2, col: 1 },
+      { name: 'Безынерционная', desc: 'Плавный ход', cost: 400, bonus: 0.15, requires: [{branch:'reel', level:0}], row: 2, col: 2 },
+      { name: 'Мультипликаторная', desc: 'Для троллинга', cost: 1800, bonus: 0.3, requires: [{branch:'reel', level:1}], row: 2, col: 3 }
     ]
   },
-  handle: {
-    name: 'Рукоять', icon: '🪵',
+  hook: {
+    name: 'Крючок', icon: '🪝',
     levels: [
-      { name: 'Дерево', desc: 'Деревянная рукоять', cost: 0, bonus: 0, requires: null },
-      { name: 'Пробка', desc: 'Удобная пробка', cost: 300, bonus: 0.05, requires: null },
-      { name: 'Неопрен', desc: 'Не скользит в руке', cost: 1200, bonus: 0.1, requires: null }
+      { name: 'Обычный', desc: 'Стандартный крючок', cost: 0, bonus: 0, requires: [], row: 3, col: 1 },
+      { name: 'Кованый', desc: 'Не разгибается', cost: 250, bonus: 0.1, requires: [{branch:'hook', level:0}], row: 3, col: 2 },
+      { name: 'С кольцом', desc: 'Для крупной рыбы', cost: 1000, bonus: 0.25, requires: [{branch:'hook', level:1}], row: 3, col: 3 },
+      { name: 'Двойной', desc: 'Двойная зацепка', cost: 3000, bonus: 0.4, requires: [{branch:'hook', level:2}, {branch:'float', level:1}], row: 3, col: 4 }
     ]
   },
-  net: {
-    name: 'Подсачек', icon: '🥅',
+  float: {
+    name: 'Поплавок', icon: '🎈',
     levels: [
-      { name: 'Без подсачека', desc: 'Рискованно', cost: 0, bonus: 0, requires: null },
-      { name: 'Мелкий', desc: 'Для мелочи', cost: 150, bonus: 0.05, requires: null },
-      { name: 'Крупный', desc: 'Для трофеев', cost: 700, bonus: 0.15, requires: null }
-    ]
-  },
-  bait: {
-    name: 'Прикормка', icon: '🌾',
-    levels: [
-      { name: 'Без прикормки', desc: 'Как есть', cost: 0, bonus: 0, requires: null },
-      { name: 'Хлеб', desc: 'Простая прикормка', cost: 100, bonus: 0.1, requires: null },
-      { name: 'Смесь', desc: 'Специальная смесь', cost: 500, bonus: 0.2, requires: null }
+      { name: 'Перо', desc: 'Гусиный поплавок', cost: 0, bonus: 0, requires: [], row: 2, col: 4 },
+      { name: 'Пластик', desc: 'Яркий и прочный', cost: 150, bonus: 0.15, requires: [{branch:'float', level:0}], row: 2, col: 5 }
     ]
   }
 };
 
 const ACHV_LIST = [
   { id: 'collector', name: '🏆 Коллекционер', desc: 'Поймать всех рыб', bonus: '+10% к очкам', check: () => FISH_ONLY.every(f => catalog[f.name] > 0), progress: () => FISH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + FISH_ONLY.length },
-  // [FIX] Текст бонуса приведён к реальности
   { id: 'trashman', name: '🗑️ Мусорщик', desc: 'Собрать весь мусор', bonus: '+15% к скорости вываживания, +4% к зоне', check: () => TRASH_ONLY.every(f => catalog[f.name] > 0), progress: () => TRASH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + TRASH_ONLY.length },
   { id: 'pro', name: '🎣 Рыбак-профи', desc: 'Поймать 100 рыб', bonus: '+5% к очкам', check: () => totalCaught >= 100, progress: () => Math.min(totalCaught, 100) + '/100' },
   { id: 'night', name: '🌙 Ночной охотник', desc: 'Поймать 10 рыб ночью', bonus: '+5% к шансу редкой рыбы ночью', check: () => (achievements.nightCount || 0) >= 10, progress: () => Math.min(achievements.nightCount || 0, 10) + '/10' },
@@ -442,7 +467,7 @@ function saveProgress() {
   localStorage.setItem('fishTotal', totalCaught);
   localStorage.setItem('fishCatalog', JSON.stringify(catalog));
   localStorage.setItem('fishUpgrades', JSON.stringify(upgrades));
-  localStorage.setItem('fishBaitCount', baitCount); // [CHANGE]
+  localStorage.setItem('fishBaitCount', baitCount);
   localStorage.setItem('fishEncyclopedia', JSON.stringify(encyclopedia));
   localStorage.setItem('fishNewAchievements', JSON.stringify(achievements));
   localStorage.setItem('fishBossDefeated', bossDefeated);
@@ -657,7 +682,6 @@ const SHOP_ITEMS = [
   { id: 'reel', name: '⚡ Скорость', desc: 'Замедляет индикатор', max: 5, baseCost: 50, costMult: 2 },
   { id: 'zone', name: '🎯 Зона', desc: 'Шире зелёная зона', max: 5, baseCost: 60, costMult: 2 },
   { id: 'luck', name: '🍀 Удача', desc: 'Меньше мусора', max: 5, baseCost: 80, costMult: 2.5 },
-  // [CHANGE] Наживка теперь стопкой
   { id: 'bait', name: '🪱 Наживка', desc: '×3 шанс редкой рыбы. Тратится при улове.', max: 99, baseCost: 150, costMult: 1, isConsumable: true }
 ];
 let currentShopTab = 'upgrades';
@@ -672,14 +696,13 @@ function buyUpgrade(id) {
   const cost = getShopCost(item);
   if (score < cost) return;
   if (item.isConsumable) {
-    baitCount++; // [CHANGE]
+    baitCount++;
   } else {
     if ((upgrades[id] || 0) >= item.max) return;
     upgrades[id] = (upgrades[id] || 0) + 1;
   }
   score -= cost; playSound('buy'); saveProgress(); renderShop(); checkNewAchievements();
 }
-// [NEW] Покупка наживки пачкой
 function buyBaitPack(count) {
   const item = SHOP_ITEMS.find(i => i.id === 'bait');
   const cost = item.baseCost * count;
@@ -703,27 +726,23 @@ function buyHarpoon() {
   playSound('buy'); saveProgress(); renderShop();
 }
 
-function buyTreeUpgrade(branch, levelIndex) {
-  const branchData = TREE_DATA[branch];
-  const currentLevel = treeUpgrades[branch] || 0;
-  if (levelIndex !== currentLevel + 1) return;
-  
-  const levelData = branchData.levels[levelIndex];
-  if (score < levelData.cost) return;
-  
-  if (levelData.requires) {
-    const reqBranch = levelData.requires.branch;
-    const reqLevel = levelData.requires.level;
-    if ((treeUpgrades[reqBranch] || 0) < reqLevel) return;
+// [NEW] Честный текст бонуса для каждой ветки дерева
+function getBonusText(branch, level) {
+  const b = level.bonus;
+  if (b === 0) return 'Базовая экипировка';
+  const pct = Math.round(b * 100);
+  switch (branch) {
+    case 'body':
+    case 'line':
+    case 'reel':    return `−${pct}% к скорости индикатора`;
+    case 'handle':
+    case 'keeper':  return `+${Math.round(b * 20)} к ширине зоны`;
+    case 'net':     return `+${Math.round(b * 10)} к зоне, −${pct}% мусора`;
+    case 'hook':    return `+${pct}% к шансу редкой рыбы`;
+    case 'float':   return `+${pct}% ко времени реакции`;
+    case 'bait':    return `−${pct}% мусора`;
+    default:        return `+${pct}%`;
   }
-  
-  score -= levelData.cost;
-  treeUpgrades[branch] = levelIndex;
-  playSound('buy');
-  saveProgress();
-  renderShop();
-  checkNewAchievements();
-  vibrate(100);
 }
 
 function switchShopTab(tab) {
@@ -743,7 +762,6 @@ function renderShop() {
     container.innerHTML = SHOP_ITEMS.map(item => {
       const cost = getShopCost(item);
       
-      // [CHANGE] Наживка: отдельная отрисовка со стопкой и кнопками ×1/×5/×10
       if (item.isConsumable) {
         const canBuy1 = score >= cost;
         const canBuy5 = score >= cost * 5;
@@ -775,67 +793,80 @@ function renderShop() {
         </div>`;
     }).join('');
   } else if (currentShopTab === 'tree') {
-    let html = '';
+    // Константы для сетки
+    const CELL_W = 140; // Расстояние между колонками по X
+    const CELL_H = 110; // Расстояние между рядами по Y
+    const START_X = 20;
+    const START_Y = 20;
+
+    let html = `<div class="tech-tree-container">
+      <div class="tech-canvas">
+        <svg class="tech-lines" id="techLines"></svg>`;
+
+    // 1. Рисуем карточки
     for (const [branchKey, branchData] of Object.entries(TREE_DATA)) {
-      const currentLevel = treeUpgrades[branchKey] || 0;
-      html += `<div class="tree-branch">`;
-      html += `<div class="tree-branch-title">${branchData.icon} ${branchData.name}</div>`;
-      html += `<div class="tree-nodes">`;
-      
       branchData.levels.forEach((level, idx) => {
+        const currentLevel = treeUpgrades[branchKey] || 0;
         const isUnlocked = idx <= currentLevel;
         const isNext = idx === currentLevel + 1;
         
+        // Проверяем ВСЕ требования (перекрестия)
         let reqMet = true;
-        let reqText = '';
-        if (level.requires) {
-          const reqLvl = treeUpgrades[level.requires.branch] || 0;
-          if (reqLvl < level.requires.level) {
-            reqMet = false;
-            const reqName = TREE_DATA[level.requires.branch].name;
-            const reqLevelName = TREE_DATA[level.requires.branch].levels[level.requires.level].name;
-            reqText = `Требуется: ${reqName} — ${reqLevelName}`;
+        if (level.requires && level.requires.length > 0) {
+          for (const req of level.requires) {
+            if ((treeUpgrades[req.branch] || 0) < req.level) {
+              reqMet = false;
+              break;
+            }
           }
         }
         
         const canBuy = isNext && reqMet && score >= level.cost;
-        const bonusText = level.bonus > 0 ? `+${Math.round(level.bonus * 100)}% к эффективности` : 'Базовая экипировка';
         
-        let nodeClass = 'tree-node';
+        let nodeClass = 'tech-node';
         if (isUnlocked) nodeClass += ' unlocked';
-        else if (isNext) nodeClass += ' next';
+        else if (canBuy) nodeClass += ' available';
         else nodeClass += ' locked';
-        
+
+        let priceHtml = '';
+        if (!isUnlocked && level.cost > 0) {
+          priceHtml = `<div class="node-price">${level.cost} <span class="star">★</span></div>`;
+        } else if (isUnlocked) {
+          priceHtml = `<div class="node-price" style="color:#4CAF50;">✓</div>`;
+        }
+
+        // Вычисляем позицию (абсолютное позиционирование)
+        const posX = START_X + level.col * CELL_W;
+        const posY = START_Y + level.row * CELL_H;
+
         html += `
-          <div class="${nodeClass}">
-            <div class="node-icon">${isUnlocked ? '✅' : '🔒'}</div>
-            <div class="node-info">
-              <div class="node-name">${level.name} <span class="node-level">Ур. ${idx}</span></div>
-              <div class="node-desc">${level.desc}</div>
-              <div class="node-bonus">${bonusText}</div>
-              ${!reqMet ? `<div class="node-req">${reqText}</div>` : ''}
-            </div>
-            ${isUnlocked 
-              ? `<button class="buy-btn owned-btn" disabled>✓ Куплено</button>` 
-              : `<button class="buy-btn" onclick="buyTreeUpgrade('${branchKey}', ${idx})" ${canBuy ? '' : 'disabled'}>Купить (${level.cost})</button>`
-            }
-          </div>`;
+          <div class="${nodeClass}" 
+               style="left: ${posX}px; top: ${posY}px;"
+               onclick="handleTreeClick('${branchKey}', ${idx})"
+               onmouseenter="showTreeTooltip(event, '${branchKey}', ${idx})"
+               onmouseleave="hideTreeTooltip()">
+            <div class="node-icon-large">${branchData.icon}</div>
+            <div class="node-name-small">${level.name}</div>
+            ${priceHtml}
+            ${canBuy ? `<div class="node-status">+</div>` : ''}
+          </div>
+        `;
       });
-      
-      html += `</div></div>`;
     }
+
+    html += `</div></div>`;
     
+    // Добавляем Острогу
     if (harpoonInShop && !hasHarpoon) {
-      html += `
-        <div class="tree-branch" style="border-color:rgba(255,100,100,0.5); background:rgba(255,100,100,0.1);">
+       html += `
+        <div class="tree-branch" style="border-color:rgba(255,100,100,0.5); background:rgba(255,100,100,0.1); margin-top:15px;">
           <div class="tree-branch-title" style="color:#ff8888;">🔱 Спецснаряжение</div>
           <div class="tree-nodes">
             <div class="tree-node" style="border-color:rgba(255,100,100,0.5);">
               <div class="node-icon">🔱</div>
               <div class="node-info">
                 <div class="node-name">Острога Рыбака</div>
-                <div class="node-desc">Позволяет победить Сома-Гиганта во второй раз</div>
-                <div class="node-bonus">Значительно упрощает бой</div>
+                <div class="node-desc">Позволяет победить Сома-Гиганта во втором бою</div>
               </div>
               <button class="buy-btn" onclick="buyHarpoon()" ${score >= 1000 ? '' : 'disabled'}>Купить (1000)</button>
             </div>
@@ -843,23 +874,25 @@ function renderShop() {
         </div>`;
     } else if (hasHarpoon) {
       html += `
-        <div class="tree-branch" style="border-color:rgba(255,100,100,0.5); background:rgba(255,100,100,0.1);">
-          <div class="tree-branch-title" style="color:#ff8888;">🔱 Спецснаряжение</div>
+        <div class="tree-branch" style="border-color:rgba(100,255,100,0.5); background:rgba(100,255,100,0.1); margin-top:15px;">
+          <div class="tree-branch-title" style="color:#88ff88;">🔱 Спецснаряжение</div>
           <div class="tree-nodes">
             <div class="tree-node unlocked">
               <div class="node-icon">✅</div>
               <div class="node-info">
                 <div class="node-name">Острога Рыбака</div>
                 <div class="node-desc">Куплена и готова к бою!</div>
-                <div class="node-bonus">✓ Активна</div>
               </div>
               <button class="buy-btn owned-btn" disabled>✓ Есть</button>
             </div>
           </div>
         </div>`;
     }
-    
+
     container.innerHTML = html;
+    
+    // Рисуем линии после вставки в DOM
+    setTimeout(() => drawTreeLines(CELL_W, CELL_H, START_X, START_Y), 10);
   } else if (currentShopTab === 'books') {
     container.innerHTML = BOOKS.map(book => {
       const owned = encyclopedia[book.id];
@@ -871,6 +904,133 @@ function renderShop() {
           <button class="buy-btn" onclick="buyBook('${book.id}')" ${canBuy ? '' : 'disabled'}>${owned ? '✓ Куплено' : `Купить (${book.cost})`}</button>
         </div>`;
     }).join('');
+  }
+}
+
+// [NEW] Обработка клика по узлу дерева
+function handleTreeClick(branch, levelIdx) {
+  const branchData = TREE_DATA[branch];
+  const currentLevel = treeUpgrades[branch] || 0;
+  
+  if (levelIdx <= currentLevel) return; // Уже куплено
+  if (levelIdx !== currentLevel + 1) return; // Не следующий уровень
+  
+  const level = branchData.levels[levelIdx];
+  if (score < level.cost) { vibrate([50, 50, 50]); return; }
+  
+  // Проверка перекрестных требований
+  if (level.requires && level.requires.length > 0) {
+    for (const req of level.requires) {
+      if ((treeUpgrades[req.branch] || 0) < req.level) {
+        vibrate([50, 50, 50]);
+        return;
+      }
+    }
+  }
+  
+  score -= level.cost;
+  treeUpgrades[branch] = levelIdx;
+  playSound('buy');
+  saveProgress();
+  renderShop();
+  checkNewAchievements();
+  vibrate(100);
+}
+
+// [NEW] Тултип для дерева
+function showTreeTooltip(e, branch, levelIdx) {
+  const level = TREE_DATA[branch].levels[levelIdx];
+  let tt = document.getElementById('techTooltip');
+  if (!tt) {
+    tt = document.createElement('div');
+    tt.id = 'techTooltip';
+    tt.className = 'tech-tooltip';
+    document.body.appendChild(tt);
+  }
+  
+  let bonusText = getBonusText(branch, level);
+  let reqText = '';
+  
+  if (level.requires && level.requires.length > 0) {
+    const missing = level.requires.filter(req => (treeUpgrades[req.branch] || 0) < req.level);
+    if (missing.length > 0) {
+      reqText = `<div style="color:#ff6666; font-size:10px; margin-top:4px;">Требуется: ` + 
+        missing.map(req => `${TREE_DATA[req.branch].name} ур. ${req.level}`).join(', ') + 
+        `</div>`;
+    }
+  }
+
+  tt.innerHTML = `
+    <h4>${level.name}</h4>
+    <div class="tt-desc">${level.desc}</div>
+    <div class="tt-bonus">${bonusText}</div>
+    ${reqText}
+  `;
+  
+  tt.style.display = 'block';
+  const rect = e.target.getBoundingClientRect();
+  tt.style.left = Math.min(window.innerWidth - 240, rect.left + 'px');
+  tt.style.top = (rect.top - tt.offsetHeight - 10) + 'px';
+}
+
+function hideTreeTooltip() {
+  const tt = document.getElementById('techTooltip');
+  if (tt) tt.style.display = 'none';
+}
+
+// [NEW] Рисование линий между узлами (SVG)
+function drawTreeLines(CELL_W, CELL_H, START_X, START_Y) {
+  const svg = document.getElementById('techLines');
+  if (!svg) return;
+  svg.innerHTML = '';
+  
+  // Размеры карточки (должны совпадать с CSS)
+  const NODE_W = 110;
+  const NODE_H = 90;
+
+  // Проходим по всем веткам и уровням
+  for (const [branch, data] of Object.entries(TREE_DATA)) {
+    data.levels.forEach((level, idx) => {
+      if (!level.requires || level.requires.length === 0) return;
+
+      // Целевая точка (центр текущей карточки)
+      const toX = START_X + level.col * CELL_W + NODE_W / 2;
+      const toY = START_Y + level.row * CELL_H + NODE_H / 2;
+
+      level.requires.forEach(req => {
+        // Исходная точка (центр карточки-требования)
+        const reqLevel = TREE_DATA[req.branch].levels[req.level];
+        const fromX = START_X + reqLevel.col * CELL_W + NODE_W / 2;
+        const fromY = START_Y + reqLevel.row * CELL_H + NODE_H / 2;
+
+        // Проверяем, куплено ли требование
+        const isBought = (treeUpgrades[req.branch] || 0) >= req.level;
+        const color = isBought ? '#4CAF50' : '#4a5a6a';
+
+        // Рисуем "танковую" линию (зигзагом)
+        let pathD = '';
+        if (fromY === toY) {
+          // Прямая горизонтальная
+          pathD = `M ${fromX + NODE_W/2} ${fromY} L ${toX - NODE_W/2} ${toY}`;
+        } else {
+          // Угловая (сначала вправо, потом вверх/вниз, потом вправо)
+          const midX = fromX + (toX - fromX) / 2;
+          pathD = `M ${fromX + NODE_W/2} ${fromY} 
+                   L ${midX} ${fromY} 
+                   L ${midX} ${toY} 
+                   L ${toX - NODE_W/2} ${toY}`;
+        }
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathD);
+        path.setAttribute('stroke', color);
+        path.setAttribute('stroke-width', '3');
+        path.setAttribute('fill', 'none');
+        if (!isBought) path.setAttribute('stroke-dasharray', '4,4');
+        
+        svg.appendChild(path);
+      });
+    });
   }
 }
 
@@ -970,7 +1130,7 @@ function addFloatingText(text, x, y, color) { floatingTexts.push({ text, x, y, c
 function resetProgress(e) {
   if (e) e.stopPropagation();
   if (!confirm('Сбросить ВЕСЬ прогресс?')) return;
-  score = 0; bestScore = 0; totalCaught = 0; catalog = {}; upgrades = {reel:0, zone:0, luck:0}; baitCount = 0; // [CHANGE]
+  score = 0; bestScore = 0; totalCaught = 0; catalog = {}; upgrades = {reel:0, zone:0, luck:0}; baitCount = 0;
   encyclopedia = {}; achievements = {}; bossDefeated = false; hasHarpoon = false; harpoonInShop = false; bossMet = false;
   treeUpgrades = {body:0, line:0, float:0, hook:0, keeper:0, reel:0, handle:0, net:0, bait:0};
   catchStreak = 0; missStreak = 0;
@@ -1006,7 +1166,7 @@ function handleInput(e) {
   ensureAudioStarted();
   if (document.querySelector('.overlay.show')) return;
   if (state === S.BOSS_QTE) return;
-  if (state === S.BOSS_INSTRUCTION) return; // [NEW] блокируем клики по канвасу во время инструкции
+  if (state === S.BOSS_INSTRUCTION) return;
   
   if (e.type === 'touchstart' && e.touches && e.touches.length > 0) {
     e.preventDefault();
@@ -1078,7 +1238,6 @@ window.addEventListener('keydown', (e) => {
 // ЧАСТЬ 7: ЛОГИКА РЫБАЛКИ
 // ==================================================================
 function castRod(mx, my) {
-  // [NEW] Вместо мгновенного старта боя — показываем инструкцию
   if (checkBossTrigger() && !bossDefeated) {
     state = S.BOSS_INSTRUCTION;
     stateTime = 0;
@@ -1096,7 +1255,6 @@ function castRod(mx, my) {
   playSound('cast'); vibrate(30);
 }
 
-// [NEW] Игрок нажал «В БОЙ!» на инструкции
 function startBossFromInstruction(e) {
   if (e) e.stopPropagation();
   document.getElementById('bossInstruction').classList.remove('show');
@@ -1107,12 +1265,14 @@ function startReeling() {
   state = S.REELING; stateTime = 0;
   reelPos = 0; lastReelSoundTime = 0;
   
-  const lineBonus = (TREE_DATA.line.levels[treeUpgrades.line || 0]?.bonus || 0);
+  const bodyBonus   = (TREE_DATA.body.levels[treeUpgrades.body || 0]?.bonus || 0);
+  const lineBonus   = (TREE_DATA.line.levels[treeUpgrades.line || 0]?.bonus || 0);
+  const reelBonus   = (TREE_DATA.reel.levels[treeUpgrades.reel || 0]?.bonus || 0);
   const keeperBonus = (TREE_DATA.keeper.levels[treeUpgrades.keeper || 0]?.bonus || 0);
-  const reelBonus = (TREE_DATA.reel.levels[treeUpgrades.reel || 0]?.bonus || 0);
-  const netBonus = (TREE_DATA.net.levels[treeUpgrades.net || 0]?.bonus || 0);
+  const netBonus    = (TREE_DATA.net.levels[treeUpgrades.net || 0]?.bonus || 0);
+  const handleBonus = (TREE_DATA.handle.levels[treeUpgrades.handle || 0]?.bonus || 0);
   
-  let speedReduction = (upgrades.reel || 0) * 0.15 + lineBonus + reelBonus;
+  let speedReduction = (upgrades.reel || 0) * 0.15 + bodyBonus + lineBonus + reelBonus;
   if (achievements.trashman) speedReduction += 0.15;
   if (achievements.rodmaster) speedReduction += 0.10;
   let difficultyMultiplier = 1;
@@ -1125,7 +1285,7 @@ function startReeling() {
   let bonusZone = (upgrades.zone || 0) * 4;
   if (achievements.trashman) bonusZone += 4;
   
-  let finalZone = baseZone + bonusZone + (keeperBonus * 20) + (netBonus * 10);
+  let finalZone = baseZone + bonusZone + (keeperBonus * 20) + (netBonus * 10) + (handleBonus * 20);
   if (catchStreak >= 3) finalZone *= 0.8;
   if (missStreak >= 2) finalZone *= 1.3;
   zoneEnd = Math.min(95, zoneStart + finalZone);
@@ -1141,11 +1301,12 @@ function pickFish() {
   const allTrashCollected = TRASH_ONLY.every(f => catalog[f.name] > 0);
   const rareBonus = (TREE_DATA.hook.levels[treeUpgrades.hook || 0]?.bonus || 0);
   const netBonus = (TREE_DATA.net.levels[treeUpgrades.net || 0]?.bonus || 0);
+  const baitBonus = (TREE_DATA.bait.levels[treeUpgrades.bait || 0]?.bonus || 0);
   
   const adjusted = FISH_TYPES.map(f => {
     let weight = f.baseWeight;
     if (f.isTrash) {
-      weight *= trashMult * (1 - netBonus);
+      weight *= trashMult * (1 - netBonus) * (1 - baitBonus);
       if (allTrashCollected) {
         const luckReduction = 1 - (upgrades.luck || 0) * 0.15;
         weight *= Math.max(0.05, luckReduction);
@@ -1164,7 +1325,6 @@ function pickFish() {
     } else if (w === 'rain') {
       if (f.isTrash) weight *= 1.2;
     }
-    // [CHANGE] Наживка: любая купленная наживка даёт ×3 (тратится при улове)
     if (baitCount > 0 && !f.isTrash && f.isRare) weight *= 3;
     if (!f.isTrash && f.isRare) weight *= (1 + rareBonus);
     if (w === 'night' && achievements.night && !f.isTrash && f.isRare) weight *= 1.05;
@@ -1185,16 +1345,11 @@ function getTrashMultiplier() {
   return 0.8;
 }
 
-// [NEW] Единый расчёт очков — используется и при улове, и в UI
 function calcPoints(fish) {
-  const bodyBonus = TREE_DATA.body.levels[treeUpgrades.body || 0]?.bonus || 0;
-  const handleBonus = TREE_DATA.handle.levels[treeUpgrades.handle || 0]?.bonus || 0;
-  
   let points = fish.pts;
   if (achievements.collector) points = Math.floor(points * 1.1);
   if (achievements.pro) points = Math.floor(points * 1.05);
   if (achievements.millionaire) points = Math.floor(points * 1.02);
-  points = Math.floor(points * (1 + bodyBonus + handleBonus));
   return points;
 }
 
@@ -1204,13 +1359,11 @@ function checkReel() {
     const fish = pickFish();
     lastCatch = fish;
     
-    // [FIX] Используем единый calcPoints
     const points = calcPoints(fish);
     
     score += points; totalCaught++;
     if (score > bestScore) bestScore = score;
-    // [CHANGE] Тратим наживку только при успешном улове
-    if (baitCount > 0) { baitCount--; saveProgress(); } // [NEW]
+    if (baitCount > 0) { baitCount--; saveProgress(); }
     
     addToCatalog(fish.name);
     state = S.RETURNING; stateTime = 0;
@@ -1259,10 +1412,9 @@ function startQte() {
   document.getElementById('qteControls').classList.add('show');
 }
 
-// [FIX] Защита от «двойного проскока» и обработка только при активном QTE
 function handleQteKey(key) {
   if (state !== S.BOSS_QTE) return;
-  if (qteTimer <= 0) return; // [FIX] нельзя нажать после истечения
+  if (qteTimer <= 0) return;
   if (qteSequence[qteIndex] && qteSequence[qteIndex].key === key) {
     qteIndex++;
     qteTimer = qteSequence[qteIndex] ? qteSequence[qteIndex].time : 0;
@@ -1290,14 +1442,12 @@ function winBossFight() {
   vibrate([100, 50, 100, 50, 300]);
 }
 
-// [FIX] Коллекция рыб обнуляется, totalCaught НЕ трогаем (подтверждено)
 function loseBossFight() {
   state = S.BOSS_DEATH; stateTime = 0;
   playSound('hurt');
   document.getElementById('qteControls').classList.remove('show');
   vibrate([200, 100, 200]);
   
-  // Обнуляем только коллекцию рыб. totalCaught (общее число уловов) сохраняется.
   FISH_ONLY.forEach(f => { delete catalog[f.name]; });
   achievements.collector = false;
   harpoonInShop = true;
@@ -1314,7 +1464,6 @@ function update(dt) {
   updateGameTime(dt);
   const t = performance.now() / 1000;
   
-  // [NEW] Во время инструкции погода не меняется, босс не анимируется
   if (state !== S.BOSS_INSTRUCTION && state !== S.BOSS_INTRO && state !== S.BOSS_QTE && state !== S.BOSS_DEATH && state !== S.BOSS_WIN) {
     if (weatherTimer > WEATHER_DURATION) changeWeather();
   }
@@ -1381,7 +1530,9 @@ function update(dt) {
       playSound('bite'); vibrate([100, 50, 100]);
     }
   } else if (state === S.BITE) {
-    if (stateTime > 0.9) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); missStreak++; }
+    const floatBonus = TREE_DATA.float.levels[treeUpgrades.float || 0]?.bonus || 0;
+    const biteWindow = 0.9 + floatBonus * 1.5;
+    if (stateTime > biteWindow) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); missStreak++; }
   } else if (state === S.REELING) {
     reelPos += reelSpeed * dt;
     if (performance.now() - lastReelSoundTime > 120) { playSound('reel'); lastReelSoundTime = performance.now(); }
@@ -1577,7 +1728,6 @@ function drawUI() {
   ctx.fillText(`💰 Очки: ${score}`, 30, 45);
   ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700'; ctx.fillText(`🏆 Рекорд: ${bestScore}`, 30, 70);
   ctx.fillStyle = '#aaddff'; ctx.fillText(`🎣 Поймано: ${totalCaught}`, 30, 90);
-  // [CHANGE] Показываем количество наживки
   if (baitCount > 0) { ctx.fillStyle = '#ff9966'; ctx.fillText(`🪱 Наживка: ×${baitCount} (×3 к редким!)`, 30, 110); }
   if (catchStreak >= 3) { ctx.fillStyle = '#ff9966'; ctx.font = 'bold 12px "Segoe UI"'; ctx.fillText(`🔥 Серия ${catchStreak}!`, 30, 130); }
   else if (missStreak >= 2) { ctx.fillStyle = '#99ff99'; ctx.font = 'bold 12px "Segoe UI"'; ctx.fillText(`🍀 Удача рыбака`, 30, 130); }
@@ -1588,7 +1738,6 @@ function drawUI() {
     ctx.font = 'bold 20px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = lastCatch.color;
     ctx.fillText(`${lastCatch.emoji} ${lastCatch.name}`, W - panelW/2 - 15, 190);
     ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = lastCatch.isTrash ? '#ff8888' : '#fff';
-    // [FIX] Используем единый calcPoints
     const pts = calcPoints(lastCatch);
     ctx.fillText(lastCatch.isTrash ? '🗑 Мусор...' : `+${pts} очков`, W - panelW/2 - 15, 210);
   }
@@ -1740,7 +1889,6 @@ function draw() {
   ctx.clearRect(0, 0, W, H);
   
   if (state === S.BOSS_INSTRUCTION) {
-    // [NEW] Фон рисуем, но без активных элементов — сверху DOM-панель инструкции
     drawEnvironment(t);
     drawFisherman();
     drawBoss();
