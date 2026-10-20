@@ -10,11 +10,12 @@
   #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: #0d1520; }
   canvas { display: block; width: 100%; height: 100%; object-fit: contain; touch-action: none; }
   
-  .top-panel { position: absolute; bottom: 15px; right: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 250px; z-index: 5; }
+  .top-panel { position: absolute; bottom: 15px; right: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 300px; z-index: 5; }
   .btn { color: white; border: 2px solid; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: transform 0.1s; backdrop-filter: blur(4px); white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
   .btn:active { transform: scale(0.92); }
   #catalogBtn { background: rgba(60, 120, 200, 0.85); border-color: rgba(100,180,255,0.5); }
   #shopBtn { background: rgba(60, 180, 100, 0.85); border-color: rgba(100,255,150,0.5); }
+  #statsBtn { background: rgba(180, 80, 200, 0.85); border-color: rgba(220,140,255,0.5); }
   #soundBtn { background: rgba(200, 180, 60, 0.85); border-color: rgba(255,220,100,0.5); }
   #fullscreenBtn { background: rgba(120, 80, 200, 0.85); border-color: rgba(180,140,255,0.5); }
   #resetBtn { background: rgba(200, 60, 60, 0.85); border-color: rgba(255,100,100,0.5); }
@@ -36,6 +37,7 @@
   .fish-card .name { font-size: 11px; color: #ccc; font-weight: bold; margin-bottom: 2px; }
   .fish-card.caught .name, .fish-card.known .name { color: #fff; }
   .fish-card .pts { font-size: 10px; color: #ffd700; }
+  .fish-card .record { font-size: 10px; color: #ff9966; margin-top: 2px; font-weight: bold; }
   .fish-card.trash-card .pts { color: #ff9966; }
   .fish-card .desc { font-size: 10px; color: #999; margin-top: 4px; line-height: 1.2; display: none; }
   .fish-card.caught .desc, .fish-card.known .desc { display: block; }
@@ -73,62 +75,15 @@
   .bait-buy-row { display: flex; gap: 4px; }
   .bait-buy-row .buy-btn { min-width: 44px; padding: 6px 4px; }
 
-  .tech-tree-container {
-    position: relative;
-    width: 100%;
-    height: 480px;
-    overflow: auto;
-    background: rgba(0,0,0,0.2);
-    border-radius: 12px;
-    border: 1px solid rgba(100,180,255,0.1);
-    padding: 15px;
-  }
-  .tech-canvas {
-    position: relative;
-    width: 780px; 
-    height: 450px; 
-  }
-  .tech-lines {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none;
-    z-index: 1;
-  }
-  .tech-node {
-    position: absolute;
-    width: 110px;
-    height: 90px;
-    background: rgba(30, 40, 50, 0.9);
-    border: 2px solid #4a5a6a;
-    border-radius: 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-    z-index: 2;
-  }
-  .tech-node:hover {
-    border-color: #aaddff;
-    transform: scale(1.05);
-    z-index: 3;
-  }
-  .tech-node.unlocked {
-    border-color: #ffd700;
-    background: linear-gradient(180deg, #b8860b, #8b6508);
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-  }
-  .tech-node.available {
-    border-color: #fff;
-    background: rgba(40, 60, 80, 0.9);
-  }
-  .tech-node.locked {
-    opacity: 0.6;
-    cursor: not-allowed;
-    filter: grayscale(0.8);
-  }
+  /* Дерево улучшений */
+  .tech-tree-container { position: relative; width: 100%; height: 480px; overflow: auto; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid rgba(100,180,255,0.1); padding: 15px; }
+  .tech-canvas { position: relative; width: 780px; height: 450px; }
+  .tech-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
+  .tech-node { position: absolute; width: 110px; height: 90px; background: rgba(30, 40, 50, 0.9); border: 2px solid #4a5a6a; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s, border-color 0.2s; box-shadow: 0 4px 8px rgba(0,0,0,0.5); z-index: 2; }
+  .tech-node:hover { border-color: #aaddff; transform: scale(1.05); z-index: 3; }
+  .tech-node.unlocked { border-color: #ffd700; background: linear-gradient(180deg, #b8860b, #8b6508); box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+  .tech-node.available { border-color: #fff; background: rgba(40, 60, 80, 0.9); }
+  .tech-node.locked { opacity: 0.6; cursor: not-allowed; filter: grayscale(0.8); }
   .tech-node .node-icon-large { font-size: 32px; margin-bottom: 4px; }
   .tech-node .node-name-small { font-size: 11px; color: #fff; text-align: center; line-height: 1.1; padding: 0 4px; }
   .tech-node .node-price { font-size: 12px; font-weight: bold; color: #ffd700; margin-top: 4px; display: flex; align-items: center; gap: 2px; }
@@ -137,18 +92,7 @@
   .tech-node.available .node-status { background: #4CAF50; color: #fff; }
   .tech-node.unlocked .node-status { display: none; }
 
-  .tech-tooltip {
-    position: fixed;
-    background: rgba(15, 25, 35, 0.95);
-    border: 1px solid #aaddff;
-    border-radius: 6px;
-    padding: 10px;
-    width: 220px;
-    z-index: 100;
-    pointer-events: none;
-    display: none;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-  }
+  .tech-tooltip { position: fixed; background: rgba(15, 25, 35, 0.95); border: 1px solid #aaddff; border-radius: 6px; padding: 10px; width: 220px; z-index: 100; pointer-events: none; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
   .tech-tooltip.show { display: block; }
   .tech-tooltip h4 { color: #fff; margin-bottom: 4px; font-size: 14px; }
   .tech-tooltip .tt-bonus { color: #7fff7f; font-size: 11px; margin: 4px 0; }
@@ -187,6 +131,12 @@
   .instr-key { width: 50px; height: 50px; border-radius: 10px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); display: flex; justify-content: center; align-items: center; font-size: 22px; color: #fff; }
   .boss-start-btn { background: linear-gradient(180deg, #ff4444, #aa0000); color: #fff; border: 2px solid #ff8888; padding: 14px 40px; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; box-shadow: 0 0 30px rgba(255,50,50,0.5); }
   .boss-start-btn:active { transform: scale(0.95); }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+  @media (min-width: 400px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+  .stat-card { background: rgba(255,255,255,0.05); border-radius: 8px; padding: 10px; border: 1px solid rgba(255,255,255,0.1); }
+  .stat-val { color: #ffd700; font-size: 20px; font-weight: bold; }
+  .stat-label { color: #aaa; font-size: 11px; margin-top: 2px; text-transform: uppercase; }
 </style>
 </head>
 <body>
@@ -197,8 +147,9 @@
     <button id="soundBtn" class="btn" onclick="toggleSound(event)">🔊</button>
     <button id="fullscreenBtn" class="btn" onclick="toggleFullscreen(event)">📺</button>
     <button id="resetBtn" class="btn" onclick="resetProgress(event)">🗑</button>
-    <button id="catalogBtn" class="btn" onclick="toggleCatalog(event)">📖 Каталог</button>
-    <button id="shopBtn" class="btn" onclick="toggleShop(event)">🛒 Магазин</button>
+    <button id="statsBtn" class="btn" onclick="toggleStats(event)">📊</button>
+    <button id="catalogBtn" class="btn" onclick="toggleCatalog(event)">📖</button>
+    <button id="shopBtn" class="btn" onclick="toggleShop(event)">🛒</button>
   </div>
 
   <div id="qteControls">
@@ -234,7 +185,7 @@
       </div>
       <div class="instr-block" style="border-color:rgba(255,215,0,0.4);">
         <div class="instr-title" style="color:#ffd700;">💡 Важно</div>
-        <div class="instr-text">• <b>Ошибка или просрочка</b> — сом утащит тебя в омут.<br>• При поражении <b>коллекция рыб обнулится</b> (очки и прокачка останутся).<br>• Купи <b>«Острогу Рыбака»</b> в магазине, чтобы бой стал проще и короче.</div>
+        <div class="instr-text">• <b>Ошибка или просрочка</b> — сом утащит тебя в омут.<br>• При поражении <b>коллекция рыб обнулится</b> (монеты и прокачка останутся).<br>• Купи <b>«Острогу Рыбака»</b> в магазине, чтобы бой стал проще и короче.</div>
       </div>
       <button class="boss-start-btn" onclick="startBossFromInstruction(event)">⚔️ В БОЙ!</button>
     </div>
@@ -257,13 +208,38 @@
     <div class="panel">
       <button class="close-btn" onclick="toggleShop(event)">×</button>
       <h2>🛒 Магазин</h2>
-      <div style="text-align:center; font-size: 18px; color: #ffd700; font-weight: bold; margin-bottom: 10px;">Очки: <span id="shopScore">0</span></div>
+      <div style="text-align:center; font-size: 18px; margin-bottom: 10px;">
+        <span style="color:#ffd700; font-weight:bold;">💰 Монеты: <span id="shopScore">0</span></span> | 
+        <span style="color:#00ccff; font-weight:bold;">✨ Опыт: <span id="shopXp">0</span></span>
+      </div>
       <div class="shop-tabs">
-        <button class="shop-tab active" id="tabUpgrades" onclick="switchShopTab('upgrades')">⚙️ Прокачка</button>
-        <button class="shop-tab" id="tabTree" onclick="switchShopTab('tree')">🔧 Удочка</button>
-        <button class="shop-tab" id="tabBooks" onclick="switchShopTab('books')">📕 Справочники</button>
+        <button class="shop-tab active" id="tabUpgrades" onclick="switchShopTab('upgrades')">✨ Прокачка (XP)</button>
+        <button class="shop-tab" id="tabTree" onclick="switchShopTab('tree')">🔧 Удочка (Монеты)</button>
+        <button class="shop-tab" id="tabBooks" onclick="switchShopTab('books')">📕 Книги (Монеты)</button>
       </div>
       <div id="shopItems"></div>
+    </div>
+  </div>
+
+  <div id="statsOverlay" class="overlay" onclick="if(event.target===this) toggleStats(event)">
+    <div class="panel">
+      <button class="close-btn" onclick="toggleStats(event)">×</button>
+      <h2>📊 Статистика</h2>
+      
+      <div class="section-title">Общие показатели</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-val" id="statCaught">0</div><div class="stat-label">Всего поймано</div></div>
+        <div class="stat-card"><div class="stat-val" id="statWeight">0 кг</div><div class="stat-label">Общий вес улова</div></div>
+        <div class="stat-card"><div class="stat-val" id="statStreak">0</div><div class="stat-label">Рекорд серии</div></div>
+        <div class="stat-card"><div class="stat-val" id="statMiss">0</div><div class="stat-label">Срывов</div></div>
+        <div class="stat-card"><div class="stat-val" id="statEarned">0</div><div class="stat-label">Заработано монет</div></div>
+        <div class="stat-card"><div class="stat-val" id="statSpent">0</div><div class="stat-label">Потрачено монет</div></div>
+      </div>
+
+      <div class="section-title" style="margin-top: 20px;">Рекорды веса (Трофеи)</div>
+      <div id="statRecords" style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 8px; font-size: 13px; color: #ddd; line-height: 1.6;">
+        <!-- Список рекордов -->
+      </div>
     </div>
   </div>
   
@@ -283,7 +259,9 @@ const S = { IDLE: 'idle', CASTING: 'casting', WAITING: 'waiting', BITE: 'bite', 
 let state = S.IDLE;
 let stateTime = 0;
 
+// Валюты и прогресс
 let score = parseInt(localStorage.getItem('fishScore') || '0');
+let xp = parseInt(localStorage.getItem('fishXp') || '0');
 let bestScore = parseInt(localStorage.getItem('fishBest') || '0');
 let totalCaught = parseInt(localStorage.getItem('fishTotal') || '0');
 let catalog = JSON.parse(localStorage.getItem('fishCatalog') || '{}');
@@ -297,6 +275,10 @@ let harpoonInShop = localStorage.getItem('fishHarpoonInShop') === 'true';
 let bossMet = localStorage.getItem('fishBossMet') === 'true';
 
 let treeUpgrades = JSON.parse(localStorage.getItem('fishTreeUpgrades') || '{"body":0, "line":0, "float":0, "hook":0, "keeper":0, "reel":0, "handle":0, "net":0, "bait":0}');
+
+// Статистика и рекорды
+let gameStats = JSON.parse(localStorage.getItem('fishStats') || '{"earned":0, "spent":0, "misses":0, "bestStreak":0, "totalWeight":0}');
+let fishRecords = JSON.parse(localStorage.getItem('fishRecords') || '{}');
 
 let catchStreak = 0, missStreak = 0;
 let character = localStorage.getItem('fishCharacter') || null;
@@ -340,36 +322,36 @@ const BOOKS = [
   { id: 'bookМусор',    name: '📕 Справочник мусора',   cost: 60,  opens: ['Ботинок', 'Бутылка', 'Шина', 'Банка'] }
 ];
 
+// Базовые типы рыб. Добавлены веса и базовый XP.
 const FISH_TYPES = [
-  { name: 'Окунь',         color: '#e8a020', size: 25, pts: 10,  baseWeight: 30, emoji: '🐟', isTrash: false, isRare: false },
-  { name: 'Карась',        color: '#d4b048', size: 30, pts: 15,  baseWeight: 25, emoji: '🐠', isTrash: false, isRare: false },
-  { name: 'Щука',          color: '#4a8a3a', size: 45, pts: 30,  baseWeight: 15, emoji: '🦈', isTrash: false, isRare: false },
-  { name: 'Сом',           color: '#5a4a3a', size: 55, pts: 50,  baseWeight: 8,  emoji: '🐋', isTrash: false, isRare: true },
-  { name: 'Золотая рыбка', color: '#ffd700', size: 25, pts: 100, baseWeight: 2,  emoji: '✨', isTrash: false, isRare: true },
-  { name: 'Форель',        color: '#c08060', size: 35, pts: 40,  baseWeight: 4,  emoji: '🐡', isTrash: false, isRare: false },
-  { name: 'Лещ',           color: '#8a7a5a', size: 38, pts: 25,  baseWeight: 5,  emoji: '🎏', isTrash: false, isRare: false },
-  { name: 'Ёрш',           color: '#6a7a8a', size: 20, pts: 8,   baseWeight: 6,  emoji: '🐟', isTrash: false, isRare: false },
-  { name: 'Плотва',        color: '#aab0a0', size: 22, pts: 12,  baseWeight: 8,  emoji: '🐠', isTrash: false, isRare: false },
-  { name: 'Карп',          color: '#b08040', size: 50, pts: 60,  baseWeight: 2,  emoji: '🐳', isTrash: false, isRare: true },
-  { name: 'Угорь',         color: '#4a5a4a', size: 60, pts: 70,  baseWeight: 3,  emoji: '🐍', isTrash: false, isRare: true },
-  { name: 'Ботинок',       color: '#3a3a3a', size: 35, pts: 1,   baseWeight: 6,  emoji: '👢', isTrash: true, isRare: false },
-  { name: 'Бутылка',       color: '#4a8a4a', size: 28, pts: 1,   baseWeight: 6,  emoji: '🍾', isTrash: true, isRare: false },
-  { name: 'Шина',          color: '#1a1a1a', size: 45, pts: 1,   baseWeight: 6,  emoji: '🛞', isTrash: true, isRare: false },
-  { name: 'Банка',         color: '#8a8a9a', size: 20, pts: 1,   baseWeight: 6,  emoji: '🥫', isTrash: true, isRare: false }
+  { name: 'Окунь',         color: '#e8a020', size: 25, pts: 10,  xp: 8,   baseWeight: 30, minW: 100, maxW: 800,  emoji: '🐟', isTrash: false, isRare: false },
+  { name: 'Карась',        color: '#d4b048', size: 30, pts: 15,  xp: 12,  baseWeight: 25, minW: 200, maxW: 1500, emoji: '🐠', isTrash: false, isRare: false },
+  { name: 'Щука',          color: '#4a8a3a', size: 45, pts: 30,  xp: 25,  baseWeight: 15, minW: 1000, maxW: 7000, emoji: '🦈', isTrash: false, isRare: false },
+  { name: 'Сом',           color: '#5a4a3a', size: 55, pts: 50,  xp: 40,  baseWeight: 8,  minW: 5000, maxW: 40000, emoji: '🐋', isTrash: false, isRare: true },
+  { name: 'Золотая рыбка', color: '#ffd700', size: 25, pts: 100, xp: 80,  baseWeight: 2,  minW: 50,   maxW: 200,  emoji: '✨', isTrash: false, isRare: true },
+  { name: 'Форель',        color: '#c08060', size: 35, pts: 40,  xp: 30,  baseWeight: 4,  minW: 300,  maxW: 3000, emoji: '🐡', isTrash: false, isRare: false },
+  { name: 'Лещ',           color: '#8a7a5a', size: 38, pts: 25,  xp: 20,  baseWeight: 5,  minW: 500,  maxW: 4000, emoji: '🎏', isTrash: false, isRare: false },
+  { name: 'Ёрш',           color: '#6a7a8a', size: 20, pts: 8,   xp: 5,   baseWeight: 6,  minW: 30,   maxW: 150,  emoji: '🐟', isTrash: false, isRare: false },
+  { name: 'Плотва',        color: '#aab0a0', size: 22, pts: 12,  xp: 8,   baseWeight: 8,  minW: 50,   maxW: 300,  emoji: '🐠', isTrash: false, isRare: false },
+  { name: 'Карп',          color: '#b08040', size: 50, pts: 60,  xp: 45,  baseWeight: 2,  minW: 2000, maxW: 15000, emoji: '🐳', isTrash: false, isRare: true },
+  { name: 'Угорь',         color: '#4a5a4a', size: 60, pts: 70,  xp: 50,  baseWeight: 3,  minW: 500,  maxW: 5000, emoji: '🐍', isTrash: false, isRare: true },
+  { name: 'Ботинок',       color: '#3a3a3a', size: 35, pts: 1,   xp: 0,   baseWeight: 6,  minW: 300,  maxW: 1200, emoji: '👢', isTrash: true, isRare: false },
+  { name: 'Бутылка',       color: '#4a8a4a', size: 28, pts: 1,   xp: 0,   baseWeight: 6,  minW: 100,  maxW: 500,  emoji: '🍾', isTrash: true, isRare: false },
+  { name: 'Шина',          color: '#1a1a1a', size: 45, pts: 1,   xp: 0,   baseWeight: 6,  minW: 5000, maxW: 15000, emoji: '🛞', isTrash: true, isRare: false },
+  { name: 'Банка',         color: '#8a8a9a', size: 20, pts: 1,   xp: 0,   baseWeight: 6,  minW: 50,   maxW: 200,  emoji: '🥫', isTrash: true, isRare: false }
 ];
 const FISH_ONLY = FISH_TYPES.filter(f => !f.isTrash);
 const TRASH_ONLY = FISH_TYPES.filter(f => f.isTrash);
 
-// ДЕРЕВО УДОЧКИ — со всеми ветками, которые использует код
 const TREE_DATA = {
   body: {
     name: 'Тело удилища', icon: '🎣',
     levels: [
-      { name: 'Бамбук', desc: 'Классическая бамбуковая палка', cost: 0, bonus: 0, requires: [], row: 0, col: 1 },
-      { name: 'Телескоп', desc: 'Стеклопластик, удобно носить', cost: 300, bonus: 0.05, requires: [{branch:'body', level:0}], row: 0, col: 2 },
-      { name: 'Карбон', desc: 'Лёгкий и прочный карбон', cost: 1200, bonus: 0.10, requires: [{branch:'body', level:1}, {branch:'line', level:1}], row: 0, col: 3 },
-      { name: 'Спиннинг', desc: 'Профессиональная снасть', cost: 3000, bonus: 0.15, requires: [{branch:'body', level:2}, {branch:'reel', level:1}], row: 0, col: 4 },
-      { name: 'Фидер', desc: 'Английская донная снасть', cost: 6000, bonus: 0.20, requires: [{branch:'body', level:3}, {branch:'line', level:2}], row: 0, col: 5 }
+      { name: 'Бамбук', desc: 'Классическая палка', cost: 0, bonus: 0, requires: [], row: 0, col: 1 },
+      { name: 'Телескоп', desc: 'Стеклопластик', cost: 300, bonus: 0.05, requires: [{branch:'body', level:0}], row: 0, col: 2 },
+      { name: 'Карбон', desc: 'Лёгкий карбон', cost: 1200, bonus: 0.10, requires: [{branch:'body', level:1}, {branch:'line', level:1}], row: 0, col: 3 },
+      { name: 'Спиннинг', desc: 'Проф. снасть', cost: 3000, bonus: 0.15, requires: [{branch:'body', level:2}, {branch:'reel', level:1}], row: 0, col: 4 },
+      { name: 'Фидер', desc: 'Английская снасть', cost: 6000, bonus: 0.20, requires: [{branch:'body', level:3}, {branch:'line', level:2}], row: 0, col: 5 }
     ]
   },
   line: {
@@ -377,8 +359,8 @@ const TREE_DATA = {
     levels: [
       { name: 'Монофил', desc: 'Обычная леска', cost: 0, bonus: 0, requires: [], row: 1, col: 1 },
       { name: 'Флюорокарбон', desc: 'Менее заметна', cost: 200, bonus: 0.1, requires: [{branch:'line', level:0}], row: 1, col: 2 },
-      { name: 'Плетёнка', desc: 'Крепкая и прочная', cost: 800, bonus: 0.2, requires: [{branch:'line', level:1}, {branch:'hook', level:1}], row: 1, col: 3 },
-      { name: 'Нанофил', desc: 'Невероятно прочная', cost: 2500, bonus: 0.35, requires: [{branch:'line', level:2}, {branch:'reel', level:2}], row: 1, col: 4 }
+      { name: 'Плетёнка', desc: 'Крепкая', cost: 800, bonus: 0.2, requires: [{branch:'line', level:1}, {branch:'hook', level:1}], row: 1, col: 3 },
+      { name: 'Нанофил', desc: 'Очень прочная', cost: 2500, bonus: 0.35, requires: [{branch:'line', level:2}, {branch:'reel', level:2}], row: 1, col: 4 }
     ]
   },
   reel: {
@@ -392,23 +374,23 @@ const TREE_DATA = {
   hook: {
     name: 'Крючок', icon: '🪝',
     levels: [
-      { name: 'Обычный', desc: 'Стандартный крючок', cost: 0, bonus: 0, requires: [], row: 3, col: 1 },
+      { name: 'Обычный', desc: 'Стандартный', cost: 0, bonus: 0, requires: [], row: 3, col: 1 },
       { name: 'Кованый', desc: 'Не разгибается', cost: 250, bonus: 0.1, requires: [{branch:'hook', level:0}], row: 3, col: 2 },
-      { name: 'С кольцом', desc: 'Для крупной рыбы', cost: 1000, bonus: 0.25, requires: [{branch:'hook', level:1}], row: 3, col: 3 },
+      { name: 'С кольцом', desc: 'Для крупной', cost: 1000, bonus: 0.25, requires: [{branch:'hook', level:1}], row: 3, col: 3 },
       { name: 'Двойной', desc: 'Двойная зацепка', cost: 3000, bonus: 0.4, requires: [{branch:'hook', level:2}, {branch:'float', level:1}], row: 3, col: 4 }
     ]
   },
   float: {
     name: 'Поплавок', icon: '🎈',
     levels: [
-      { name: 'Перо', desc: 'Гусиный поплавок', cost: 0, bonus: 0, requires: [], row: 2, col: 4 },
-      { name: 'Пластик', desc: 'Яркий и прочный', cost: 150, bonus: 0.15, requires: [{branch:'float', level:0}], row: 2, col: 5 }
+      { name: 'Перо', desc: 'Гусиный', cost: 0, bonus: 0, requires: [], row: 2, col: 4 },
+      { name: 'Пластик', desc: 'Яркий', cost: 150, bonus: 0.15, requires: [{branch:'float', level:0}], row: 2, col: 5 }
     ]
   },
   keeper: {
     name: 'Садок', icon: '🪣',
     levels: [
-      { name: 'Кукан', desc: 'Куда складывать улов', cost: 0, bonus: 0, requires: [], row: 4, col: 1 },
+      { name: 'Кукан', desc: 'Для улова', cost: 0, bonus: 0, requires: [], row: 4, col: 1 },
       { name: 'Ведро', desc: 'Удобная ёмкость', cost: 350, bonus: 0.05, requires: [{branch:'keeper', level:0}], row: 4, col: 2 },
       { name: 'Садок', desc: 'Сетчатый садок', cost: 900, bonus: 0.10, requires: [{branch:'keeper', level:1}, {branch:'line', level:1}], row: 4, col: 3 }
     ]
@@ -416,17 +398,17 @@ const TREE_DATA = {
   handle: {
     name: 'Рукоять', icon: '🖐️',
     levels: [
-      { name: 'Дерево', desc: 'Обычная рукоять', cost: 0, bonus: 0, requires: [], row: 5, col: 1 },
+      { name: 'Дерево', desc: 'Обычная', cost: 0, bonus: 0, requires: [], row: 5, col: 1 },
       { name: 'Пробка', desc: 'Не скользит', cost: 300, bonus: 0.05, requires: [{branch:'handle', level:0}], row: 5, col: 2 },
-      { name: 'Неопрен', desc: 'Мягкая и удобная', cost: 800, bonus: 0.10, requires: [{branch:'handle', level:1}], row: 5, col: 3 }
+      { name: 'Неопрен', desc: 'Мягкая', cost: 800, bonus: 0.10, requires: [{branch:'handle', level:1}], row: 5, col: 3 }
     ]
   },
   net: {
     name: 'Подсак', icon: '🥅',
     levels: [
-      { name: 'Без подсака', desc: 'Ловишь руками', cost: 0, bonus: 0, requires: [], row: 6, col: 1 },
-      { name: 'Подсак', desc: 'Помогает вытаскивать', cost: 500, bonus: 0.05, requires: [{branch:'net', level:0}], row: 6, col: 2 },
-      { name: 'Большой подсак', desc: 'Для крупной рыбы', cost: 1500, bonus: 0.10, requires: [{branch:'net', level:1}, {branch:'keeper', level:1}], row: 6, col: 3 }
+      { name: 'Без подсака', desc: 'Руками', cost: 0, bonus: 0, requires: [], row: 6, col: 1 },
+      { name: 'Подсак', desc: 'Помогает', cost: 500, bonus: 0.05, requires: [{branch:'net', level:0}], row: 6, col: 2 },
+      { name: 'Большой', desc: 'Для крупной', cost: 1500, bonus: 0.10, requires: [{branch:'net', level:1}, {branch:'keeper', level:1}], row: 6, col: 3 }
     ]
   },
   bait: {
@@ -440,20 +422,19 @@ const TREE_DATA = {
 };
 
 const ACHV_LIST = [
-  { id: 'collector', name: '🏆 Коллекционер', desc: 'Поймать всех рыб', bonus: '+10% к очкам', check: () => FISH_ONLY.every(f => catalog[f.name] > 0), progress: () => FISH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + FISH_ONLY.length },
-  { id: 'trashman', name: '🗑️ Мусорщик', desc: 'Собрать весь мусор', bonus: '+15% к скорости вываживания, +4% к зоне', check: () => TRASH_ONLY.every(f => catalog[f.name] > 0), progress: () => TRASH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + TRASH_ONLY.length },
-  { id: 'pro', name: '🎣 Рыбак-профи', desc: 'Поймать 100 рыб', bonus: '+5% к очкам', check: () => totalCaught >= 100, progress: () => Math.min(totalCaught, 100) + '/100' },
+  { id: 'collector', name: '🏆 Коллекционер', desc: 'Поймать всех рыб', bonus: '+10% к монетам', check: () => FISH_ONLY.every(f => catalog[f.name] > 0), progress: () => FISH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + FISH_ONLY.length },
+  { id: 'trashman', name: '🗑️ Мусорщик', desc: 'Собрать весь мусор', bonus: '+15% к скорости вываживания, +4% к удержанию', check: () => TRASH_ONLY.every(f => catalog[f.name] > 0), progress: () => TRASH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + TRASH_ONLY.length },
+  { id: 'pro', name: '🎣 Рыбак-профи', desc: 'Поймать 100 рыб', bonus: '+5% к монетам', check: () => totalCaught >= 100, progress: () => Math.min(totalCaught, 100) + '/100' },
   { id: 'night', name: '🌙 Ночной охотник', desc: 'Поймать 10 рыб ночью', bonus: '+5% к шансу редкой рыбы ночью', check: () => (achievements.nightCount || 0) >= 10, progress: () => Math.min(achievements.nightCount || 0, 10) + '/10' },
-  { id: 'millionaire', name: '💎 Миллионер', desc: 'Накопить 5000 очков', bonus: '+2% к очкам', check: () => bestScore >= 5000, progress: () => Math.min(bestScore, 5000) + '/5000' },
-  { id: 'rodmaster', name: '🎣 Мастер удочек', desc: 'Прокачать все ветки дерева', bonus: '+10% к скорости вываживания', check: () => Object.keys(TREE_DATA).every(k => treeUpgrades[k] >= TREE_DATA[k].levels.length - 1), progress: () => Object.keys(TREE_DATA).filter(k => treeUpgrades[k] >= TREE_DATA[k].levels.length - 1).length + '/' + Object.keys(TREE_DATA).length },
-  { id: 'leviathan', name: '🐋 Убийца Сома-Гиганта', desc: 'Секретное достижение', bonus: '+5000 очков', check: () => bossDefeated, progress: () => bossDefeated ? '✓' : '???', secret: true }
+  { id: 'millionaire', name: '💎 Миллионер', desc: 'Накопить 1 000 000 монет', bonus: '+2% к монетам', check: () => score >= 1000000, progress: () => Math.min(score, 1000000).toLocaleString() + ' / 1 000 000' },
+  { id: 'rodmaster', name: '🎣 Мастер удочек', desc: 'Прокачать 5 базовых веток', bonus: '+10% к скорости вываживания', check: () => ['body', 'line', 'reel', 'hook', 'float'].every(k => treeUpgrades[k] >= TREE_DATA[k].levels.length - 1), progress: () => ['body', 'line', 'reel', 'hook', 'float'].filter(k => treeUpgrades[k] >= TREE_DATA[k].levels.length - 1).length + '/5' },
+  { id: 'leviathan', name: '🐋 Убийца Сома-Гиганта', desc: 'Секретное достижение', bonus: '+5000 монет', check: () => bossDefeated, progress: () => bossDefeated ? '✓' : '???', secret: true }
 ];
 
 let lastCatch = null;
 let particles = [], rippleEffects = [], floatingTexts = [], bubbles = [], rainDrops = [];
-// prevReelPos нужен для проверки отрезка пути индикатора
-let reelPos = 0, prevReelPos = 0, zoneStart = 0, zoneEnd = 0, reelSpeed = 85;
-const REEL_TOLERANCE = 2.5; // допуск в % шкалы — компенсирует кадровый шаг и задержку ввода
+let reelPos = 0, prevReelPos = 0, reelDirection = 1, zoneStart = 0, zoneEnd = 0, reelSpeed = 85;
+const REEL_TOLERANCE = 2.5;
 let lastReelSoundTime = 0;
 const rod = { baseX: 100, baseY: 480, tipX: 180, tipY: 380 };
 const bobber = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0, phase: 0, mx: 600, my: 450 };
@@ -471,10 +452,11 @@ let qteTimer = 0;
 let qteMaxTime = 1.0;
 
 // ==================================================================
-// ЧАСТЬ 2: СОХРАНЕНИЕ, ЗАГРУЗКА И АУДИО
+// ЧАСТЬ 2: СОХРАНЕНИЕ И АУДИО
 // ==================================================================
 function saveProgress() {
   localStorage.setItem('fishScore', score);
+  localStorage.setItem('fishXp', xp);
   localStorage.setItem('fishBest', bestScore);
   localStorage.setItem('fishTotal', totalCaught);
   localStorage.setItem('fishCatalog', JSON.stringify(catalog));
@@ -488,6 +470,8 @@ function saveProgress() {
   localStorage.setItem('fishBossMet', bossMet);
   localStorage.setItem('fishTreeUpgrades', JSON.stringify(treeUpgrades));
   localStorage.setItem('fishWeatherIndex', currentWeatherIndex);
+  localStorage.setItem('fishStats', JSON.stringify(gameStats));
+  localStorage.setItem('fishRecords', JSON.stringify(fishRecords));
 }
 
 function checkBossTrigger() {
@@ -693,49 +677,62 @@ function selectCharacter(type, e) {
 // ЧАСТЬ 4: МАГАЗИН
 // ==================================================================
 const SHOP_ITEMS = [
-  { id: 'reel', name: '⚡ Скорость', desc: 'Замедляет индикатор', max: 5, baseCost: 50, costMult: 2 },
-  { id: 'zone', name: '🎯 Зона', desc: 'Шире зелёная зона', max: 5, baseCost: 60, costMult: 2 },
-  { id: 'luck', name: '🍀 Удача', desc: 'Меньше мусора', max: 5, baseCost: 80, costMult: 2.5 },
-  { id: 'bait', name: '🪱 Наживка', desc: '×3 шанс редкой рыбы. Тратится при улове.', max: 99, baseCost: 150, costMult: 1, isConsumable: true }
+  { id: 'reel', name: '⚡ Скорость', desc: 'Замедляет индикатор', max: 5, baseCost: 50, costMult: 2, currency: 'xp' },
+  { id: 'zone', name: '🎯 Удержание', desc: 'Шире зелёная зона', max: 5, baseCost: 60, costMult: 2, currency: 'xp' },
+  { id: 'luck', name: '🍀 Удача', desc: 'Меньше мусора', max: 5, baseCost: 80, costMult: 2.5, currency: 'xp' },
+  { id: 'bait', name: '🪱 Наживка', desc: '×3 шанс редкой рыбы. Тратится при улове.', max: 99, baseCost: 150, costMult: 1, isConsumable: true, currency: 'coins' }
 ];
 let currentShopTab = 'upgrades';
+
 function getShopCost(item) {
   if (item.isConsumable) return item.baseCost;
   const currentLvl = upgrades[item.id] || 0;
   return Math.floor(item.baseCost * Math.pow(item.costMult, currentLvl));
 }
+
 function buyUpgrade(id) {
   const item = SHOP_ITEMS.find(i => i.id === id);
   if (!item) return;
   const cost = getShopCost(item);
-  if (score < cost) return;
+  const isXp = item.currency === 'xp';
+  
+  if (isXp && xp < cost) return;
+  if (!isXp && score < cost) return;
+  
   if (item.isConsumable) {
     baitCount++;
   } else {
     if ((upgrades[id] || 0) >= item.max) return;
     upgrades[id] = (upgrades[id] || 0) + 1;
   }
-  score -= cost; playSound('buy'); saveProgress(); renderShop(); checkNewAchievements();
+  
+  if (isXp) xp -= cost; else { score -= cost; gameStats.spent += cost; }
+  
+  playSound('buy'); saveProgress(); renderShop(); checkNewAchievements();
 }
+
 function buyBaitPack(count) {
   const item = SHOP_ITEMS.find(i => i.id === 'bait');
   const cost = item.baseCost * count;
   if (score < cost) return;
-  score -= cost;
+  score -= cost; gameStats.spent += cost;
   baitCount += count;
   playSound('buy'); saveProgress(); renderShop(); checkNewAchievements();
   vibrate(50);
 }
+
 function buyBook(bookId) {
   const book = BOOKS.find(b => b.id === bookId);
   if (!book || encyclopedia[bookId] || score < book.cost) return;
-  score -= book.cost; encyclopedia[bookId] = true;
+  score -= book.cost; gameStats.spent += book.cost;
+  encyclopedia[bookId] = true;
   book.opens.forEach(f => { if (!catalog[f]) catalog[f] = 0; });
   playSound('buy'); saveProgress(); renderShop(); checkNewAchievements();
 }
+
 function buyHarpoon() {
   if (hasHarpoon || score < 1000) return;
-  score -= 1000;
+  score -= 1000; gameStats.spent += 1000;
   hasHarpoon = true;
   playSound('buy'); saveProgress(); renderShop();
 }
@@ -749,8 +746,8 @@ function getBonusText(branch, level) {
     case 'line':
     case 'reel':    return `−${pct}% к скорости индикатора`;
     case 'keeper':
-    case 'handle':  return `+${Math.round(b * 20)} к ширине зоны`;
-    case 'net':     return `+${Math.round(b * 10)} к зоне, −${pct}% мусора`;
+    case 'handle':  return `+${Math.round(b * 90)} к ширине удержания`;
+    case 'net':     return `+${Math.round(b * 45)} к удержанию, −${pct}% мусора`;
     case 'hook':    return `+${pct}% к шансу редкой рыбы`;
     case 'float':   return `+${pct}% ко времени реакции`;
     case 'bait':    return `−${pct}% мусора`;
@@ -776,11 +773,14 @@ function toggleShop(e) {
 
 function renderShop() {
   document.getElementById('shopScore').textContent = score;
+  document.getElementById('shopXp').textContent = xp;
   const container = document.getElementById('shopItems');
   
   if (currentShopTab === 'upgrades') {
     container.innerHTML = SHOP_ITEMS.map(item => {
       const cost = getShopCost(item);
+      const isXp = item.currency === 'xp';
+      const canAfford = isXp ? xp >= cost : score >= cost;
       
       if (item.isConsumable) {
         const canBuy1 = score >= cost;
@@ -803,8 +803,10 @@ function renderShop() {
       
       const lvl = upgrades[item.id] || 0;
       const isMax = lvl >= item.max;
-      const canBuy = !isMax && score >= cost;
-      let btnText = isMax ? 'MAX' : `Купить (${cost})`;
+      const canBuy = !isMax && canAfford;
+      const currencyIcon = isXp ? '✨' : '💰';
+      let btnText = isMax ? 'MAX' : `${currencyIcon} ${cost}`;
+      
       return `
         <div class="shop-item">
           <div class="icon">${item.name.split(' ')[0]}</div>
@@ -847,7 +849,7 @@ function renderShop() {
 
         let priceHtml = '';
         if (!isUnlocked && level.cost > 0) {
-          priceHtml = `<div class="node-price">${level.cost} <span class="star">★</span></div>`;
+          priceHtml = `<div class="node-price">${level.cost} <span class="star">💰</span></div>`;
         } else if (isUnlocked) {
           priceHtml = `<div class="node-price" style="color:#4CAF50;">✓</div>`;
         }
@@ -914,7 +916,7 @@ function renderShop() {
         <div class="shop-item ${owned ? 'owned' : ''}">
           <div class="icon">📕</div>
           <div class="info"><div class="name">${book.name}</div><div class="desc">Открывает: ${book.opens.join(', ')}</div></div>
-          <button class="buy-btn" onclick="buyBook('${book.id}')" ${canBuy ? '' : 'disabled'}>${owned ? '✓ Куплено' : `Купить (${book.cost})`}</button>
+          <button class="buy-btn" onclick="buyBook('${book.id}')" ${canBuy ? '' : 'disabled'}>${owned ? '✓ Куплено' : `💰 ${book.cost}`}</button>
         </div>`;
     }).join('');
   }
@@ -942,6 +944,7 @@ function handleTreeClick(branch, levelIdx) {
   }
   
   score -= level.cost;
+  gameStats.spent += level.cost;
   treeUpgrades[branch] = levelIdx;
   playSound('buy');
   saveProgress();
@@ -1039,7 +1042,7 @@ function drawTreeLines(CELL_W, CELL_H, START_X, START_Y) {
 }
 
 // ==================================================================
-// ЧАСТЬ 5: КАТАЛОГ И ДОСТИЖЕНИЯ
+// ЧАСТЬ 5: КАТАЛОГ, ДОСТИЖЕНИЯ И СТАТИСТИКА
 // ==================================================================
 function addToCatalog(name) {
   if (!catalog[name]) catalog[name] = 0;
@@ -1075,6 +1078,13 @@ function toggleCatalog(e) {
   if (overlay.classList.contains('show')) renderCatalog();
   else document.getElementById('shopOverlay').classList.remove('show');
 }
+function toggleStats(e) {
+  if (e) e.stopPropagation();
+  const overlay = document.getElementById('statsOverlay');
+  overlay.classList.toggle('show');
+  hideTreeTooltip();
+  if (overlay.classList.contains('show')) renderStats();
+}
 function isFishKnown(fishName) {
   if (catalog[fishName] > 0) return true;
   for (const book of BOOKS) { if (encyclopedia[book.id] && book.opens.includes(fishName)) return true; }
@@ -1085,9 +1095,12 @@ function renderCatalog() {
     const count = catalog[f.name] || 0;
     const known = isFishKnown(f.name);
     const desc = FISH_DESCRIPTIONS[f.name];
+    const record = fishRecords[f.name] ? `Рекорд: ${fishRecords[f.name]} г` : '';
+    
     return `<div class="fish-card ${count > 0 ? 'caught' : ''} ${known && count === 0 ? 'known' : ''}">
         <span class="emoji">${f.emoji}</span><div class="name">${known ? f.name : '???'}</div>
-        <div class="pts">${count > 0 ? '+' + f.pts + ' ×' + count : (known ? 'не поймана' : '')}</div>
+        <div class="pts">${count > 0 ? '+' + f.pts + ' монет ×' + count : (known ? 'не поймана' : '')}</div>
+        ${record ? `<div class="record">${record}</div>` : ''}
         ${known && desc ? `<div class="desc">📍 ${desc.where}<br>⏰ ${desc.when}<br>💡 ${desc.how}</div>` : ''}
       </div>`;
   }).join('');
@@ -1095,9 +1108,12 @@ function renderCatalog() {
     const count = catalog[f.name] || 0;
     const known = isFishKnown(f.name);
     const desc = FISH_DESCRIPTIONS[f.name];
+    const record = fishRecords[f.name] ? `Вес: ${fishRecords[f.name]} г` : '';
+    
     return `<div class="fish-card trash-card ${count > 0 ? 'caught' : ''} ${known && count === 0 ? 'known' : ''}">
         <span class="emoji">${f.emoji}</span><div class="name">${known ? f.name : '???'}</div>
         <div class="pts">${count > 0 ? '🗑 ×' + count : (known ? 'не найден' : '')}</div>
+        ${record ? `<div class="record">${record}</div>` : ''}
         ${known && desc ? `<div class="desc">📍 ${desc.where}<br>⏰ ${desc.when}<br>💡 ${desc.how}</div>` : ''}
       </div>`;
   }).join('');
@@ -1107,8 +1123,8 @@ function renderCatalog() {
     let pct = 0;
     if (a.id === 'pro') pct = Math.min(totalCaught, 100);
     else if (a.id === 'night') pct = Math.min((achievements.nightCount||0), 10) * 10;
-    else if (a.id === 'millionaire') pct = Math.min(bestScore/5000*100, 100);
-    else if (a.id === 'rodmaster') pct = Object.keys(TREE_DATA).filter(k => treeUpgrades[k] >= TREE_DATA[k].levels.length - 1).length / Object.keys(TREE_DATA).length * 100;
+    else if (a.id === 'millionaire') pct = Math.min(score/1000000*100, 100);
+    else if (a.id === 'rodmaster') pct = ['body', 'line', 'reel', 'hook', 'float'].filter(k => treeUpgrades[k] >= TREE_DATA[k].levels.length - 1).length / 5 * 100;
     else if (a.id === 'collector') pct = FISH_ONLY.filter(f => catalog[f.name] > 0).length / FISH_ONLY.length * 100;
     else if (a.id === 'trashman') pct = TRASH_ONLY.filter(f => catalog[f.name] > 0).length / TRASH_ONLY.length * 100;
     else if (a.id === 'leviathan') pct = bossDefeated ? 100 : 0;
@@ -1129,6 +1145,28 @@ function renderCatalog() {
   }).join('');
 }
 
+function renderStats() {
+  document.getElementById('statCaught').textContent = totalCaught;
+  document.getElementById('statWeight').textContent = (gameStats.totalWeight / 1000).toFixed(1) + ' кг';
+  document.getElementById('statStreak').textContent = gameStats.bestStreak;
+  document.getElementById('statMiss').textContent = gameStats.misses;
+  document.getElementById('statEarned').textContent = gameStats.earned;
+  document.getElementById('statSpent').textContent = gameStats.spent;
+
+  const recContainer = document.getElementById('statRecords');
+  let html = '';
+  for (const f of FISH_TYPES) {
+    if (fishRecords[f.name]) {
+      html += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.1); padding: 4px 0;">
+        <span>${f.emoji} ${f.name}</span>
+        <span style="color:#ffd700; font-weight:bold;">${fishRecords[f.name]} г</span>
+      </div>`;
+    }
+  }
+  if (!html) html = '<div style="text-align:center; color:#888;">Пока нет рекордов</div>';
+  recContainer.innerHTML = html;
+}
+
 // ==================================================================
 // ЧАСТЬ 6: ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И ВВОД
 // ==================================================================
@@ -1141,9 +1179,11 @@ function addFloatingText(text, x, y, color) { floatingTexts.push({ text, x, y, c
 function resetProgress(e) {
   if (e) e.stopPropagation();
   if (!confirm('Сбросить ВЕСЬ прогресс?')) return;
-  score = 0; bestScore = 0; totalCaught = 0; catalog = {}; upgrades = {reel:0, zone:0, luck:0}; baitCount = 0;
+  score = 0; xp = 0; bestScore = 0; totalCaught = 0; catalog = {}; upgrades = {reel:0, zone:0, luck:0}; baitCount = 0;
   encyclopedia = {}; achievements = {}; bossDefeated = false; hasHarpoon = false; harpoonInShop = false; bossMet = false;
   treeUpgrades = {body:0, line:0, float:0, hook:0, keeper:0, reel:0, handle:0, net:0, bait:0};
+  gameStats = {earned:0, spent:0, misses:0, bestStreak:0, totalWeight:0};
+  fishRecords = {};
   catchStreak = 0; missStreak = 0;
   character = null;
   currentWeatherIndex = 0; weatherTimer = 0;
@@ -1247,8 +1287,19 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ==================================================================
-// ЧАСТЬ 7: ЛОГИКА РЫБАЛКИ
+// ЧАСТЬ 7: ЛОГИКА РЫБАЛКИ И ВЕСА
 // ==================================================================
+function getRandomWeight(min, max) {
+  const r = Math.pow(Math.random(), 2);
+  return Math.round(min + (max - min) * r);
+}
+
+function getWeightModifier(fish, weight) {
+  const avg = (fish.minW + fish.maxW) / 2;
+  const diff = (weight - avg) / (fish.maxW - fish.minW);
+  return 1 + diff * 0.7; // От -35% до +35%
+}
+
 function castRod(mx, my) {
   if (checkBossTrigger() && !bossDefeated) {
     state = S.BOSS_INSTRUCTION;
@@ -1275,7 +1326,7 @@ function startBossFromInstruction(e) {
  
 function startReeling() {
   state = S.REELING; stateTime = 0;
-  reelPos = 0; prevReelPos = 0; lastReelSoundTime = 0;
+  reelPos = 0; prevReelPos = 0; reelDirection = 1; lastReelSoundTime = 0;
   
   const bodyBonus   = (TREE_DATA.body.levels[treeUpgrades.body || 0]?.bonus || 0);
   const lineBonus   = (TREE_DATA.line.levels[treeUpgrades.line || 0]?.bonus || 0);
@@ -1284,24 +1335,57 @@ function startReeling() {
   const netBonus    = (TREE_DATA.net.levels[treeUpgrades.net || 0]?.bonus || 0);
   const handleBonus = (TREE_DATA.handle.levels[treeUpgrades.handle || 0]?.bonus || 0);
   
-  // Скорость индикатора
+  // 1. Сложность от веса (генерируем вес заранее, чтобы знать сложность)
+  const fish = pickFish(); // Мы фиксируем рыбу тут, чтобы знать её вес для сложности
+  const weight = getRandomWeight(fish.minW, fish.maxW);
+  const resistance = (weight - fish.minW) / (fish.maxW - fish.minW); // 0..1
+  
+  // Сохраняем в глобал для checkReel
+  bobber.pendingFish = fish;
+  bobber.pendingWeight = weight;
+  
+  // 2. Скорость индикатора
   let speedReduction = (upgrades.reel || 0) * 0.15 + bodyBonus + lineBonus + reelBonus;
   if (achievements.trashman) speedReduction += 0.15;
   if (achievements.rodmaster) speedReduction += 0.10;
+  
+  let baseSpeed = 85 + Math.random() * 40;
+  // Погода влияет на скорость
+  const w = getWeather();
+  if (w === 'sunset') baseSpeed *= 1.10;
+  if (w === 'night') baseSpeed *= 0.85;
+  if (w === 'rain') baseSpeed *= 1.20;
+  if (w === 'fog') baseSpeed *= 0.75;
+  
+  // Вес увеличивает скорость (тяжелая рыба дергает сильнее)
+  baseSpeed *= (1 + resistance * 0.5);
+  
   let difficultyMultiplier = 1;
   if (catchStreak >= 3) difficultyMultiplier = 1 + (catchStreak - 2) * 0.15;
   if (missStreak >= 2) difficultyMultiplier = Math.max(0.5, 1 - (missStreak - 1) * 0.2);
-  reelSpeed = (85 + Math.random() * 40) * Math.max(0.2, 1 - speedReduction) * difficultyMultiplier;
   
-  // --- ГЕНЕРАЦИЯ ЗОНЫ ---
-  let baseZone = 15 + Math.random() * 7;                    // 15–22%
-  let bonusZone = (upgrades.zone || 0) * 3;                 // +3% за уровень (макс +15%)
-  if (achievements.trashman) bonusZone += 3;                // +3% за «Мусорщика»
-  let treeBonus = (keeperBonus * 90) + (netBonus * 45) + (handleBonus * 90); // до +33.75%
+  reelSpeed = baseSpeed * Math.max(0.2, 1 - speedReduction) * difficultyMultiplier;
+  
+  // 3. Ширина зоны
+  let baseZone = 15 + Math.random() * 7;
+  let bonusZone = (upgrades.zone || 0) * 3;
+  if (achievements.trashman) bonusZone += 3;
+  let treeBonus = (keeperBonus * 90) + (netBonus * 45) + (handleBonus * 90);
   let finalZone = baseZone + bonusZone + treeBonus;
+  
+  // Вес сужает зону (до -40%)
+  finalZone *= (1 - resistance * 0.4);
+  
+  // Погода
+  if (w === 'sunset') finalZone *= 1.05;
+  if (w === 'night') finalZone *= 0.90;
+  if (w === 'rain') finalZone *= 0.95;
+  if (w === 'fog') finalZone *= 0.90;
+  
   if (catchStreak >= 3) finalZone *= 0.85;
   if (missStreak >= 2) finalZone *= 1.2;
-  finalZone = Math.max(15, Math.min(75, finalZone));        // потолок 75%
+  
+  finalZone = Math.max(8, Math.min(75, finalZone)); // Уменьшен минимум до 8% для трофеев
   
   const minStart = 10;
   const maxStart = 100 - finalZone - 10;
@@ -1367,39 +1451,66 @@ function getTrashMultiplier() {
   return 0.8;
 }
 
-function calcPoints(fish) {
+function calcPoints(fish, weight) {
   let points = fish.pts;
+  const wMod = getWeightModifier(fish, weight);
+  points = Math.floor(points * wMod);
+  
   if (achievements.collector) points = Math.floor(points * 1.1);
   if (achievements.pro) points = Math.floor(points * 1.05);
   if (achievements.millionaire) points = Math.floor(points * 1.02);
-  return points;
+  return Math.max(1, points);
 }
 
-// Проверка попадания: отрезок [prevReelPos, reelPos] с допуском пересекает зону
 function checkReel() {
   const lo = Math.min(prevReelPos, reelPos) - REEL_TOLERANCE;
   const hi = Math.max(prevReelPos, reelPos) + REEL_TOLERANCE;
   const hit = hi >= zoneStart && lo <= zoneEnd;
 
   if (hit) {
-    catchStreak++; missStreak = 0;
-    const fish = pickFish();
-    lastCatch = fish;
-    lastCatch.points = calcPoints(fish);
+    catchStreak++; 
+    if (catchStreak > gameStats.bestStreak) gameStats.bestStreak = catchStreak;
+    missStreak = 0;
     
-    score += lastCatch.points; totalCaught++;
+    const fish = bobber.pendingFish;
+    const weight = bobber.pendingWeight;
+    
+    lastCatch = fish;
+    lastCatch.weight = weight;
+    lastCatch.points = calcPoints(fish, weight);
+    
+    // Опыт: базовый * (вес) * (множитель серии)
+    const wMod = getWeightModifier(fish, weight);
+    const streakMult = 1 + Math.min(catchStreak * 0.1, 1.0);
+    const xpGained = Math.round(fish.xp * wMod * streakMult);
+    
+    score += lastCatch.points; 
+    xp += xpGained;
+    gameStats.earned += lastCatch.points;
+    gameStats.totalWeight += weight;
+    
+    totalCaught++;
     if (score > bestScore) bestScore = score;
     if (baitCount > 0) { baitCount--; saveProgress(); }
+    
+    // Рекорд веса
+    if (!fishRecords[fish.name] || weight > fishRecords[fish.name]) {
+      fishRecords[fish.name] = weight;
+    }
     
     addToCatalog(fish.name);
     state = S.RETURNING; stateTime = 0;
     addParticles(bobber.x, bobber.y, fish.color, 25, 6);
     addRipple(bobber.x, bobber.y);
-    addFloatingText(`+${lastCatch.points}`, bobber.x, bobber.y - 20, fish.color);
+    addFloatingText(`+${lastCatch.points} 💰`, bobber.x, bobber.y - 20, fish.color);
+    addFloatingText(`+${xpGained} ✨`, bobber.x, bobber.y - 45, '#00ccff');
+    
     if (fish.isRare) { playSound('rare'); vibrate([50, 30, 50, 30, 100]); }
     else { playSound('catch'); vibrate(50); }
   } else {
-    catchStreak = 0; missStreak++;
+    catchStreak = 0; 
+    missStreak++;
+    gameStats.misses++;
     state = S.RESULT; stateTime = 0;
     addFloatingText('Сорвалась!', bobber.x, bobber.y - 20, '#ff6666');
     playSound('miss'); vibrate([50, 50, 50]);
@@ -1408,7 +1519,7 @@ function checkReel() {
 function resetToIdle() { state = S.IDLE; stateTime = 0; lastCatch = null; }
 
 // ==================================================================
-// ЧАСТЬ 8: БОСС РЕЧНОЙ МОНСТР
+// ЧАСТЬ 8: БОСС
 // ==================================================================
 function startBossFight() {
   state = S.BOSS_INTRO; stateTime = 0;
@@ -1425,7 +1536,6 @@ function startQte() {
   qteSequence = [];
   const isSecondFight = hasHarpoon;
   const length = isSecondFight ? 5 : 8;
-  // Смягчено: 0.65 с на реакцию в первом бою вместо 0.45
   const baseTime = isSecondFight ? 1.8 : 0.65;
   
   for (let i = 0; i < length; i++) {
@@ -1462,8 +1572,12 @@ function winBossFight() {
   state = S.BOSS_WIN; stateTime = 0;
   bossDefeated = true;
   score += 5000;
+  gameStats.earned += 5000;
+  xp += 500;
+  if (score > bestScore) bestScore = score;
   playSound('achv');
   saveProgress();
+  checkNewAchievements();
   document.getElementById('qteControls').classList.remove('show');
   showAchievementToast('Убийца Сома-Гиганта!');
   vibrate([100, 50, 100, 50, 300]);
@@ -1484,7 +1598,7 @@ function loseBossFight() {
 }
 
 // ==================================================================
-// ЧАСТЬ 9: ОБНОВЛЕНИЕ (ИГРОВАЯ ЛОГИКА)
+// ЧАСТЬ 9: ОБНОВЛЕНИЕ
 // ==================================================================
 function update(dt) {
   stateTime += dt;
@@ -1560,13 +1674,22 @@ function update(dt) {
   } else if (state === S.BITE) {
     const floatBonus = TREE_DATA.float.levels[treeUpgrades.float || 0]?.bonus || 0;
     const biteWindow = 0.9 + floatBonus * 1.5;
-    if (stateTime > biteWindow) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); missStreak++; }
+    if (stateTime > biteWindow) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); missStreak++; gameStats.misses++; }
   } else if (state === S.REELING) {
-    // Запоминаем позицию до шага, чтобы клик мог засчитать весь путь индикатора
     prevReelPos = reelPos;
-    reelPos += reelSpeed * dt;
+    reelPos += reelSpeed * dt * reelDirection;
+    
+    if (reelPos >= 100) {
+      reelPos = 100;
+      reelDirection = -1;
+      playSound('reel');
+    } else if (reelPos <= 0 && reelDirection === -1) {
+      state = S.RESULT; stateTime = 0; 
+      addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); 
+      missStreak++; catchStreak = 0; gameStats.misses++;
+    }
+    
     if (performance.now() - lastReelSoundTime > 120) { playSound('reel'); lastReelSoundTime = performance.now(); }
-    if (reelPos > 100) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); missStreak++; catchStreak = 0; }
   } else if (state === S.RETURNING) {
     const progress = Math.min(1, stateTime / 0.8);
     const ease = 1 - Math.pow(1 - progress, 3);
@@ -1753,23 +1876,33 @@ function drawSundial(x, y, radius) {
 }
 
 function drawUI() {
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'; ctx.beginPath(); ctx.roundRect(15, 15, 250, 110, 10); ctx.fill();
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'; ctx.beginPath(); ctx.roundRect(15, 15, 270, 130, 10); ctx.fill();
   ctx.font = 'bold 20px "Segoe UI", sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
-  ctx.fillText(`💰 Очки: ${score}`, 30, 45);
-  ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700'; ctx.fillText(`🏆 Рекорд: ${bestScore}`, 30, 70);
-  ctx.fillStyle = '#aaddff'; ctx.fillText(`🎣 Поймано: ${totalCaught}`, 30, 90);
-  if (baitCount > 0) { ctx.fillStyle = '#ff9966'; ctx.fillText(`🪱 Наживка: ×${baitCount} (×3 к редким!)`, 30, 110); }
-  if (catchStreak >= 3) { ctx.fillStyle = '#ff9966'; ctx.font = 'bold 12px "Segoe UI"'; ctx.fillText(`🔥 Серия ${catchStreak}!`, 30, 130); }
-  else if (missStreak >= 2) { ctx.fillStyle = '#99ff99'; ctx.font = 'bold 12px "Segoe UI"'; ctx.fillText(`🍀 Удача рыбака`, 30, 130); }
+  ctx.fillText(`💰 Монеты: ${score}`, 30, 45);
+  ctx.fillStyle = '#00ccff'; ctx.fillText(`✨ Опыт: ${xp}`, 30, 70);
+  ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700'; ctx.fillText(`🏆 Рекорд: ${bestScore}`, 30, 95);
+  ctx.fillStyle = '#aaddff'; ctx.fillText(`🎣 Поймано: ${totalCaught}`, 30, 115);
+  
+  if (catchStreak >= 3) { ctx.fillStyle = '#ff9966'; ctx.font = 'bold 12px "Segoe UI"'; ctx.fillText(`🔥 Серия ${catchStreak}! (x${(1 + Math.min(catchStreak * 0.1, 1.0)).toFixed(1)} XP)`, 30, 135); }
+  else if (missStreak >= 2) { ctx.fillStyle = '#99ff99'; ctx.font = 'bold 12px "Segoe UI"'; ctx.fillText(`🍀 Удача рыбака`, 30, 135); }
+  
+  if (baitCount > 0) { ctx.fillStyle = '#ff9966'; ctx.font = '14px "Segoe UI"'; ctx.fillText(`🪱 Наживка: ×${baitCount}`, 30, 155); }
+  
   drawSundial(W - 80, 75, 40);
+  
   if (lastCatch && (state === S.RESULT || state === S.RETURNING)) {
-    const panelW = 240;
-    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.roundRect(W - panelW - 15, 160, panelW, 60, 10); ctx.fill();
+    const panelW = 280;
+    ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.beginPath(); ctx.roundRect(W - panelW - 15, 160, panelW, 85, 10); ctx.fill();
+    ctx.strokeStyle = lastCatch.color; ctx.lineWidth = 2; ctx.stroke();
+    
     ctx.font = 'bold 20px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = lastCatch.color;
     ctx.fillText(`${lastCatch.emoji} ${lastCatch.name}`, W - panelW/2 - 15, 190);
+    
+    ctx.font = 'bold 16px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700';
+    ctx.fillText(`${lastCatch.weight} г`, W - panelW/2 - 15, 215);
+    
     ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = lastCatch.isTrash ? '#ff8888' : '#fff';
-    const pts = lastCatch.points ?? calcPoints(lastCatch);
-    ctx.fillText(lastCatch.isTrash ? '🗑 Мусор...' : `+${pts} очков`, W - panelW/2 - 15, 210);
+    ctx.fillText(lastCatch.isTrash ? '🗑 Мусор...' : `+${lastCatch.points} монет`, W - panelW/2 - 15, 235);
   }
 }
 
@@ -1782,10 +1915,10 @@ function drawReelUI() {
   ctx.fill();
   ctx.strokeStyle = 'rgba(100,200,100,0.5)'; ctx.lineWidth = 2; ctx.stroke();
   
-  ctx.font = 'bold 22px "Segoe UI", sans-serif'; 
+  ctx.font = 'bold 20px "Segoe UI", sans-serif'; 
   ctx.textAlign = 'center'; 
   ctx.fillStyle = '#fff'; 
-  ctx.fillText('🎣 Кликни в зелёной зоне!', W/2, barY - 22);
+  ctx.fillText('🎣 Удержи рыбу в зелёной зоне!', W/2, barY - 22);
   
   ctx.fillStyle = '#222'; 
   ctx.beginPath(); 
@@ -1863,9 +1996,6 @@ function drawHints() {
   }
 }
 
-// ==================================================================
-// РИСОВАНИЕ БОССА (СОМ-ГИГАНТ) — без анимации хвоста (по условию)
-// ==================================================================
 function drawBoss() {
   if (!boss) return;
   let shakeX = 0, shakeY = 0;
@@ -1977,7 +2107,7 @@ function draw() {
       ctx.font = 'bold 28px "Segoe UI", sans-serif'; ctx.fillStyle = '#88ff88';
       ctx.fillText('✅ Сохранено:', W/2, 310);
       ctx.font = '22px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
-      ctx.fillText('Очки, прокачка, удочки, мусор', W/2, 345);
+      ctx.fillText('Монеты, опыт, прокачка, мусор', W/2, 345);
       ctx.fillStyle = 'rgba(255, 215, 0, 0.2)'; ctx.beginPath(); ctx.roundRect(W/2 - 300, 390, 600, 100, 16); ctx.fill();
       ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 3; ctx.stroke();
       ctx.font = 'bold 22px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700';
@@ -1996,7 +2126,7 @@ function draw() {
       ctx.font = 'bold 44px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd700';
       ctx.fillText('РЕЧНОЙ МОНСТР ПОВЕРЖЕН!', W/2, H/2 - 60);
       ctx.font = '28px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
-      ctx.fillText('+5000 очков', W/2, H/2);
+      ctx.fillText('+5000 монет, +500 опыта', W/2, H/2);
       ctx.fillStyle = '#aaffaa'; ctx.font = '22px "Segoe UI", sans-serif';
       ctx.fillText('Сом больше никогда не появится.', W/2, H/2 + 50);
       if (stateTime > 3) {
