@@ -1251,6 +1251,7 @@ function startReeling() {
   const netBonus    = (TREE_DATA.net.levels[treeUpgrades.net || 0]?.bonus || 0);
   const handleBonus = (TREE_DATA.handle.levels[treeUpgrades.handle || 0]?.bonus || 0);
   
+  // Скорость индикатора
   let speedReduction = (upgrades.reel || 0) * 0.15 + bodyBonus + lineBonus + reelBonus;
   if (achievements.trashman) speedReduction += 0.15;
   if (achievements.rodmaster) speedReduction += 0.10;
@@ -1259,9 +1260,10 @@ function startReeling() {
   if (missStreak >= 2) difficultyMultiplier = Math.max(0.5, 1 - (missStreak - 1) * 0.2);
   reelSpeed = (85 + Math.random() * 40) * Math.max(0.2, 1 - speedReduction) * difficultyMultiplier;
   
-  // --- ГЕНЕРАЦИЯ ЗОНЫ
-  let baseZone = 22 + Math.random() * 10; 
+  // --- ГЕНЕРАЦИЯ ЗОНЫ (ЗАЩИЩЕННАЯ ВЕРСИЯ) ---
   
+  // 1. Считаем желаемую ширину
+  let baseZone = 22 + Math.random() * 10; 
   let bonusZone = (upgrades.zone || 0) * 4; 
   if (achievements.trashman) bonusZone += 4;
   
@@ -1269,12 +1271,20 @@ function startReeling() {
   
   if (catchStreak >= 3) finalZone *= 0.85;
   if (missStreak >= 2) finalZone *= 1.2;
- 
-  finalZone = Math.min(45, finalZone);
   
-  const maxStart = 100 - finalZone - 10;
-  zoneStart = 15 + Math.random() * (maxStart - 15); 
-  zoneStart = Math.max(10, Math.min(zoneStart, maxStart)); 
+  // 2. Жестко ограничиваем ширину (минимум 15, максимум 45)
+  finalZone = Math.max(15, Math.min(45, finalZone));
+  
+  // 3. Вычисляем позицию. Оставляем отступы по 10% слева и справа.
+  const minStart = 10;
+  const maxStart = 100 - finalZone - 10; // 100% - ширина - отступ справа
+  
+  // Защита от дурака: если maxStart меньше minStart (такого быть не должно, но на всякий случай)
+  if (maxStart < minStart) {
+    zoneStart = minStart;
+  } else {
+    zoneStart = minStart + Math.random() * (maxStart - minStart);
+  }
   
   zoneEnd = zoneStart + finalZone;
   
