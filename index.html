@@ -6,58 +6,25 @@
 <title>🎣 Рыбалка на речке</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0d1520; font-family: 'Segoe UI', sans-serif; user-select: none; touch-action: none; display: flex; justify-content: center; align-items: center; }
+  #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: #0d1520; }
+  canvas { display: block; width: 100%; height: 100%; object-fit: contain; touch-action: none; }
   
-  /* Фон страницы */
-  html, body { 
-    width: 100%; height: 100%; overflow: hidden; 
-    background: #0d1520; font-family: 'Segoe UI', sans-serif; 
-    user-select: none; touch-action: none;
-    display: flex; justify-content: center; align-items: center;
-  }
-  
-  /* Контейнер для канваса */
-  #game-container { 
-    position: relative; width: 100vw; height: 100vh; 
-    display: flex; justify-content: center; align-items: center;
-    background: #0d1520;
-  }
-  
-  /* Канвас: вписывается целиком на любом экране */
-  canvas { 
-    display: block; width: 100%; height: 100%;
-    object-fit: contain; /* ВАЖНО: сохраняет пропорции и показывает ВСЁ поле */
-    touch-action: none;
-  }
-  
-  /* Панель кнопок (теперь внизу справа, чтобы не мешать) */
-  .top-panel {
-    position: absolute; bottom: 15px; right: 15px;
-    display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;
-    max-width: 250px; z-index: 5;
-  }
-  
-  .btn {
-    color: white; border: 2px solid; padding: 8px 12px; border-radius: 8px;
-    font-weight: bold; font-size: 14px; cursor: pointer; transition: transform 0.1s;
-    backdrop-filter: blur(4px); white-space: nowrap;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  }
+  .top-panel { position: absolute; bottom: 15px; right: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 250px; z-index: 5; }
+  .btn { color: white; border: 2px solid; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: transform 0.1s; backdrop-filter: blur(4px); white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
   .btn:active { transform: scale(0.92); }
-  
   #catalogBtn { background: rgba(60, 120, 200, 0.85); border-color: rgba(100,180,255,0.5); }
   #shopBtn { background: rgba(60, 180, 100, 0.85); border-color: rgba(100,255,150,0.5); }
   #soundBtn { background: rgba(200, 180, 60, 0.85); border-color: rgba(255,220,100,0.5); }
   #fullscreenBtn { background: rgba(120, 80, 200, 0.85); border-color: rgba(180,140,255,0.5); }
   #resetBtn { background: rgba(200, 60, 60, 0.85); border-color: rgba(255,100,100,0.5); }
   
-  /* Оверлеи */
   .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; backdrop-filter: blur(6px); z-index: 10; padding: 15px; }
   .overlay.show { display: flex; }
-  .panel { background: linear-gradient(180deg, #2a3a4a, #1a2a3a); border: 2px solid rgba(100,180,255,0.4); border-radius: 16px; padding: 15px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.8); position: relative; }
+  .panel { background: linear-gradient(180deg, #2a3a4a, #1a2a3a); border: 2px solid rgba(100,180,255,0.4); border-radius: 16px; padding: 15px; width: 100%; max-width: 750px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.8); position: relative; }
   .panel h2 { color: #aaddff; margin: 0 0 12px; text-align: center; font-size: 18px; }
   .close-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 18px; font-weight: bold; display: flex; justify-content: center; align-items: center; }
   
-  /* Каталог */
   .section-title { color: #aaddff; font-size: 12px; font-weight: bold; margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(100,180,255,0.2); padding-bottom: 4px; }
   .fish-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
   @media (min-width: 500px) { .fish-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; } }
@@ -73,7 +40,6 @@
   .fish-card .desc { font-size: 10px; color: #999; margin-top: 4px; line-height: 1.2; display: none; }
   .fish-card.caught .desc, .fish-card.known .desc { display: block; }
 
-  /* Достижения */
   .achv-grid { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 8px; }
   @media (min-width: 500px) { .achv-grid { grid-template-columns: 1fr 1fr; gap: 8px; } }
   .achv { padding: 8px; border-radius: 8px; background: rgba(255,215,0,0.05); border: 2px dashed rgba(255,215,0,0.3); }
@@ -88,7 +54,6 @@
   .achv .progress-bar { height: 4px; background: rgba(0,0,0,0.3); border-radius: 2px; margin-top: 4px; overflow: hidden; }
   .achv .progress-fill { height: 100%; background: #ffd700; border-radius: 2px; }
 
-  /* Магазин */
   .shop-tabs { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
   .shop-tab { flex: 1; min-width: 70px; padding: 6px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 6px; color: #aaa; font-weight: bold; font-size: 11px; cursor: pointer; }
   .shop-tab.active { background: rgba(100,180,255,0.15); border-color: #aaddff; color: #fff; }
@@ -105,14 +70,30 @@
   .shop-item.equipped { border-color: #ffd700; background: rgba(255,215,0,0.1); }
   .shop-item.harpoon { border-color: rgba(255,100,100,0.5); background: rgba(255,100,100,0.1); }
 
-  /* Тосты */
+  /* Дерево улучшений */
+  .tree-branch { margin-bottom: 15px; }
+  .tree-branch-title { font-size: 14px; font-weight: bold; color: #aaddff; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .tree-nodes { display: flex; flex-direction: column; gap: 6px; padding-left: 10px; border-left: 2px dashed rgba(100,180,255,0.3); }
+  .tree-node { display: flex; align-items: center; gap: 10px; padding: 8px; background: rgba(0,0,0,0.2); border: 2px solid rgba(255,255,255,0.1); border-radius: 8px; transition: all 0.2s; }
+  .tree-node.unlocked { border-color: rgba(100,255,100,0.4); background: rgba(100,255,100,0.05); }
+  .tree-node.locked { opacity: 0.5; }
+  .tree-node.next { border-color: #ffd700; background: rgba(255,215,0,0.1); }
+  .tree-node .node-icon { font-size: 24px; width: 40px; text-align: center; }
+  .tree-node .node-info { flex: 1; }
+  .tree-node .node-name { color: #fff; font-weight: bold; font-size: 13px; }
+  .tree-node .node-desc { color: #aaa; font-size: 10px; margin-top: 2px; }
+  .tree-node .node-bonus { color: #7fff7f; font-size: 11px; margin-top: 2px; font-weight: bold; }
+  .tree-node .node-req { color: #ff9966; font-size: 10px; margin-top: 2px; font-style: italic; }
+  .tree-node .buy-btn { background: #4CAF50; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; min-width: 70px; }
+  .tree-node .buy-btn:disabled { background: #555; cursor: not-allowed; opacity: 0.6; }
+  .tree-node .buy-btn.owned-btn { background: transparent; color: #7fff7f; border: 2px solid #7fff7f; cursor: default; }
+
   #achvToast, #toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: bold; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; text-align: center; border: 2px solid #fff; z-index: 20; width: 90%; max-width: 350px; }
   #achvToast { background: linear-gradient(180deg, #ffd700, #ffa000); color: #1a1a1a; }
   #achvToast.show, #toast.show { opacity: 1; transform: translateX(-50%) translateY(10px); }
   #toast { top: 50%; transform: translate(-50%, -50%); border-color: #4CAF50; background: rgba(0,0,0,0.9); width: auto; padding: 12px 24px; }
   #toast.show { transform: translate(-50%, -50%) scale(1.05); }
 
-  /* Выбор персонажа */
   #charSelect { background: rgba(10, 15, 25, 0.95); }
   .char-select-panel { text-align: center; }
   .char-select-panel h2 { font-size: 24px; margin-bottom: 8px; color: #fff; }
@@ -124,7 +105,6 @@
   .char-card .char-name { color: #fff; font-weight: bold; font-size: 15px; }
   .char-card .char-desc { color: #888; font-size: 11px; margin-top: 2px; }
 
-  /* QTE (Мобилка) */
   #qteControls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: none; gap: 15px; z-index: 15; touch-action: none; }
   #qteControls.show { display: flex; }
   .qte-btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(200, 40, 40, 0.8); border: 3px solid #ff6666; color: #fff; font-size: 30px; font-weight: bold; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(255,60,60,0.5); user-select: none; cursor: pointer; }
@@ -135,7 +115,6 @@
 <div id="game-container">
   <canvas id="game"></canvas>
   
-  <!-- Кнопки перенесены вниз, чтобы не перекрывать игру -->
   <div class="top-panel">
     <button id="soundBtn" class="btn" onclick="toggleSound(event)">🔊</button>
     <button id="fullscreenBtn" class="btn" onclick="toggleFullscreen(event)">📺</button>
@@ -156,14 +135,8 @@
       <h2>🎣 Кто сегодня рыбачит?</h2>
       <p>Выбери персонажа. Повлияет только на внешний вид.</p>
       <div class="char-options">
-        <div class="char-card" onclick="selectCharacter('fisher', event)">
-          <canvas id="previewFisher" width="120" height="120"></canvas>
-          <div class="char-name">Рыбак</div>
-        </div>
-        <div class="char-card" onclick="selectCharacter('fisherwoman', event)">
-          <canvas id="previewFisherwoman" width="120" height="120"></canvas>
-          <div class="char-name">Рыбачка</div>
-        </div>
+        <div class="char-card" onclick="selectCharacter('fisher', event)"><canvas id="previewFisher" width="120" height="120"></canvas><div class="char-name">Рыбак</div></div>
+        <div class="char-card" onclick="selectCharacter('fisherwoman', event)"><canvas id="previewFisherwoman" width="120" height="120"></canvas><div class="char-name">Рыбачка</div></div>
       </div>
     </div>
   </div>
@@ -188,7 +161,8 @@
       <div style="text-align:center; font-size: 18px; color: #ffd700; font-weight: bold; margin-bottom: 10px;">Очки: <span id="shopScore">0</span></div>
       <div class="shop-tabs">
         <button class="shop-tab active" id="tabUpgrades" onclick="switchShopTab('upgrades')">⚙️ Прокачка</button>
-        <button class="shop-tab" id="tabRods" onclick="switchShopTab('rods')">🎣 Удочки</button>
+        <button class="shop-tab" id="tabTree" onclick="switchShopTab('tree')">🪵 Дерево</button>
+        <button class="shop-tab" id="tabRods" onclick="switchShopTab('rods')">🎣 Скины</button>
         <button class="shop-tab" id="tabBooks" onclick="switchShopTab('books')">📕 Справочники</button>
       </div>
       <div id="shopItems"></div>
@@ -225,6 +199,9 @@ let bossDefeated = localStorage.getItem('fishBossDefeated') === 'true';
 let hasHarpoon = localStorage.getItem('fishHasHarpoon') === 'true';
 let harpoonInShop = localStorage.getItem('fishHarpoonInShop') === 'true';
 let bossMet = localStorage.getItem('fishBossMet') === 'true';
+
+// Дерево улучшений (9 веток)
+let treeUpgrades = JSON.parse(localStorage.getItem('fishTreeUpgrades') || '{"body":0, "line":0, "float":0, "hook":0, "keeper":0, "reel":0, "handle":0, "net":0, "bait":0}');
 
 let catchStreak = 0, missStreak = 0;
 let character = localStorage.getItem('fishCharacter') || null;
@@ -287,6 +264,87 @@ const FISH_TYPES = [
 const FISH_ONLY = FISH_TYPES.filter(f => !f.isTrash);
 const TRASH_ONLY = FISH_TYPES.filter(f => f.isTrash);
 
+// ДЕРЕВО УЛУЧШЕНИЙ (РАСШИРЕННОЕ, 9 ВЕТОК)
+const TREE_DATA = {
+  body: {
+    name: 'Тело удилища', icon: '🎣',
+    levels: [
+      { name: 'Бамбук', desc: 'Обычная палка', cost: 0, bonus: 0, requires: null },
+      { name: 'Стеклопластик', desc: 'Легче и прочнее', cost: 300, bonus: 0.05, requires: null },
+      { name: 'Карбон', desc: 'Профессиональная', cost: 1200, bonus: 0.10, requires: { branch: 'line', level: 1 } },
+      { name: 'Титан', desc: 'Неубиваемая', cost: 4000, bonus: 0.20, requires: { branch: 'line', level: 2 } }
+    ]
+  },
+  line: {
+    name: 'Леска', icon: '🧵',
+    levels: [
+      { name: 'Монофил', desc: 'Стандартная', cost: 0, bonus: 0, requires: null },
+      { name: 'Флюорокарбон', desc: 'Менее заметна', cost: 200, bonus: 0.1, requires: null },
+      { name: 'Плетёнка', desc: 'Крепкая', cost: 800, bonus: 0.2, requires: { branch: 'reel', level: 1 } },
+      { name: 'Нанонить', desc: 'Невероятно прочная', cost: 2500, bonus: 0.35, requires: { branch: 'reel', level: 2 } }
+    ]
+  },
+  float: {
+    name: 'Поплавок', icon: '🎈',
+    levels: [
+      { name: 'Перо', desc: 'Классика', cost: 0, bonus: 0, requires: null },
+      { name: 'Пластик', desc: 'Яркий', cost: 150, bonus: 0.15, requires: null },
+      { name: 'Светящийся', desc: 'Виден ночью', cost: 600, bonus: 0.3, requires: null },
+      { name: 'Эхолот', desc: 'Показывает рыбу', cost: 2000, bonus: 0.5, requires: { branch: 'hook', level: 2 } }
+    ]
+  },
+  hook: {
+    name: 'Крючок', icon: '🪝',
+    levels: [
+      { name: 'Обычный', desc: 'Стандарт', cost: 0, bonus: 0, requires: null },
+      { name: 'Острый', desc: 'Лучше цепляет', cost: 250, bonus: 0.1, requires: null },
+      { name: 'Гарпунный', desc: 'Для монстров', cost: 1000, bonus: 0.25, requires: { branch: 'line', level: 1 } },
+      { name: 'Титановый', desc: 'Не гнётся', cost: 3000, bonus: 0.4, requires: { branch: 'line', level: 2 } }
+    ]
+  },
+  keeper: {
+    name: 'Садок', icon: '🧺',
+    levels: [
+      { name: 'Сетка', desc: 'Мелкая', cost: 0, bonus: 0, requires: null },
+      { name: 'Ведро', desc: 'Вместительное', cost: 200, bonus: 0.1, requires: null },
+      { name: 'Садок', desc: 'Профессиональный', cost: 800, bonus: 0.2, requires: null },
+      { name: 'Морозильник', desc: 'Сохраняет улов', cost: 2500, bonus: 0.3, requires: { branch: 'body', level: 2 } }
+    ]
+  },
+  reel: {
+    name: 'Катушка', icon: '⚙️',
+    levels: [
+      { name: 'Инерционная', desc: 'Простая', cost: 0, bonus: 0, requires: null },
+      { name: 'Безынерционная', desc: 'Плавная', cost: 400, bonus: 0.15, requires: null },
+      { name: 'Электронная', desc: 'Автоматическая', cost: 1800, bonus: 0.3, requires: { branch: 'body', level: 1 } }
+    ]
+  },
+  handle: {
+    name: 'Рукоять', icon: '🪵',
+    levels: [
+      { name: 'Дерево', desc: 'Обычная', cost: 0, bonus: 0, requires: null },
+      { name: 'Пробка', desc: 'Удобная', cost: 300, bonus: 0.05, requires: null },
+      { name: 'Неопрен', desc: 'Не скользит', cost: 1200, bonus: 0.1, requires: null }
+    ]
+  },
+  net: {
+    name: 'Подсачек', icon: '🥅',
+    levels: [
+      { name: 'Без подсачека', desc: 'Рискованно', cost: 0, bonus: 0, requires: null },
+      { name: 'Мелкий', desc: 'Для мелочи', cost: 150, bonus: 0.05, requires: null },
+      { name: 'Крупный', desc: 'Для трофеев', cost: 700, bonus: 0.15, requires: null }
+    ]
+  },
+  bait: {
+    name: 'Прикормка', icon: '🌾',
+    levels: [
+      { name: 'Без прикормки', desc: 'Как есть', cost: 0, bonus: 0, requires: null },
+      { name: 'Хлеб', desc: 'Простая', cost: 100, bonus: 0.1, requires: null },
+      { name: 'Смесь', desc: 'Специальная', cost: 500, bonus: 0.2, requires: null }
+    ]
+  }
+};
+
 const ROD_SKINS = {
   bamboo: { name: 'Бамбуковая', emoji: '🎋', price: 0, bonus: 0, color1: '#8B4513', color2: '#a06030', lineColor: 'rgba(255,255,255,0.4)', glow: false },
   spinning: { name: 'Спиннинг', emoji: '🎣', price: 500, bonus: 0.02, color1: '#2a3a4a', color2: '#4a5a6a', lineColor: 'rgba(200,220,255,0.5)', glow: false },
@@ -300,7 +358,7 @@ const ACHV_LIST = [
   { id: 'pro', name: '🎣 Рыбак-профи', desc: 'Поймать 100 рыб', bonus: '+5% к очкам', check: () => totalCaught >= 100, progress: () => Math.min(totalCaught, 100) + '/100' },
   { id: 'night', name: '🌙 Ночной охотник', desc: 'Поймать 10 рыб ночью', bonus: '+5% к шансу редкой рыбы ночью', check: () => (achievements.nightCount || 0) >= 10, progress: () => Math.min(achievements.nightCount || 0, 10) + '/10' },
   { id: 'millionaire', name: '💎 Миллионер', desc: 'Накопить 5000 очков', bonus: '+2% к очкам', check: () => bestScore >= 5000, progress: () => Math.min(bestScore, 5000) + '/5000' },
-  { id: 'rodmaster', name: '🎣 Мастер удочек', desc: 'Купить все 4 удочки', bonus: '+10% к скорости вываживания', check: () => ownedRods.length >= 4, progress: () => ownedRods.length + '/4' },
+  { id: 'rodmaster', name: '🎣 Мастер удочек', desc: 'Купить все 4 скина', bonus: '+10% к скорости вываживания', check: () => ownedRods.length >= 4, progress: () => ownedRods.length + '/4' },
   { id: 'leviathan', name: '🐋 Убийца Левиафана', desc: 'Секретное достижение', bonus: '+5000 очков', check: () => bossDefeated, progress: () => bossDefeated ? '✓' : '???', secret: true }
 ];
 
@@ -341,6 +399,7 @@ function saveProgress() {
   localStorage.setItem('fishHasHarpoon', hasHarpoon);
   localStorage.setItem('fishHarpoonInShop', harpoonInShop);
   localStorage.setItem('fishBossMet', bossMet);
+  localStorage.setItem('fishTreeUpgrades', JSON.stringify(treeUpgrades));
 }
 
 function checkBossTrigger() {
@@ -583,9 +642,35 @@ function buyHarpoon() {
   hasHarpoon = true;
   playSound('buy'); saveProgress(); renderShop();
 }
+
+function buyTreeUpgrade(branch, levelIndex) {
+  const branchData = TREE_DATA[branch];
+  const currentLevel = treeUpgrades[branch] || 0;
+  if (levelIndex !== currentLevel + 1) return;
+  
+  const levelData = branchData.levels[levelIndex];
+  if (score < levelData.cost) return;
+  
+  // Проверка зависимостей
+  if (levelData.requires) {
+    const reqBranch = levelData.requires.branch;
+    const reqLevel = levelData.requires.level;
+    if ((treeUpgrades[reqBranch] || 0) < reqLevel) return;
+  }
+  
+  score -= levelData.cost;
+  treeUpgrades[branch] = levelIndex;
+  playSound('buy');
+  saveProgress();
+  renderShop();
+  checkNewAchievements();
+  vibrate(100);
+}
+
 function switchShopTab(tab) {
   currentShopTab = tab;
   document.getElementById('tabUpgrades').classList.toggle('active', tab === 'upgrades');
+  document.getElementById('tabTree').classList.toggle('active', tab === 'tree');
   document.getElementById('tabRods').classList.toggle('active', tab === 'rods');
   document.getElementById('tabBooks').classList.toggle('active', tab === 'books');
   renderShop();
@@ -611,6 +696,58 @@ function renderShop() {
           <button class="buy-btn" onclick="buyUpgrade('${item.id}')" ${canBuy ? '' : 'disabled'}>${btnText}</button>
         </div>`;
     }).join('');
+  } else if (currentShopTab === 'tree') {
+    let html = '';
+    for (const [branchKey, branchData] of Object.entries(TREE_DATA)) {
+      const currentLevel = treeUpgrades[branchKey] || 0;
+      html += `<div class="tree-branch">`;
+      html += `<div class="tree-branch-title">${branchData.icon} ${branchData.name}</div>`;
+      html += `<div class="tree-nodes">`;
+      
+      branchData.levels.forEach((level, idx) => {
+        const isUnlocked = idx <= currentLevel;
+        const isNext = idx === currentLevel + 1;
+        
+        // Проверка требований
+        let reqMet = true;
+        let reqText = '';
+        if (level.requires) {
+          const reqLvl = treeUpgrades[level.requires.branch] || 0;
+          if (reqLvl < level.requires.level) {
+            reqMet = false;
+            const reqName = TREE_DATA[level.requires.branch].name;
+            const reqLevelName = TREE_DATA[level.requires.branch].levels[level.requires.level].name;
+            reqText = `Требуется: ${reqName} — ${reqLevelName}`;
+          }
+        }
+        
+        const canBuy = isNext && reqMet && score >= level.cost;
+        const bonusText = level.bonus > 0 ? `+${Math.round(level.bonus * 100)}% к эффективности` : 'Базовая экипировка';
+        
+        let nodeClass = 'tree-node';
+        if (isUnlocked) nodeClass += ' unlocked';
+        else if (isNext) nodeClass += ' next';
+        else nodeClass += ' locked';
+        
+        html += `
+          <div class="${nodeClass}">
+            <div class="node-icon">${isUnlocked ? '✅' : '🔒'}</div>
+            <div class="node-info">
+              <div class="node-name">${level.name}</div>
+              <div class="node-desc">${level.desc}</div>
+              <div class="node-bonus">${bonusText}</div>
+              ${!reqMet ? `<div class="node-req">${reqText}</div>` : ''}
+            </div>
+            ${isUnlocked 
+              ? `<button class="buy-btn owned-btn" disabled>✓ Куплено</button>` 
+              : `<button class="buy-btn" onclick="buyTreeUpgrade('${branchKey}', ${idx})" ${canBuy ? '' : 'disabled'}>Купить (${level.cost})</button>`
+            }
+          </div>`;
+      });
+      
+      html += `</div></div>`;
+    }
+    container.innerHTML = html;
   } else if (currentShopTab === 'rods') {
     let html = Object.entries(ROD_SKINS).map(([id, skin]) => {
       const owned = ownedRods.includes(id);
@@ -756,6 +893,7 @@ function resetProgress(e) {
   if (!confirm('Сбросить ВЕСЬ прогресс?')) return;
   score = 0; bestScore = 0; totalCaught = 0; catalog = {}; upgrades = {reel:0, zone:0, luck:0}; hasBait = false;
   ownedRods = ['bamboo']; equippedRod = 'bamboo'; encyclopedia = {}; achievements = {}; bossDefeated = false; hasHarpoon = false; harpoonInShop = false; bossMet = false;
+  treeUpgrades = {body:0, line:0, float:0, hook:0, keeper:0, reel:0, handle:0, net:0, bait:0};
   catchStreak = 0; missStreak = 0;
   localStorage.clear();
   const toast = document.getElementById('toast');
@@ -771,16 +909,11 @@ function getCanvasCoords(e) {
   if (e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
   else if (e.changedTouches && e.changedTouches.length > 0) { clientX = e.changedTouches[0].clientX; clientY = e.changedTouches[0].clientY; }
   else { clientX = e.clientX; clientY = e.clientY; }
-  
-  // Т.к. canvas вписывается через object-fit: contain, пересчитываем пропорционально
   const canvasAspect = W / H; const rectAspect = rect.width / rect.height;
   let renderedW, renderedH, offsetX, offsetY;
   
-  if (rectAspect > canvasAspect) {
-    renderedH = rect.height; renderedW = rect.height * canvasAspect;
-  } else {
-    renderedW = rect.width; renderedH = rect.width / canvasAspect;
-  }
+  if (rectAspect > canvasAspect) { renderedH = rect.height; renderedW = rect.height * canvasAspect; }
+  else { renderedW = rect.width; renderedH = rect.width / canvasAspect; }
   offsetX = (rect.width - renderedW) / 2; offsetY = (rect.height - renderedH) / 2;
   
   const scale = renderedW / W;
@@ -883,21 +1016,31 @@ function castRod(mx, my) {
 function startReeling() {
   state = S.REELING; stateTime = 0;
   reelPos = 0; lastReelSoundTime = 0;
-  let speedReduction = (upgrades.reel || 0) * 0.15;
+  
+  // Бонусы от дерева
+  const lineBonus = (TREE_DATA.line.levels[treeUpgrades.line || 0]?.bonus || 0);
+  const keeperBonus = (TREE_DATA.keeper.levels[treeUpgrades.keeper || 0]?.bonus || 0);
+  const reelBonus = (TREE_DATA.reel.levels[treeUpgrades.reel || 0]?.bonus || 0);
+  const netBonus = (TREE_DATA.net.levels[treeUpgrades.net || 0]?.bonus || 0);
+  
+  let speedReduction = (upgrades.reel || 0) * 0.15 + lineBonus + reelBonus;
   if (achievements.trashman) speedReduction += 0.15;
   if (achievements.rodmaster) speedReduction += 0.10;
   let difficultyMultiplier = 1;
   if (catchStreak >= 3) difficultyMultiplier = 1 + (catchStreak - 2) * 0.15;
   if (missStreak >= 2) difficultyMultiplier = Math.max(0.5, 1 - (missStreak - 1) * 0.2);
   reelSpeed = (85 + Math.random() * 40) * Math.max(0.2, 1 - speedReduction) * difficultyMultiplier;
+  
   zoneStart = 35 + Math.random() * 25;
   let baseZone = 18 + Math.random() * 12;
   let bonusZone = (upgrades.zone || 0) * 4;
   if (achievements.trashman) bonusZone += 4;
-  let finalZone = baseZone + bonusZone;
+  
+  let finalZone = baseZone + bonusZone + (keeperBonus * 20) + (netBonus * 10);
   if (catchStreak >= 3) finalZone *= 0.8;
   if (missStreak >= 2) finalZone *= 1.3;
   zoneEnd = Math.min(95, zoneStart + finalZone);
+  
   addParticles(bobber.x, bobber.y, '#fff', 15);
   addRipple(bobber.x, bobber.y);
   vibrate(80);
@@ -907,12 +1050,13 @@ function pickFish() {
   const w = getWeather();
   const trashMult = getTrashMultiplier();
   const allTrashCollected = TRASH_ONLY.every(f => catalog[f.name] > 0);
-  const rareBonus = ROD_SKINS[equippedRod]?.bonus || 0;
+  const rareBonus = (ROD_SKINS[equippedRod]?.bonus || 0) + (TREE_DATA.hook.levels[treeUpgrades.hook || 0]?.bonus || 0);
+  const netBonus = (TREE_DATA.net.levels[treeUpgrades.net || 0]?.bonus || 0);
   
   const adjusted = FISH_TYPES.map(f => {
     let weight = f.baseWeight;
     if (f.isTrash) {
-      weight *= trashMult;
+      weight *= trashMult * (1 - netBonus);
       if (allTrashCollected) {
         const luckReduction = 1 - (upgrades.luck || 0) * 0.15;
         weight *= Math.max(0.05, luckReduction);
@@ -956,10 +1100,17 @@ function checkReel() {
     catchStreak++; missStreak = 0;
     const fish = pickFish();
     lastCatch = fish;
+    
+    // Бонусы от дерева
+    const bodyBonus = TREE_DATA.body.levels[treeUpgrades.body || 0]?.bonus || 0;
+    const handleBonus = TREE_DATA.handle.levels[treeUpgrades.handle || 0]?.bonus || 0;
+    
     let points = fish.pts;
     if (achievements.collector) points = Math.floor(points * 1.1);
     if (achievements.pro) points = Math.floor(points * 1.05);
     if (achievements.millionaire) points = Math.floor(points * 1.02);
+    points = Math.floor(points * (1 + bodyBonus + handleBonus));
+    
     score += points; totalCaught++;
     if (score > bestScore) bestScore = score;
     if (hasBait) hasBait = false;
@@ -1163,14 +1314,28 @@ function drawTrashBody(x, y, size, color, emoji) {
 }
 function drawBobber(x, y) {
   const skin = ROD_SKINS[equippedRod] || ROD_SKINS.bamboo;
+  const floatLvl = treeUpgrades.float || 0;
+  
   ctx.strokeStyle = skin.lineColor; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(rod.tipX, rod.tipY); ctx.quadraticCurveTo((rod.tipX+x)/2, Math.min(rod.tipY,y)-30, x, y); ctx.stroke();
-  if (getWeather() === 'night' || skin.glow) { ctx.shadowColor = skin.glow ? '#ffd700' : '#ffff88'; ctx.shadowBlur = 15; }
-  ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x, y - 22); ctx.stroke();
-  ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.arc(x, y, 9, Math.PI, 0); ctx.fill();
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI); ctx.fill();
-  ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
+  if (getWeather() === 'night' || floatLvl >= 2 || skin.glow) { ctx.shadowColor = floatLvl >= 2 ? '#00ffff' : skin.glow ? '#ffd700' : '#ffff88'; ctx.shadowBlur = 15; }
+  
+  if (floatLvl === 0) {
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(x, y, 4, 12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.arc(x, y - 8, 5, 0, Math.PI * 2); ctx.fill();
+  } else if (floatLvl === 1 || floatLvl === 3) {
+    ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x, y - 22); ctx.stroke();
+    ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.arc(x, y, 9, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI); ctx.fill();
+    ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
+  } else {
+    ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x, y - 22); ctx.stroke();
+    ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(x, y, 9, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI); ctx.fill();
+    ctx.strokeStyle = '#005555'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
+  }
   ctx.shadowBlur = 0;
 }
 
@@ -1484,11 +1649,20 @@ function draw() {
   
   drawFisherman();
   
+  // Отрисовка удилища с учётом дерева и скина
   const skin = ROD_SKINS[equippedRod] || ROD_SKINS.bamboo;
+  const bodyLvl = treeUpgrades.body || 0;
+  let rodColor = skin.color1;
+  let rodColor2 = skin.color2;
+  
+  if (bodyLvl === 1) { rodColor = '#8a9aaa'; rodColor2 = '#aaccee'; }
+  else if (bodyLvl === 2) { rodColor = '#2a2a2a'; rodColor2 = '#4a4a4a'; }
+  else if (bodyLvl === 3) { rodColor = '#b8860b'; rodColor2 = '#ffd700'; }
+  
   if (skin.glow) { ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 10; }
-  ctx.strokeStyle = skin.color1; ctx.lineWidth = 6; ctx.lineCap = 'round';
+  ctx.strokeStyle = rodColor; ctx.lineWidth = 6; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(rod.baseX, rod.baseY); ctx.quadraticCurveTo(140, 420, rod.tipX, rod.tipY); ctx.stroke();
-  ctx.strokeStyle = skin.color2; ctx.lineWidth = 3;
+  ctx.strokeStyle = rodColor2; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(140, 420); ctx.quadraticCurveTo(165, 400, rod.tipX, rod.tipY); ctx.stroke();
   ctx.shadowBlur = 0;
   
