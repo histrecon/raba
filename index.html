@@ -522,13 +522,13 @@ const ACHV_LIST = [
 
 // --- Миграция старых достижений ---
 function migrateAchievements() {
-  if (localStorage.getItem('fishMigrated_v2')) return;
+  if (localStorage.getItem('fishMigrated_v3')) return;
   if (achievements.pro === true) achievements.pro = 3;
   if (achievements.millionaire) achievements.money = 4;
   if (achievements.rodmaster) achievements.engineer = 2;
   delete achievements.millionaire;
   delete achievements.rodmaster;
-  localStorage.setItem('fishMigrated_v2', 'true');
+  localStorage.setItem('fishMigrated_v3', 'true');
   saveProgress();
 }
 migrateAchievements();
@@ -798,7 +798,7 @@ function drawCharacterBody(cCtx, x, y, type, scale = 1, isPreview = false, hasHa
 function drawHat(cCtx, hatId, x, y, isWoman) {
   cCtx.save();
   cCtx.translate(x, y);
-  cCtx.scale(0.9, 0.9);
+  cCtx.scale(0.85, 0.85);
   
   if (hatId === 'straw') {
     cCtx.fillStyle = '#e0c080'; cCtx.beginPath(); cCtx.ellipse(0, -5, 38, 10, 0, 0, Math.PI * 2); cCtx.fill();
@@ -1654,8 +1654,6 @@ function castRod(mx, my) {
   bobber.vx = dx / flightTime; bobber.vy = dy / flightTime - 400 * flightTime;
   state = S.CASTING; stateTime = 0;
   playSound('cast'); vibrate(30);
-  
-  hintCounter++; // <--- Обновление слухов только при забросе
 }
  
 function startReeling() {
@@ -2064,9 +2062,6 @@ function update(dt) {
   } else if (state === S.RESULT) {
     if (stateTime > 2) resetToIdle();
   }
-
-  // Убираем автоинкремент для слухов (теперь только при забросе)
-  // if (state === S.IDLE && !bossDefeated) hintCounter++;
 }
 
 // ==================================================================
@@ -2259,9 +2254,9 @@ function drawFisherman() {
   ctx.lineWidth = 9; 
   ctx.lineCap = 'round';
   ctx.beginPath(); 
-  ctx.moveTo(68, 455); // От плеча
-  ctx.lineTo(110, 470); // Локоть
-  ctx.lineTo(rod.baseX, rod.baseY); 
+  ctx.moveTo(68, 455);
+  ctx.lineTo(110, 470);
+  ctx.lineTo(rod.baseX, rod.baseY);
   ctx.stroke();
 
   // Обувь
@@ -2277,9 +2272,9 @@ function drawFisherman() {
     ctx.beginPath(); ctx.arc(100, 450, 6, 0, Math.PI * 2); ctx.fill();
   }
 
-  // --- ШЛЯПА (опущена ниже) ---
+  // --- ШЛЯПА (y=410, точная посадка) ---
   if (activeHat) {
-    drawHat(ctx, activeHat, 82, 395, isWoman);
+    drawHat(ctx, activeHat, 82, 410, isWoman);
   }
 }
 
@@ -2426,19 +2421,8 @@ function drawHints() {
   
   if (state === S.IDLE) {
     if (!bossDefeated) {
-      if (hintCounter % 4 === 0) {
-        const rumors = [
-          "Местные говорят, на дне живёт гигантский сом...",
-          "Вода сегодня странно тихая. Будто кто-то на глубине наблюдает.",
-          "Старик с причала обмолвился: 'Собери всю рыбу — и он придёт'",
-          "Если очистить реку от мусора, гигант потеряет укрытие.",
-          "Сом выходит только ночью. Тот, кто ловил в темноте, видел его тень."
-        ];
-        hint = rumors[Math.floor(Math.random() * rumors.length)];
-        color = '#ffdd44';
-      } else {
-        hint = '👆 Нажми на воду или свайпни вниз';
-      }
+      hint = '👆 Нажми на воду (в реке водится гигантский сом...)';
+      color = '#ffdd44';
     } else {
       hint = '👆 Нажми на воду или свайпни вниз';
     }
