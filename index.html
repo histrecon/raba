@@ -15,7 +15,6 @@
   .btn:active { transform: scale(0.92); }
   #catalogBtn { background: rgba(60, 120, 200, 0.85); border-color: rgba(100,180,255,0.5); }
   #shopBtn { background: rgba(60, 180, 100, 0.85); border-color: rgba(100,255,150,0.5); }
-  #statsBtn { background: rgba(180, 80, 200, 0.85); border-color: rgba(220,140,255,0.5); }
   #soundBtn { background: rgba(200, 180, 60, 0.85); border-color: rgba(255,220,100,0.5); }
   #fullscreenBtn { background: rgba(120, 80, 200, 0.85); border-color: rgba(180,140,255,0.5); }
   #resetBtn { background: rgba(200, 60, 60, 0.85); border-color: rgba(255,100,100,0.5); }
@@ -28,7 +27,6 @@
   
   .section-title { color: #aaddff; font-size: 12px; font-weight: bold; margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(100,180,255,0.2); padding-bottom: 4px; }
   
-  /* Новый дизайн карточек каталога */
   .fish-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   @media (min-width: 500px) { .fish-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; } }
   .fish-card { 
@@ -57,7 +55,6 @@
   .fish-card .record { font-size: 11px; color: #ff9966; margin-top: 4px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 2px 4px; border-radius: 4px; display: inline-block; }
   .fish-card.trash-card .pts { color: #ff9966; }
   
-  /* Золотая рамка для трофея */
   .fish-card.record-holder { border-color: #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.3); }
   .fish-card.record-holder::before { content: '👑'; position: absolute; top: 5px; right: 5px; font-size: 16px; }
 
@@ -151,6 +148,11 @@
   .boss-start-btn { background: linear-gradient(180deg, #ff4444, #aa0000); color: #fff; border: 2px solid #ff8888; padding: 14px 40px; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; box-shadow: 0 0 30px rgba(255,50,50,0.5); }
   .boss-start-btn:active { transform: scale(0.95); }
 
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+  .stat-card { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 8px; text-align: center; }
+  .stat-val { color: #ffd700; font-size: 20px; font-weight: bold; }
+  .stat-label { color: #aaa; font-size: 11px; }
+
   .trophy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
   @media (min-width: 500px) { .trophy-grid { grid-template-columns: repeat(3, 1fr); } }
   .trophy-card { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -169,7 +171,6 @@
     <button id="soundBtn" class="btn" onclick="toggleSound(event)">🔊</button>
     <button id="fullscreenBtn" class="btn" onclick="toggleFullscreen(event)">📺</button>
     <button id="resetBtn" class="btn" onclick="resetProgress(event)">🗑</button>
-    <button id="statsBtn" class="btn" onclick="toggleStats(event)">📊</button>
     <button id="catalogBtn" class="btn" onclick="toggleCatalog(event)">📖</button>
     <button id="shopBtn" class="btn" onclick="toggleShop(event)">🛒</button>
   </div>
@@ -213,16 +214,54 @@
     </div>
   </div>
 
+  <!-- Объединенный Дневник (Каталог + Трофеи) -->
   <div id="catalogOverlay" class="overlay" onclick="if(event.target===this) toggleCatalog(event)">
     <div class="panel">
       <button class="close-btn" onclick="toggleCatalog(event)">×</button>
-      <h2>📖 Каталог уловов</h2>
-      <div class="section-title">🐟 Рыбы</div>
-      <div class="fish-grid" id="fishGrid"></div>
-      <div class="section-title">🗑 Мусор</div>
-      <div class="fish-grid" id="trashGrid"></div>
-      <div class="section-title">🏆 Достижения</div>
-      <div class="achv-grid" id="achvGrid"></div>
+      <h2>📖 Дневник рыбака</h2>
+      
+      <div class="shop-tabs" style="margin-bottom: 15px;">
+        <button class="shop-tab active" id="tabFish" onclick="switchCatalogTab('fish')">🐟 Уловы</button>
+        <button class="shop-tab" id="tabTrophies" onclick="switchCatalogTab('trophies')">🏆 Трофеи и Достижения</button>
+      </div>
+
+      <!-- Вкладка Уловы -->
+      <div id="catalogTabFish" style="display: block;">
+        <div class="section-title">🐟 Рыбы</div>
+        <div class="fish-grid" id="fishGrid"></div>
+        <div class="section-title" style="margin-top:15px;">🗑 Мусор</div>
+        <div class="fish-grid" id="trashGrid"></div>
+      </div>
+
+      <!-- Вкладка Трофеи и Достижения -->
+      <div id="catalogTabTrophies" style="display: none;">
+        <div class="section-title">Статистика</div>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-val" id="statCaught">0</div>
+            <div class="stat-label">Всего поймано</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="statWeight">0 кг</div>
+            <div class="stat-label">Общий вес</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="statStreak">0</div>
+            <div class="stat-label">Рекорд серии</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="statMiss">0</div>
+            <div class="stat-label">Срывов</div>
+          </div>
+        </div>
+
+        <div class="section-title">🏆 Трофейная комната (Только рыба)</div>
+        <div class="trophy-grid" id="trophyGrid"></div>
+
+        <div class="section-title" style="margin-top: 20px;">Достижения</div>
+        <div class="achv-grid" id="achvGrid"></div>
+      </div>
+
     </div>
   </div>
 
@@ -240,36 +279,6 @@
         <button class="shop-tab" id="tabBooks" onclick="switchShopTab('books')">📕 Книги (Монеты)</button>
       </div>
       <div id="shopItems"></div>
-    </div>
-  </div>
-
-  <div id="statsOverlay" class="overlay" onclick="if(event.target===this) toggleStats(event)">
-    <div class="panel">
-      <button class="close-btn" onclick="toggleStats(event)">×</button>
-      <h2>📊 Статистика и Трофеи</h2>
-      
-      <div class="section-title">Общие показатели</div>
-      <div class="stats-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:15px;">
-        <div class="stat-card" style="background:rgba(255,255,255,0.05); padding:8px; border-radius:8px; text-align:center;">
-          <div class="stat-val" id="statCaught" style="color:#ffd700; font-size:20px; font-weight:bold;">0</div>
-          <div class="stat-label" style="color:#aaa; font-size:11px;">Всего поймано</div>
-        </div>
-        <div class="stat-card" style="background:rgba(255,255,255,0.05); padding:8px; border-radius:8px; text-align:center;">
-          <div class="stat-val" id="statWeight" style="color:#ffd700; font-size:20px; font-weight:bold;">0 кг</div>
-          <div class="stat-label" style="color:#aaa; font-size:11px;">Общий вес</div>
-        </div>
-        <div class="stat-card" style="background:rgba(255,255,255,0.05); padding:8px; border-radius:8px; text-align:center;">
-          <div class="stat-val" id="statStreak" style="color:#ffd700; font-size:20px; font-weight:bold;">0</div>
-          <div class="stat-label" style="color:#aaa; font-size:11px;">Рекорд серии</div>
-        </div>
-        <div class="stat-card" style="background:rgba(255,255,255,0.05); padding:8px; border-radius:8px; text-align:center;">
-          <div class="stat-val" id="statMiss" style="color:#ffd700; font-size:20px; font-weight:bold;">0</div>
-          <div class="stat-label" style="color:#aaa; font-size:11px;">Срывов</div>
-        </div>
-      </div>
-
-      <div class="section-title" style="margin-top: 20px;">🏆 Трофейная комната (Рекорды веса)</div>
-      <div class="trophy-grid" id="trophyGrid"></div>
     </div>
   </div>
   
@@ -318,14 +327,17 @@ let currentWeatherIndex = parseInt(localStorage.getItem('fishWeatherIndex') || '
 let weatherTimer = 0, gameTimeMinutes = 6 * 60;
 const WEATHER_DURATION = 45;
 
-// Для плавных переходов
-let prevWeatherColor = { top: '#87CEEB', bottom: '#ffd9a0' };
-let weatherTransition = 0; 
-const TRANSITION_SPEED = 0.5;
+// Плавный переход погоды
+let weatherFadeAlpha = 0; 
 
 function getWeather() { return WEATHERS[currentWeatherIndex]; }
 function getNextWeather() { return WEATHERS[(currentWeatherIndex + 1) % WEATHERS.length]; }
-function changeWeather() { currentWeatherIndex = (currentWeatherIndex + 1) % WEATHERS.length; weatherTimer = 0; weatherTransition = 0; localStorage.setItem('fishWeatherIndex', currentWeatherIndex); }
+function changeWeather() { 
+  currentWeatherIndex = (currentWeatherIndex + 1) % WEATHERS.length; 
+  weatherTimer = 0; 
+  weatherFadeAlpha = 1.0; // Запускаем эффект "вспышки" или затемнения
+  localStorage.setItem('fishWeatherIndex', currentWeatherIndex); 
+}
 function updateGameTime(dt) { gameTimeMinutes += dt; if (gameTimeMinutes >= 24 * 60) gameTimeMinutes -= 24 * 60; }
 function formatTime() { const h = Math.floor(gameTimeMinutes / 60) % 24; const m = Math.floor(gameTimeMinutes) % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; }
 
@@ -486,7 +498,7 @@ let qteTimer = 0;
 let qteMaxTime = 1.0;
 
 // ==================================================================
-// ЧАСТЬ 2: СОХРАНЕНИЕ И АУДИО (С ФОНОВЫМИ ЗВУКАМИ)
+// ЧАСТЬ 2: СОХРАНЕНИЕ И АУДИО
 // ==================================================================
 function saveProgress() {
   localStorage.setItem('fishScore', score);
@@ -521,7 +533,7 @@ function checkBossTrigger() {
 let audioCtx = null;
 let soundEnabled = localStorage.getItem('fishSoundEnabled') !== 'false';
 let bgNoiseNode = null;
-let ambientInterval = null;
+let rainNode = null;
 
 function initAudio() {
   if (audioCtx) return;
@@ -601,44 +613,6 @@ function playSound(type) {
   }
 }
 
-// Простые процедурные звуки для окружения
-function playAmbientSound(type) {
-  if (!soundEnabled || !audioCtx) return;
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  const now = audioCtx.currentTime;
-  
-  if (type === 'birds') {
-    // Короткий птичий щебет (высокие частоты)
-    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-    osc.type = 'sine'; 
-    osc.frequency.setValueAtTime(2000 + Math.random() * 1000, now);
-    osc.frequency.exponentialRampToValueAtTime(3000 + Math.random() * 1000, now + 0.1);
-    gain.gain.setValueAtTime(0.05, now); 
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-    osc.connect(gain); gain.connect(audioCtx.destination); 
-    osc.start(now); osc.stop(now + 0.1);
-  } else if (type === 'crickets') {
-    // Стрекотание сверчков (очень частые короткие импульсы)
-    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-    osc.type = 'square'; 
-    osc.frequency.value = 4000 + Math.random() * 500;
-    gain.gain.setValueAtTime(0.02, now); 
-    gain.gain.exponentialRampToValueAtTime(0.005, now + 0.05);
-    osc.connect(gain); gain.connect(audioCtx.destination); 
-    osc.start(now); osc.stop(now + 0.05);
-  } else if (type === 'rain') {
-    // Шелест дождя (фильтрованный шум)
-    const bufferSize = audioCtx.sampleRate * 0.1; 
-    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0); 
-    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-    const source = audioCtx.createBufferSource(); source.buffer = buffer;
-    const filter = audioCtx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 2000;
-    const gain = audioCtx.createGain(); gain.gain.setValueAtTime(0.02, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-    source.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); source.start(now);
-  }
-}
-
 function startAmbientSound() {
   if (!soundEnabled || !audioCtx || bgNoiseNode) return;
   
@@ -652,27 +626,32 @@ function startAmbientSound() {
   const gain = audioCtx.createGain(); gain.gain.value = 0.15;
   source.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); source.start(); 
   bgNoiseNode = { source, gain };
-  
-  // Периодические звуки (птицы, сверчки, дождь)
-  if (ambientInterval) clearInterval(ambientInterval);
-  ambientInterval = setInterval(() => {
-    if (!soundEnabled) return;
-    const weather = getWeather();
-    const isNight = gameTimeMinutes >= 20 * 60 || gameTimeMinutes < 6 * 60;
-    
-    if (weather === 'rain') {
-      playAmbientSound('rain');
-    } else if (weather === 'day' && !isNight) {
-      if (Math.random() > 0.5) playAmbientSound('birds');
-    } else if (isNight || weather === 'night') {
-      if (Math.random() > 0.6) playAmbientSound('crickets');
-    }
-  }, 2000); // Каждые 2 секунды проверяем
 }
 
 function stopAmbientSound() {
   if (bgNoiseNode) { try { bgNoiseNode.source.stop(); } catch(e) {} bgNoiseNode = null; }
-  if (ambientInterval) { clearInterval(ambientInterval); ambientInterval = null; }
+}
+
+function updateWeatherSound() {
+  if (!soundEnabled || !audioCtx) return;
+  const weather = getWeather();
+  
+  if (weather === 'rain' && !rainNode) {
+    // Включаем шум дождя
+    const bufferSize = audioCtx.sampleRate * 2; 
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0); 
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const source = audioCtx.createBufferSource(); source.buffer = buffer; source.loop = true;
+    const filter = audioCtx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 2000;
+    const gain = audioCtx.createGain(); gain.gain.value = 0.1;
+    source.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); source.start();
+    rainNode = { source, gain };
+  } else if (weather !== 'rain' && rainNode) {
+    // Выключаем шум дождя
+    try { rainNode.source.stop(); } catch(e) {}
+    rainNode = null;
+  }
 }
 
 function toggleSound(e) {
@@ -680,7 +659,15 @@ function toggleSound(e) {
   soundEnabled = !soundEnabled;
   localStorage.setItem('fishSoundEnabled', soundEnabled);
   document.getElementById('soundBtn').textContent = soundEnabled ? '🔊' : '🔇';
-  if (soundEnabled) { initAudio(); if (!bgNoiseNode) startAmbientSound(); playSound('buy'); } else { stopAmbientSound(); }
+  if (soundEnabled) { 
+    initAudio(); 
+    if (!bgNoiseNode) startAmbientSound(); 
+    playSound('buy'); 
+    updateWeatherSound();
+  } else { 
+    stopAmbientSound(); 
+    if (rainNode) { try { rainNode.source.stop(); } catch(e) {} rainNode = null; }
+  }
 }
 function ensureAudioStarted() {
   if (!audioCtx) initAudio();
@@ -1141,8 +1128,22 @@ function drawTreeLines(CELL_W, CELL_H, START_X, START_Y) {
 }
 
 // ==================================================================
-// ЧАСТЬ 5: КАТАЛОГ, ДОСТИЖЕНИЯ И СТАТИСТИКА
+// ЧАСТЬ 5: ДНЕВНИК (КАТАЛОГ + СТАТИСТИКА)
 // ==================================================================
+let currentCatalogTab = 'fish';
+
+function switchCatalogTab(tab) {
+  currentCatalogTab = tab;
+  document.getElementById('tabFish').classList.toggle('active', tab === 'fish');
+  document.getElementById('tabTrophies').classList.toggle('active', tab === 'trophies');
+  
+  document.getElementById('catalogTabFish').style.display = tab === 'fish' ? 'block' : 'none';
+  document.getElementById('catalogTabTrophies').style.display = tab === 'trophies' ? 'block' : 'none';
+  
+  if (tab === 'fish') renderCatalog();
+  else renderStats();
+}
+
 function addToCatalog(name) {
   if (!catalog[name]) catalog[name] = 0;
   catalog[name]++;
@@ -1174,16 +1175,13 @@ function toggleCatalog(e) {
   const overlay = document.getElementById('catalogOverlay');
   overlay.classList.toggle('show');
   hideTreeTooltip();
-  if (overlay.classList.contains('show')) renderCatalog();
-  else document.getElementById('shopOverlay').classList.remove('show');
+  if (overlay.classList.contains('show')) {
+    switchCatalogTab(currentCatalogTab);
+  } else {
+    document.getElementById('shopOverlay').classList.remove('show');
+  }
 }
-function toggleStats(e) {
-  if (e) e.stopPropagation();
-  const overlay = document.getElementById('statsOverlay');
-  overlay.classList.toggle('show');
-  hideTreeTooltip();
-  if (overlay.classList.contains('show')) renderStats();
-}
+
 function isFishKnown(fishName) {
   if (catalog[fishName] > 0) return true;
   for (const book of BOOKS) { if (encyclopedia[book.id] && book.opens.includes(fishName)) return true; }
@@ -1221,7 +1219,40 @@ function renderCatalog() {
         ${known && desc ? `<div style="font-size:10px; color:#999; margin-top:6px; line-height:1.3;">📍 ${desc.where}</div>` : ''}
       </div>`;
   }).join('');
+}
+
+function renderStats() {
+  document.getElementById('statCaught').textContent = totalCaught;
+  document.getElementById('statWeight').textContent = (gameStats.totalWeight / 1000).toFixed(1) + ' кг';
+  document.getElementById('statStreak').textContent = gameStats.bestStreak;
+  document.getElementById('statMiss').textContent = gameStats.misses;
+
+  const trophyGrid = document.getElementById('trophyGrid');
+  let html = '';
+  let hasRecords = false;
   
+  // Отображаем только рыб, мусор исключаем
+  for (const f of FISH_ONLY) {
+    if (fishRecords[f.name]) {
+      hasRecords = true;
+      const weight = fishRecords[f.name];
+      const isGold = weight >= (f.maxW - (f.maxW - f.minW) * 0.1);
+      
+      html += `
+        <div class="trophy-card ${isGold ? 'gold' : ''}">
+          <div class="t-emoji">${f.emoji}</div>
+          <div class="t-name">${f.name}</div>
+          <div class="t-weight">${weight} г</div>
+          <div class="t-label">${isGold ? '⭐ Золотой трофей' : 'Рекорд'}</div>
+        </div>
+      `;
+    }
+  }
+  
+  if (!hasRecords) html = '<div style="grid-column: 1/-1; text-align:center; color:#888; padding:20px;">Пока нет рекордов. Ловите рыбу!</div>';
+  trophyGrid.innerHTML = html;
+
+  // Достижения
   document.getElementById('achvGrid').innerHTML = ACHV_LIST.map(a => {
     const done = achievements[a.id];
     const isSecret = a.secret && !bossMet;
@@ -1248,37 +1279,6 @@ function renderCatalog() {
         ${done ? `<div class="bonus">✓ ${a.bonus}</div>` : `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>`}
       </div>`;
   }).join('');
-}
-
-function renderStats() {
-  document.getElementById('statCaught').textContent = totalCaught;
-  document.getElementById('statWeight').textContent = (gameStats.totalWeight / 1000).toFixed(1) + ' кг';
-  document.getElementById('statStreak').textContent = gameStats.bestStreak;
-  document.getElementById('statMiss').textContent = gameStats.misses;
-
-  const trophyGrid = document.getElementById('trophyGrid');
-  let html = '';
-  let hasRecords = false;
-  
-  for (const f of FISH_TYPES) {
-    if (fishRecords[f.name]) {
-      hasRecords = true;
-      const weight = fishRecords[f.name];
-      const isGold = weight >= (f.maxW - (f.maxW - f.minW) * 0.1);
-      
-      html += `
-        <div class="trophy-card ${isGold ? 'gold' : ''}">
-          <div class="t-emoji">${f.emoji}</div>
-          <div class="t-name">${f.name}</div>
-          <div class="t-weight">${weight} г</div>
-          <div class="t-label">${isGold ? '⭐ Золотой трофей' : 'Рекорд'}</div>
-        </div>
-      `;
-    }
-  }
-  
-  if (!hasRecords) html = '<div style="grid-column: 1/-1; text-align:center; color:#888; padding:20px;">Пока нет рекордов. Ловите рыбу!</div>';
-  trophyGrid.innerHTML = html;
 }
 
 // ==================================================================
@@ -1463,7 +1463,6 @@ function startReeling() {
   let baseSpeed = 85 + Math.random() * 40;
   const w = getWeather();
   
-  // Погодные бонусы (скорость)
   if (w === 'sunset') baseSpeed *= 1.10;
   if (w === 'night') baseSpeed *= 0.85;
   if (w === 'rain') baseSpeed *= 1.20;
@@ -1486,7 +1485,6 @@ function startReeling() {
   const weightPenalty = resistance * 0.6; 
   finalZone *= (1 - weightPenalty);
   
-  // Погодные бонусы (зона)
   if (w === 'sunset') finalZone *= 1.05;
   if (w === 'night') finalZone *= 0.90;
   if (w === 'rain') finalZone *= 0.95;
@@ -1537,7 +1535,6 @@ function pickFish() {
       }
     }
     
-    // Погодные бонусы (шансы)
     if (w === 'night') {
       if (f.name === 'Сом' || f.name === 'Угорь') weight *= 3;
       if (f.name === 'Золотая рыбка') weight = 0;
@@ -1545,10 +1542,10 @@ function pickFish() {
       if (f.name === 'Золотая рыбка') weight *= 3;
       if (f.name === 'Щука') weight *= 1.5;
     } else if (w === 'fog') {
-      if (!f.isTrash) weight *= 1.5; // В туман рыба клюёт лучше
+      if (!f.isTrash) weight *= 1.5;
     } else if (w === 'rain') {
-      if (f.isTrash) weight *= 1.2; // В дождь больше мусора
-      if (!f.isTrash && f.isRare) weight *= 1.5; // Но и редкая рыба смывается
+      if (f.isTrash) weight *= 1.2;
+      if (!f.isTrash && f.isRare) weight *= 1.5;
     }
     
     if (baitCount > 0 && !f.isTrash && f.isRare) weight *= 3;
@@ -1599,11 +1596,9 @@ function checkReel() {
     lastCatch.weight = weight;
     lastCatch.points = calcPoints(fish, weight);
     
-    // Проверка на рекорд
     const isNewRecord = !fishRecords[fish.name] || weight > fishRecords[fish.name];
     if (isNewRecord && !fish.isTrash) {
       fishRecords[fish.name] = weight;
-      // Показываем плашку рекорда
       const el = document.getElementById('recordToast');
       el.innerHTML = `👑 Новый рекорд!<br><span style="font-size:11px;">${fish.name} — ${weight} г</span>`;
       el.classList.add('show');
@@ -1734,23 +1729,16 @@ function update(dt) {
   updateGameTime(dt);
   const t = performance.now() / 1000;
   
-  if (weatherTransition < 1) {
-    weatherTransition += dt * TRANSITION_SPEED;
-    if (weatherTransition > 1) weatherTransition = 1;
+  // Плавное затухание эффекта смены погоды
+  if (weatherFadeAlpha > 0) {
+    weatherFadeAlpha -= dt * 1.5;
+    if (weatherFadeAlpha < 0) weatherFadeAlpha = 0;
   }
   
   if (state !== S.BOSS_INSTRUCTION && state !== S.BOSS_INTRO && state !== S.BOSS_QTE && state !== S.BOSS_DEATH && state !== S.BOSS_WIN) {
     if (weatherTimer > WEATHER_DURATION) {
-        // Сохраняем текущий цвет перед сменой
-        const currentGrad = ctx.createLinearGradient(0, 0, 0, 320);
-        if (getWeather() === 'day') { currentGrad.addColorStop(0, '#87CEEB'); currentGrad.addColorStop(1, '#ffd9a0'); }
-        else if (getWeather() === 'sunset') { currentGrad.addColorStop(0, '#ff7e5f'); currentGrad.addColorStop(1, '#ffe29a'); }
-        else if (getWeather() === 'night') { currentGrad.addColorStop(0, '#0b1021'); currentGrad.addColorStop(1, '#2a3a5a'); }
-        else if (getWeather() === 'rain') { currentGrad.addColorStop(0, '#4a5a6a'); currentGrad.addColorStop(1, '#8a9aaa'); }
-        else if (getWeather() === 'fog') { currentGrad.addColorStop(0, '#b0b8c0'); currentGrad.addColorStop(1, '#e0e8f0'); }
-        prevWeatherColor.top = currentGrad.addColorStop ? '#87CEEB' : currentGrad; 
-        // (Упростим - просто сбросим transition в 0 при смене)
-        changeWeather();
+      changeWeather();
+      updateWeatherSound();
     }
   }
   
@@ -1882,16 +1870,17 @@ function drawGear(t) {
   const netLvl = treeUpgrades.net || 0;
   if (netLvl > 0) {
     ctx.save();
-    ctx.translate(140, 495); // Сдвинули правее на доски
+    // СДВИГАЕМ ВПРАВО, ЧТОБЫ БЫЛО ВИДНО
+    ctx.translate(145, 495); 
     // Ручка
     ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(30, -10); ctx.stroke();
     // Сетка
     ctx.fillStyle = 'rgba(100, 150, 200, 0.6)';
     ctx.beginPath();
-    if (netLvl === 1) { // Маленький
+    if (netLvl === 1) { 
       ctx.ellipse(35, -12, 12, 8, 0.2, 0, Math.PI * 2);
-    } else { // Большой
+    } else { 
       ctx.ellipse(40, -15, 20, 12, 0.2, 0, Math.PI * 2);
     }
     ctx.fill();
@@ -1903,7 +1892,8 @@ function drawGear(t) {
   const keeperLvl = treeUpgrades.keeper || 0;
   if (keeperLvl > 0) {
     ctx.save();
-    ctx.translate(125, 510); // Край помоста
+    // СДВИГАЕМ ВПРАВО И ВНИЗ, ЧТОБЫ БЫЛО ВИДНО
+    ctx.translate(160, 505); 
     // Веревка
     ctx.strokeStyle = '#ddd'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(0, 5); ctx.stroke();
@@ -1919,17 +1909,6 @@ function drawGear(t) {
     }
     ctx.restore();
   }
-}
-
-// Функция получения цвета неба (с плавным переходом)
-function getSkyColors() {
-    const w = getWeather();
-    let top = '#87CEEB', bottom = '#ffd9a0';
-    if (w === 'sunset') { top = '#ff7e5f'; bottom = '#ffe29a'; }
-    else if (w === 'night') { top = '#0b1021'; bottom = '#2a3a5a'; }
-    else if (w === 'rain') { top = '#4a5a6a'; bottom = '#8a9aaa'; }
-    else if (w === 'fog') { top = '#b0b8c0'; bottom = '#e0e8f0'; }
-    return { top, bottom };
 }
 
 function drawBobber(x, y) {
@@ -1967,9 +1946,6 @@ function drawEnvironment(t) {
   const weather = getWeather();
   const skyGrad = ctx.createLinearGradient(0, 0, 0, 320);
   
-  // Плавный переход погоды (интерполяция пока не идеальна без доп. библиотек, 
-  // поэтому просто используем цвета текущей погоды, но сбрасываем transition 
-  // чтобы не было бага с "застреванием". Имитация перехода - затемнение/осветление.
   if (weather === 'day') { skyGrad.addColorStop(0, '#87CEEB'); skyGrad.addColorStop(1, '#ffd9a0'); }
   else if (weather === 'sunset') { skyGrad.addColorStop(0, '#ff7e5f'); skyGrad.addColorStop(1, '#ffe29a'); }
   else if (weather === 'night') { skyGrad.addColorStop(0, '#0b1021'); skyGrad.addColorStop(1, '#2a3a5a'); }
@@ -2038,6 +2014,12 @@ function drawEnvironment(t) {
   if (weather === 'fog') {
     ctx.fillStyle = 'rgba(200, 210, 220, 0.4)';
     for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc((i * 200 + t * 10) % W, 350 + i * 40, 150, 0, Math.PI * 2); ctx.fill(); }
+  }
+
+  // Плавный переход (вспышка)
+  if (weatherFadeAlpha > 0) {
+    ctx.fillStyle = `rgba(255, 255, 255, ${weatherFadeAlpha * 0.4})`;
+    ctx.fillRect(0, 0, W, H);
   }
 }
 
@@ -2121,9 +2103,8 @@ function drawFisherman() {
   }
 }
 
-// Компактный таймер погоды в левом верхнем углу (под монетами)
 function drawWeatherTimer() {
-  const x = 15, y = 140;
+  const x = 15, y = 150;
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.beginPath(); ctx.roundRect(x, y, 180, 30, 8); ctx.fill();
   
@@ -2139,9 +2120,9 @@ function drawWeatherTimer() {
 }
 
 function drawUI() {
-  // Основной блок (Монеты, Опыт, Серия)
-  let boxHeight = 110;
-  if (catchStreak >= 3 || missStreak >= 2) boxHeight += 20; // Добавляем место под серию
+  // Основной блок
+  let boxHeight = 120;
+  if (catchStreak >= 3 || missStreak >= 2) boxHeight += 20;
   
   ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'; 
   ctx.beginPath(); ctx.roundRect(15, 15, 270, boxHeight, 10); ctx.fill();
@@ -2152,7 +2133,6 @@ function drawUI() {
   ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700'; ctx.fillText(`🏆 Рекорд: ${bestScore}`, 30, 95);
   ctx.fillStyle = '#aaddff'; ctx.fillText(`🎣 Поймано: ${totalCaught}`, 30, 115);
   
-  // Серия внутри блока
   if (catchStreak >= 3) { 
     ctx.fillStyle = '#ff9966'; ctx.font = 'bold 13px "Segoe UI"'; 
     ctx.fillText(`🔥 Серия ${catchStreak}! (x${(1 + Math.min(catchStreak * 0.1, 1.0)).toFixed(1)} XP)`, 30, 140); 
@@ -2161,10 +2141,10 @@ function drawUI() {
     ctx.fillText(`🍀 Удача рыбака`, 30, 140); 
   }
   
-  drawWeatherTimer(); // Рисуем таймер под статой
+  drawWeatherTimer();
   
   // Панель баффов (иконки)
-  let buffY = 185;
+  let buffY = 190;
   if (baitCount > 0) {
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.roundRect(15, buffY, 80, 30, 8); ctx.fill();
     ctx.font = '16px "Segoe UI"'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
@@ -2362,7 +2342,6 @@ function drawBossQte() {
   ctx.fillText('Нажми правильную кнопку!', W/2, H/2 + 180);
 }
 
-// Отрисовка кастомизированной удочки
 function drawRod() {
   const bodyLvl = treeUpgrades.body || 0;
   const reelLvl = treeUpgrades.reel || 0;
@@ -2371,46 +2350,38 @@ function drawRod() {
   let rodColor = '#8B4513';
   let rodColor2 = '#a06030';
   
-  // Цвета тела
   if (bodyLvl === 1) { rodColor = '#8a9aaa'; rodColor2 = '#aaccee'; }
   else if (bodyLvl === 2) { rodColor = '#2a2a2a'; rodColor2 = '#4a4a4a'; }
   else if (bodyLvl === 3) { rodColor = '#1a1a1a'; rodColor2 = '#2a2a2a'; }
   else if (bodyLvl === 4) { rodColor = '#3a3a3a'; rodColor2 = '#5a5a5a'; }
   
-  // Отрисовка рукояти (handle)
-  ctx.strokeStyle = '#5a3a1a'; // По умолчанию дерево
-  if (handleLvl === 1) ctx.strokeStyle = '#e0d0a0'; // Пробка (светлая)
-  if (handleLvl === 2) ctx.strokeStyle = '#222'; // Неопрен (черная)
+  ctx.strokeStyle = '#5a3a1a';
+  if (handleLvl === 1) ctx.strokeStyle = '#e0d0a0';
+  if (handleLvl === 2) ctx.strokeStyle = '#222';
   
   ctx.lineWidth = 10; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(rod.baseX, rod.baseY); ctx.lineTo(rod.baseX + 20, rod.baseY - 20); ctx.stroke();
   
-  // Отрисовка тела (body)
   ctx.strokeStyle = rodColor; ctx.lineWidth = 6;
   ctx.beginPath(); ctx.moveTo(rod.baseX + 20, rod.baseY - 20); ctx.quadraticCurveTo(140, 420, rod.tipX, rod.tipY); ctx.stroke();
   ctx.strokeStyle = rodColor2; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(140, 420); ctx.quadraticCurveTo(165, 400, rod.tipX, rod.tipY); ctx.stroke();
   
-  // Отрисовка катушки (reel)
   if (reelLvl > 0) {
     const rx = rod.baseX + 20; const ry = rod.baseY - 20;
-    if (reelLvl === 1) { // Безынерционная
+    if (reelLvl === 1) {
       ctx.fillStyle = '#aaa'; ctx.beginPath(); ctx.arc(rx, ry, 10, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#555'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(rx, ry, 10, 0, Math.PI * 2); ctx.stroke();
-      // Дужка
       ctx.strokeStyle = '#888'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(rx, ry, 15, -0.5, 0.5); ctx.stroke();
-    } else if (reelLvl === 2) { // Мультипликаторная
+    } else if (reelLvl === 2) {
       ctx.fillStyle = '#222'; ctx.beginPath(); ctx.roundRect(rx - 12, ry - 8, 24, 16, 4); ctx.fill();
-      ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(rx - 15, ry, 4, 0, Math.PI * 2); ctx.fill(); // Ручка 1
-      ctx.beginPath(); ctx.arc(rx + 15, ry, 4, 0, Math.PI * 2); ctx.fill(); // Ручка 2
+      ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(rx - 15, ry, 4, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(rx + 15, ry, 4, 0, Math.PI * 2); ctx.fill();
     }
   }
 }
 
-// ==================================================================
-// ЧАСТЬ 11: ГЛАВНЫЙ ЦИКЛ
-// ==================================================================
 function draw() {
   const t = performance.now() / 1000;
   ctx.clearRect(0, 0, W, H);
@@ -2418,6 +2389,7 @@ function draw() {
   if (state === S.BOSS_INSTRUCTION) {
     drawEnvironment(t);
     drawFisherman();
+    drawGear(t);
     drawRod();
     drawBoss();
     drawHints();
@@ -2492,6 +2464,7 @@ function draw() {
   }
   
   drawFisherman();
+  drawGear(t); // Отрисовка экипировки
   drawRod(); // Отрисовка кастомизированной удочки
   
   if (swipe.active) drawSwipeIndicator();
