@@ -798,6 +798,7 @@ function drawCharacterBody(cCtx, x, y, type, scale = 1, isPreview = false, hasHa
 function drawHat(cCtx, hatId, x, y, isWoman) {
   cCtx.save();
   cCtx.translate(x, y);
+  cCtx.scale(0.9, 0.9);
   
   if (hatId === 'straw') {
     cCtx.fillStyle = '#e0c080'; cCtx.beginPath(); cCtx.ellipse(0, -5, 38, 10, 0, 0, Math.PI * 2); cCtx.fill();
@@ -1438,7 +1439,6 @@ function renderStats() {
       let pct = 0;
       let progressText = '';
       if (isMax) {
-        // Выводим X из Y, как просил
         progressText = `${a.levels.length}/${a.levels.length}`;
         pct = 100;
       } else {
@@ -1654,12 +1654,8 @@ function castRod(mx, my) {
   bobber.vx = dx / flightTime; bobber.vy = dy / flightTime - 400 * flightTime;
   state = S.CASTING; stateTime = 0;
   playSound('cast'); vibrate(30);
-}
-
-function startBossFromInstruction(e) {
-  if (e) e.stopPropagation();
-  document.getElementById('bossInstruction').classList.remove('show');
-  startBossFight();
+  
+  hintCounter++; // <--- Обновление слухов только при забросе
 }
  
 function startReeling() {
@@ -2069,7 +2065,8 @@ function update(dt) {
     if (stateTime > 2) resetToIdle();
   }
 
-  if (state === S.IDLE && !bossDefeated) hintCounter++;
+  // Убираем автоинкремент для слухов (теперь только при забросе)
+  // if (state === S.IDLE && !bossDefeated) hintCounter++;
 }
 
 // ==================================================================
@@ -2257,17 +2254,17 @@ function drawFisherman() {
   // --- ТЕЛО ПЕРСОНАЖА ---
   drawCharacterBody(ctx, 82, 460, character, 1.2, false, !!activeHat);
   
-  // --- РУКА С УДОЧКОЙ (только одна, поверх тела) ---
+  // --- РУКА С УДОЧКОЙ (исправлена) ---
   ctx.strokeStyle = isWoman ? '#d2a679' : '#2c3e50'; 
   ctx.lineWidth = 9; 
   ctx.lineCap = 'round';
   ctx.beginPath(); 
-  ctx.moveTo(75, 440);
-  ctx.lineTo(115, 460);
-  ctx.lineTo(rod.baseX, rod.baseY);
+  ctx.moveTo(68, 455); // От плеча
+  ctx.lineTo(110, 470); // Локоть
+  ctx.lineTo(rod.baseX, rod.baseY); 
   ctx.stroke();
 
-  // Обувь (свисает с причала)
+  // Обувь
   ctx.fillStyle = '#7a5a2a'; 
   ctx.beginPath(); ctx.ellipse(70, 520, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); 
   ctx.beginPath(); ctx.ellipse(95, 520, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
@@ -2280,10 +2277,9 @@ function drawFisherman() {
     ctx.beginPath(); ctx.arc(100, 450, 6, 0, Math.PI * 2); ctx.fill();
   }
 
-  // --- ШЛЯПА ---
+  // --- ШЛЯПА (опущена ниже) ---
   if (activeHat) {
-    // Координата Y поднята, чтобы шляпа села ровно на макушку
-    drawHat(ctx, activeHat, 82, 400, isWoman);
+    drawHat(ctx, activeHat, 82, 395, isWoman);
   }
 }
 
