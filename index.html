@@ -4,18 +4,141 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>🎣 Рыбалка на речке</title>
-<link rel="stylesheet" href="css/style.css">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #0d1520; font-family: 'Segoe UI', sans-serif; user-select: none; touch-action: none; display: flex; justify-content: center; align-items: center; }
+  #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: #0d1520; }
+  canvas { display: block; width: 100%; height: 100%; object-fit: contain; touch-action: none; }
+  
+  .top-panel { position: absolute; bottom: 15px; right: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 250px; z-index: 5; }
+  .btn { color: white; border: 2px solid; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: transform 0.1s; backdrop-filter: blur(4px); white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+  .btn:active { transform: scale(0.92); }
+  #catalogBtn { background: rgba(60, 120, 200, 0.85); border-color: rgba(100,180,255,0.5); }
+  #shopBtn { background: rgba(60, 180, 100, 0.85); border-color: rgba(100,255,150,0.5); }
+  #soundBtn { background: rgba(200, 180, 60, 0.85); border-color: rgba(255,220,100,0.5); }
+  #fullscreenBtn { background: rgba(120, 80, 200, 0.85); border-color: rgba(180,140,255,0.5); }
+  #resetBtn { background: rgba(200, 60, 60, 0.85); border-color: rgba(255,100,100,0.5); }
+  
+  .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; backdrop-filter: blur(6px); z-index: 10; padding: 15px; }
+  .overlay.show { display: flex; }
+  .panel { background: linear-gradient(180deg, #2a3a4a, #1a2a3a); border: 2px solid rgba(100,180,255,0.4); border-radius: 16px; padding: 15px; width: 100%; max-width: 700px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.8); position: relative; }
+  .panel h2 { color: #aaddff; margin: 0 0 12px; text-align: center; font-size: 18px; }
+  .close-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 18px; font-weight: bold; display: flex; justify-content: center; align-items: center; }
+  
+  .section-title { color: #aaddff; font-size: 12px; font-weight: bold; margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(100,180,255,0.2); padding-bottom: 4px; }
+  .fish-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  @media (min-width: 500px) { .fish-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; } }
+  .fish-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(100,180,255,0.2); border-radius: 8px; padding: 6px; text-align: left; transition: all 0.2s; }
+  .fish-card.caught { border-color: rgba(100,255,100,0.5); background: rgba(100,255,100,0.05); }
+  .fish-card.trash-card.caught { border-color: rgba(200,150,100,0.5); background: rgba(200,150,100,0.05); }
+  .fish-card .emoji { font-size: 24px; display: block; margin-bottom: 2px; filter: grayscale(1) opacity(0.3); }
+  .fish-card.caught .emoji, .fish-card.known .emoji { filter: none; }
+  .fish-card .name { font-size: 11px; color: #ccc; font-weight: bold; margin-bottom: 2px; }
+  .fish-card.caught .name, .fish-card.known .name { color: #fff; }
+  .fish-card .pts { font-size: 10px; color: #ffd700; }
+  .fish-card.trash-card .pts { color: #ff9966; }
+  .fish-card .desc { font-size: 10px; color: #999; margin-top: 4px; line-height: 1.2; display: none; }
+  .fish-card.caught .desc, .fish-card.known .desc { display: block; }
+
+  .achv-grid { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 8px; }
+  @media (min-width: 500px) { .achv-grid { grid-template-columns: 1fr 1fr; gap: 8px; } }
+  .achv { padding: 8px; border-radius: 8px; background: rgba(255,215,0,0.05); border: 2px dashed rgba(255,215,0,0.3); }
+  .achv.done { background: rgba(255,215,0,0.15); border-color: #ffd700; border-style: solid; }
+  .achv.secret { background: rgba(150,150,150,0.05); border-color: rgba(150,150,150,0.3); border-style: dashed; }
+  .achv.secret.done { background: rgba(255,100,100,0.15); border-color: #ff4444; border-style: solid; box-shadow: 0 0 20px rgba(255,50,50,0.4); }
+  .achv .title { color: #ffd700; font-weight: bold; font-size: 12px; margin-bottom: 2px; }
+  .achv.secret .title { color: #888; }
+  .achv.secret.done .title { color: #ff4444; }
+  .achv .desc { color: #aaa; font-size: 10px; line-height: 1.2; }
+  .achv .bonus { font-size: 10px; color: #7fff7f; margin-top: 2px; font-weight: bold; }
+  .achv .progress-bar { height: 4px; background: rgba(0,0,0,0.3); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+  .achv .progress-fill { height: 100%; background: #ffd700; border-radius: 2px; }
+
+  .shop-tabs { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
+  .shop-tab { flex: 1; min-width: 70px; padding: 6px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 6px; color: #aaa; font-weight: bold; font-size: 11px; cursor: pointer; }
+  .shop-tab.active { background: rgba(100,180,255,0.15); border-color: #aaddff; color: #fff; }
+  
+  .shop-item { display: flex; align-items: center; gap: 8px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 6px; border: 1px solid rgba(255,255,255,0.1); }
+  .shop-item .icon { font-size: 20px; width: 30px; text-align: center; }
+  .shop-item .info { flex: 1; }
+  .shop-item .name { color: #fff; font-weight: bold; font-size: 12px; }
+  .shop-item .desc { color: #aaa; font-size: 10px; margin-top: 2px; line-height: 1.2; }
+  .shop-item .bonus { color: #7fff7f; font-size: 10px; margin-top: 2px; font-weight: bold; }
+  .shop-item .buy-btn { background: #4CAF50; color: #fff; border: none; padding: 6px 8px; border-radius: 6px; font-weight: bold; font-size: 10px; cursor: pointer; min-width: 60px; }
+  .shop-item .buy-btn:disabled { background: #555; cursor: not-allowed; opacity: 0.6; }
+  .shop-item.owned { border-color: rgba(100,255,100,0.4); background: rgba(100,255,100,0.08); }
+  .shop-item.equipped { border-color: #ffd700; background: rgba(255,215,0,0.1); }
+  .shop-item.harpoon { border-color: rgba(255,100,100,0.5); background: rgba(255,100,100,0.1); }
+
+  /* [NEW] Кнопки покупки наживки пачками */
+  .bait-buy-row { display: flex; gap: 4px; }
+  .bait-buy-row .buy-btn { min-width: 44px; padding: 6px 4px; }
+
+  /* Дерево улучшений */
+  .tree-branch { margin-bottom: 12px; background: rgba(0,0,0,0.15); border-radius: 8px; padding: 10px; border: 1px solid rgba(100,180,255,0.1); }
+  .tree-branch-title { font-size: 14px; font-weight: bold; color: #aaddff; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid rgba(100,180,255,0.2); padding-bottom: 6px; }
+  .tree-nodes { display: flex; flex-direction: column; gap: 6px; }
+  .tree-node { display: flex; align-items: center; gap: 10px; padding: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; transition: all 0.2s; }
+  .tree-node.unlocked { border-color: rgba(100,255,100,0.4); background: rgba(100,255,100,0.05); }
+  .tree-node.locked { opacity: 0.5; }
+  .tree-node.next { border-color: #ffd700; background: rgba(255,215,0,0.1); }
+  .tree-node .node-icon { font-size: 24px; width: 40px; text-align: center; }
+  .tree-node .node-info { flex: 1; }
+  .tree-node .node-name { color: #fff; font-weight: bold; font-size: 13px; display: flex; align-items: center; gap: 6px; }
+  .tree-node .node-level { font-size: 10px; color: #aaa; font-weight: normal; }
+  .tree-node .node-desc { color: #aaa; font-size: 10px; margin-top: 2px; }
+  .tree-node .node-bonus { color: #7fff7f; font-size: 11px; margin-top: 2px; font-weight: bold; }
+  .tree-node .node-req { color: #ff9966; font-size: 10px; margin-top: 2px; font-style: italic; }
+  .tree-node .buy-btn { background: #4CAF50; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; font-size: 11px; cursor: pointer; min-width: 70px; }
+  .tree-node .buy-btn:disabled { background: #555; cursor: not-allowed; opacity: 0.6; }
+  .tree-node .buy-btn.owned-btn { background: transparent; color: #7fff7f; border: 2px solid #7fff7f; cursor: default; }
+
+  #achvToast, #toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: bold; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; text-align: center; border: 2px solid #fff; z-index: 20; width: 90%; max-width: 350px; }
+  #achvToast { background: linear-gradient(180deg, #ffd700, #ffa000); color: #1a1a1a; }
+  #achvToast.show, #toast.show { opacity: 1; transform: translateX(-50%) translateY(10px); }
+  #toast { top: 50%; transform: translate(-50%, -50%); border-color: #4CAF50; background: rgba(0,0,0,0.9); width: auto; padding: 12px 24px; }
+  #toast.show { transform: translate(-50%, -50%) scale(1.05); }
+
+  #charSelect { background: rgba(10, 15, 25, 0.95); }
+  .char-select-panel { text-align: center; }
+  .char-select-panel h2 { font-size: 24px; margin-bottom: 8px; color: #fff; }
+  .char-select-panel p { color: #aaa; margin-bottom: 20px; font-size: 13px; }
+  .char-options { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+  .char-card { background: rgba(255,255,255,0.05); border: 3px solid rgba(100,180,255,0.2); border-radius: 12px; padding: 15px; width: 140px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+  .char-card:active { border-color: #aaddff; background: rgba(100,180,255,0.1); transform: translateY(-3px); }
+  .char-card canvas { width: 90px; height: 90px; border-radius: 50%; background: rgba(0,0,0,0.3); margin-bottom: 8px; object-fit: contain; display: block; }
+  .char-card .char-name { color: #fff; font-weight: bold; font-size: 15px; }
+  .char-card .char-desc { color: #888; font-size: 11px; margin-top: 2px; }
+
+  #qteControls { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); display: none; gap: 15px; z-index: 15; touch-action: none; }
+  #qteControls.show { display: flex; }
+  .qte-btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(200, 40, 40, 0.8); border: 3px solid #ff6666; color: #fff; font-size: 30px; font-weight: bold; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(255,60,60,0.5); user-select: none; cursor: pointer; }
+  .qte-btn:active { transform: scale(0.9); background: #ff4444; }
+
+  /* [NEW] Экран инструкции перед боссом */
+  #bossInstruction { background: rgba(5, 8, 15, 0.95); }
+  .boss-instr-panel { text-align: center; border-color: rgba(255,100,100,0.6); box-shadow: 0 0 60px rgba(255,50,50,0.4); }
+  .boss-instr-panel h2 { color: #ff6666; font-size: 26px; margin-bottom: 6px; text-shadow: 0 0 20px rgba(255,0,0,0.6); }
+  .boss-instr-panel .sub { color: #ffaa88; font-size: 13px; margin-bottom: 16px; }
+  .instr-block { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,100,100,0.3); border-radius: 10px; padding: 12px; margin-bottom: 10px; text-align: left; }
+  .instr-block .instr-title { color: #ffdd44; font-weight: bold; font-size: 14px; margin-bottom: 6px; }
+  .instr-block .instr-text { color: #ddd; font-size: 12px; line-height: 1.5; }
+  .instr-keys { display: flex; justify-content: center; gap: 10px; margin: 10px 0; }
+  .instr-key { width: 50px; height: 50px; border-radius: 10px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); display: flex; justify-content: center; align-items: center; font-size: 22px; color: #fff; }
+  .boss-start-btn { background: linear-gradient(180deg, #ff4444, #aa0000); color: #fff; border: 2px solid #ff8888; padding: 14px 40px; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; box-shadow: 0 0 30px rgba(255,50,50,0.5); }
+  .boss-start-btn:active { transform: scale(0.95); }
+</style>
 </head>
 <body>
 <div id="game-container">
   <canvas id="game"></canvas>
   
   <div class="top-panel">
-    <button id="soundBtn" class="btn" data-action="sound">🔊</button>
-    <button id="fullscreenBtn" class="btn" data-action="fullscreen">📺</button>
-    <button id="resetBtn" class="btn" data-action="reset">🗑</button>
-    <button id="catalogBtn" class="btn" data-action="catalog">📖 Каталог</button>
-    <button id="shopBtn" class="btn" data-action="shop">🛒 Магазин</button>
+    <button id="soundBtn" class="btn" onclick="toggleSound(event)">🔊</button>
+    <button id="fullscreenBtn" class="btn" onclick="toggleFullscreen(event)">📺</button>
+    <button id="resetBtn" class="btn" onclick="resetProgress(event)">🗑</button>
+    <button id="catalogBtn" class="btn" onclick="toggleCatalog(event)">📖 Каталог</button>
+    <button id="shopBtn" class="btn" onclick="toggleShop(event)">🛒 Магазин</button>
   </div>
 
   <div id="qteControls">
@@ -25,17 +148,18 @@
     <div class="qte-btn" data-key="ArrowRight">→</div>
   </div>
   
-  <div id="charSelect" class="overlay show">
+  <div id="charSelect" class="overlay show" onclick="if(event.target===this) {}">
     <div class="panel char-select-panel">
       <h2>🎣 Кто сегодня рыбачит?</h2>
       <p>Выбери персонажа. Повлияет только на внешний вид.</p>
       <div class="char-options">
-        <div class="char-card" data-char="fisher"><canvas id="previewFisher" width="120" height="120"></canvas><div class="char-name">Рыбак</div></div>
-        <div class="char-card" data-char="fisherwoman"><canvas id="previewFisherwoman" width="120" height="120"></canvas><div class="char-name">Рыбачка</div></div>
+        <div class="char-card" onclick="selectCharacter('fisher', event)"><canvas id="previewFisher" width="120" height="120"></canvas><div class="char-name">Рыбак</div></div>
+        <div class="char-card" onclick="selectCharacter('fisherwoman', event)"><canvas id="previewFisherwoman" width="120" height="120"></canvas><div class="char-name">Рыбачка</div></div>
       </div>
     </div>
   </div>
 
+  <!-- [NEW] Инструкция перед боссом -->
   <div id="bossInstruction" class="overlay">
     <div class="panel boss-instr-panel">
       <h2>🐋 СОМ-ГИГАНТ</h2>
@@ -72,13 +196,13 @@
         </div>
       </div>
       
-      <button class="boss-start-btn" id="bossStartBtn">⚔️ В БОЙ!</button>
+      <button class="boss-start-btn" onclick="startBossFromInstruction(event)">⚔️ В БОЙ!</button>
     </div>
   </div>
 
-  <div id="catalogOverlay" class="overlay">
+  <div id="catalogOverlay" class="overlay" onclick="if(event.target===this) toggleCatalog(event)">
     <div class="panel">
-      <button class="close-btn" data-action="close-catalog">×</button>
+      <button class="close-btn" onclick="toggleCatalog(event)">×</button>
       <h2>📖 Каталог уловов</h2>
       <div class="section-title">🐟 Рыбы</div>
       <div class="fish-grid" id="fishGrid"></div>
@@ -89,15 +213,15 @@
     </div>
   </div>
 
-  <div id="shopOverlay" class="overlay">
+  <div id="shopOverlay" class="overlay" onclick="if(event.target===this) toggleShop(event)">
     <div class="panel">
-      <button class="close-btn" data-action="close-shop">×</button>
+      <button class="close-btn" onclick="toggleShop(event)">×</button>
       <h2>🛒 Магазин</h2>
       <div style="text-align:center; font-size: 18px; color: #ffd700; font-weight: bold; margin-bottom: 10px;">Очки: <span id="shopScore">0</span></div>
       <div class="shop-tabs">
-        <button class="shop-tab active" id="tabUpgrades" data-tab="upgrades">⚙️ Прокачка</button>
-        <button class="shop-tab" id="tabTree" data-tab="tree">🔧 Удочка</button>
-        <button class="shop-tab" id="tabBooks" data-tab="books">📕 Справочники</button>
+        <button class="shop-tab active" id="tabUpgrades" onclick="switchShopTab('upgrades')">⚙️ Прокачка</button>
+        <button class="shop-tab" id="tabTree" onclick="switchShopTab('tree')">🔧 Удочка</button>
+        <button class="shop-tab" id="tabBooks" onclick="switchShopTab('books')">📕 Справочники</button>
       </div>
       <div id="shopItems"></div>
     </div>
@@ -107,6 +231,1644 @@
   <div id="toast">Прогресс сброшен!</div>
 </div>
 
-<script type="module" src="js/main.js"></script>
+<script>
+// ==================================================================
+// ЧАСТЬ 1: КОНСТАНТЫ И ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+// ==================================================================
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = 900, H = 600;
+
+// [NEW] Добавлен BOSS_INSTRUCTION
+const S = { IDLE: 'idle', CASTING: 'casting', WAITING: 'waiting', BITE: 'bite', REELING: 'reeling', RETURNING: 'returning', RESULT: 'result', BOSS_INSTRUCTION: 'boss_instruction', BOSS_INTRO: 'boss_intro', BOSS_QTE: 'boss_qte', BOSS_DEATH: 'boss_death', BOSS_WIN: 'boss_win' };
+let state = S.IDLE;
+let stateTime = 0;
+
+let score = parseInt(localStorage.getItem('fishScore') || '0');
+let bestScore = parseInt(localStorage.getItem('fishBest') || '0');
+let totalCaught = parseInt(localStorage.getItem('fishTotal') || '0');
+let catalog = JSON.parse(localStorage.getItem('fishCatalog') || '{}');
+let upgrades = JSON.parse(localStorage.getItem('fishUpgrades') || '{"reel":0, "zone":0, "luck":0}');
+// [CHANGE] hasBait -> baitCount
+let baitCount = parseInt(localStorage.getItem('fishBaitCount') || '0');
+let encyclopedia = JSON.parse(localStorage.getItem('fishEncyclopedia') || '{}');
+let achievements = JSON.parse(localStorage.getItem('fishNewAchievements') || '{}');
+let bossDefeated = localStorage.getItem('fishBossDefeated') === 'true';
+let hasHarpoon = localStorage.getItem('fishHasHarpoon') === 'true';
+let harpoonInShop = localStorage.getItem('fishHarpoonInShop') === 'true';
+let bossMet = localStorage.getItem('fishBossMet') === 'true';
+
+let treeUpgrades = JSON.parse(localStorage.getItem('fishTreeUpgrades') || '{"body":0, "line":0, "float":0, "hook":0, "keeper":0, "reel":0, "handle":0, "net":0, "bait":0}');
+
+let catchStreak = 0, missStreak = 0;
+let character = localStorage.getItem('fishCharacter') || null;
+
+const WEATHERS = ['day', 'sunset', 'night', 'rain', 'fog'];
+const WEATHER_ICONS = { day: '☀️', sunset: '🌅', night: '🌙', rain: '🌧️', fog: '🌫️' };
+let currentWeatherIndex = 0, weatherTimer = 0, gameTimeMinutes = 6 * 60;
+const WEATHER_DURATION = 45;
+
+function getWeather() { return WEATHERS[currentWeatherIndex]; }
+function getNextWeather() { return WEATHERS[(currentWeatherIndex + 1) % WEATHERS.length]; }
+function changeWeather() { currentWeatherIndex = (currentWeatherIndex + 1) % WEATHERS.length; weatherTimer = 0; }
+function updateGameTime(dt) { gameTimeMinutes += dt; if (gameTimeMinutes >= 24 * 60) gameTimeMinutes -= 24 * 60; }
+function formatTime() { const h = Math.floor(gameTimeMinutes / 60) % 24; const m = Math.floor(gameTimeMinutes) % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; }
+
+const FISH_DESCRIPTIONS = {
+  'Окунь':         { where: 'Мелководье', when: 'День, закат', how: 'Клюёт часто. Идеален для новичков.' },
+  'Карась':        { where: 'Заводи', when: 'День', how: 'Медленно берёт, но стабильно.' },
+  'Щука':          { where: 'У камышей', when: 'Закат, туман', how: 'Хищник. Шанс выше на закате.' },
+  'Сом':           { where: 'Глубина', when: 'Ночь', how: 'Редкий. Ночью шанс ×3.' },
+  'Золотая рыбка': { where: 'Глубина', when: 'Закат', how: 'Очень редкая. На закате шанс ×3. Не клюёт ночью.' },
+  'Форель':        { where: 'Холодная вода', when: 'День', how: 'Любит прохладную воду.' },
+  'Лещ':           { where: 'Омуты', when: 'День', how: 'Стайная рыба.' },
+  'Ёрш':           { where: 'Песчаное дно', when: 'Любое', how: 'Мелкая рыба, ловится всегда.' },
+  'Плотва':        { where: 'Поверхность', when: 'День', how: 'Мелкая, но частая.' },
+  'Карп':          { where: 'Глубина', when: 'Закат, туман', how: 'Редкий. Требует наживки.' },
+  'Угорь':         { where: 'Коряги', when: 'Ночь', how: 'Редкий. Ночью шанс ×3.' },
+  'Ботинок':       { where: 'Дно', when: 'Любое', how: 'Мусор. Хорошо клюёт в начале.' },
+  'Бутылка':       { where: 'Дно', when: 'Дождь', how: 'Мусор. В дождь чаще.' },
+  'Шина':          { where: 'Дно', when: 'Любое', how: 'Крупный мусор.' },
+  'Банка':         { where: 'Дно', when: 'Любое', how: 'Мелкий мусор.' }
+};
+
+const BOOKS = [
+  { id: 'bookОкунь',    name: '📕 Справочник окуня',    cost: 50,  opens: ['Окунь', 'Ёрш', 'Плотва'] },
+  { id: 'bookКарась',   name: '📕 Справочник карася',   cost: 80,  opens: ['Карась', 'Лещ'] },
+  { id: 'bookЩука',     name: '📕 Справочник щуки',     cost: 150, opens: ['Щука', 'Форель'] },
+  { id: 'bookСом',      name: '📕 Справочник сома',     cost: 250, opens: ['Сом', 'Угорь'] },
+  { id: 'bookЗолотая',  name: '📕 Справочник золотой',  cost: 400, opens: ['Золотая рыбка', 'Карп'] },
+  { id: 'bookМусор',    name: '📕 Справочник мусора',   cost: 60,  opens: ['Ботинок', 'Бутылка', 'Шина', 'Банка'] }
+];
+
+const FISH_TYPES = [
+  { name: 'Окунь',         color: '#e8a020', size: 25, pts: 10,  baseWeight: 30, emoji: '🐟', isTrash: false, isRare: false },
+  { name: 'Карась',        color: '#d4b048', size: 30, pts: 15,  baseWeight: 25, emoji: '🐠', isTrash: false, isRare: false },
+  { name: 'Щука',          color: '#4a8a3a', size: 45, pts: 30,  baseWeight: 15, emoji: '🦈', isTrash: false, isRare: false },
+  { name: 'Сом',           color: '#5a4a3a', size: 55, pts: 50,  baseWeight: 8,  emoji: '🐋', isTrash: false, isRare: true },
+  { name: 'Золотая рыбка', color: '#ffd700', size: 25, pts: 100, baseWeight: 2,  emoji: '✨', isTrash: false, isRare: true },
+  { name: 'Форель',        color: '#c08060', size: 35, pts: 40,  baseWeight: 4,  emoji: '🐡', isTrash: false, isRare: false },
+  { name: 'Лещ',           color: '#8a7a5a', size: 38, pts: 25,  baseWeight: 5,  emoji: '🎏', isTrash: false, isRare: false },
+  { name: 'Ёрш',           color: '#6a7a8a', size: 20, pts: 8,   baseWeight: 6,  emoji: '🐟', isTrash: false, isRare: false },
+  { name: 'Плотва',        color: '#aab0a0', size: 22, pts: 12,  baseWeight: 8,  emoji: '🐠', isTrash: false, isRare: false },
+  { name: 'Карп',          color: '#b08040', size: 50, pts: 60,  baseWeight: 2,  emoji: '🐳', isTrash: false, isRare: true },
+  { name: 'Угорь',         color: '#4a5a4a', size: 60, pts: 70,  baseWeight: 3,  emoji: '🐍', isTrash: false, isRare: true },
+  { name: 'Ботинок',       color: '#3a3a3a', size: 35, pts: 1,   baseWeight: 6,  emoji: '👢', isTrash: true, isRare: false },
+  { name: 'Бутылка',       color: '#4a8a4a', size: 28, pts: 1,   baseWeight: 6,  emoji: '🍾', isTrash: true, isRare: false },
+  { name: 'Шина',          color: '#1a1a1a', size: 45, pts: 1,   baseWeight: 6,  emoji: '🛞', isTrash: true, isRare: false },
+  { name: 'Банка',         color: '#8a8a9a', size: 20, pts: 1,   baseWeight: 6,  emoji: '🥫', isTrash: true, isRare: false }
+];
+const FISH_ONLY = FISH_TYPES.filter(f => !f.isTrash);
+const TRASH_ONLY = FISH_TYPES.filter(f => f.isTrash);
+
+// РЕАЛИСТИЧНОЕ ДЕРЕВО УДОЧКИ
+const TREE_DATA = {
+  body: {
+    name: 'Тело удилища', icon: '🎣',
+    levels: [
+      { name: 'Бамбук', desc: 'Классическая бамбуковая палка', cost: 0, bonus: 0, requires: null },
+      { name: 'Телескоп', desc: 'Стеклопластик, удобно носить', cost: 300, bonus: 0.05, requires: null },
+      { name: 'Карбон', desc: 'Лёгкий и прочный карбон', cost: 1200, bonus: 0.10, requires: { branch: 'line', level: 1 } },
+      { name: 'Спиннинг', desc: 'Профессиональная снасть', cost: 3000, bonus: 0.15, requires: { branch: 'reel', level: 2 } },
+      { name: 'Фидер', desc: 'Английская донная снасть', cost: 6000, bonus: 0.20, requires: { branch: 'line', level: 2 } }
+    ]
+  },
+  line: {
+    name: 'Леска', icon: '🧵',
+    levels: [
+      { name: 'Монофил', desc: 'Обычная леска', cost: 0, bonus: 0, requires: null },
+      { name: 'Флюорокарбон', desc: 'Менее заметна в воде', cost: 200, bonus: 0.1, requires: null },
+      { name: 'Плетёнка', desc: 'Крепкая и прочная', cost: 800, bonus: 0.2, requires: { branch: 'reel', level: 1 } },
+      { name: 'Нанофил', desc: 'Тонкая, но невероятно прочная', cost: 2500, bonus: 0.35, requires: { branch: 'reel', level: 2 } }
+    ]
+  },
+  float: {
+    name: 'Поплавок', icon: '🎈',
+    levels: [
+      { name: 'Перо', desc: 'Классический гусиный поплавок', cost: 0, bonus: 0, requires: null },
+      { name: 'Пластик', desc: 'Яркий и прочный', cost: 150, bonus: 0.15, requires: null },
+      { name: 'Светящийся', desc: 'Виден даже ночью', cost: 600, bonus: 0.3, requires: null },
+      { name: 'Эхолот', desc: 'Показывает рыбу под водой', cost: 2000, bonus: 0.5, requires: { branch: 'hook', level: 2 } }
+    ]
+  },
+  hook: {
+    name: 'Крючок', icon: '🪝',
+    levels: [
+      { name: 'Обычный', desc: 'Стандартный крючок', cost: 0, bonus: 0, requires: null },
+      { name: 'Кованый', desc: 'Не разгибается', cost: 250, bonus: 0.1, requires: null },
+      { name: 'С кольцом', desc: 'Для крупной рыбы', cost: 1000, bonus: 0.25, requires: { branch: 'line', level: 1 } },
+      { name: 'Двойной', desc: 'Двойная зацепка', cost: 3000, bonus: 0.4, requires: { branch: 'line', level: 2 } }
+    ]
+  },
+  keeper: {
+    name: 'Садок', icon: '🧺',
+    levels: [
+      { name: 'Сетка', desc: 'Простая сетка', cost: 0, bonus: 0, requires: null },
+      { name: 'Ведро', desc: 'Вместительное ведро', cost: 200, bonus: 0.1, requires: null },
+      { name: 'Садок', desc: 'Профессиональный садок', cost: 800, bonus: 0.2, requires: null },
+      { name: 'Морозильник', desc: 'Сохраняет улов свежим', cost: 2500, bonus: 0.3, requires: { branch: 'body', level: 2 } }
+    ]
+  },
+  reel: {
+    name: 'Катушка', icon: '⚙️',
+    levels: [
+      { name: 'Инерционная', desc: 'Простая катушка', cost: 0, bonus: 0, requires: null },
+      { name: 'Безынерционная', desc: 'Плавный ход', cost: 400, bonus: 0.15, requires: null },
+      { name: 'Мультипликаторная', desc: 'Для троллинга', cost: 1800, bonus: 0.3, requires: { branch: 'body', level: 1 } }
+    ]
+  },
+  handle: {
+    name: 'Рукоять', icon: '🪵',
+    levels: [
+      { name: 'Дерево', desc: 'Деревянная рукоять', cost: 0, bonus: 0, requires: null },
+      { name: 'Пробка', desc: 'Удобная пробка', cost: 300, bonus: 0.05, requires: null },
+      { name: 'Неопрен', desc: 'Не скользит в руке', cost: 1200, bonus: 0.1, requires: null }
+    ]
+  },
+  net: {
+    name: 'Подсачек', icon: '🥅',
+    levels: [
+      { name: 'Без подсачека', desc: 'Рискованно', cost: 0, bonus: 0, requires: null },
+      { name: 'Мелкий', desc: 'Для мелочи', cost: 150, bonus: 0.05, requires: null },
+      { name: 'Крупный', desc: 'Для трофеев', cost: 700, bonus: 0.15, requires: null }
+    ]
+  },
+  bait: {
+    name: 'Прикормка', icon: '🌾',
+    levels: [
+      { name: 'Без прикормки', desc: 'Как есть', cost: 0, bonus: 0, requires: null },
+      { name: 'Хлеб', desc: 'Простая прикормка', cost: 100, bonus: 0.1, requires: null },
+      { name: 'Смесь', desc: 'Специальная смесь', cost: 500, bonus: 0.2, requires: null }
+    ]
+  }
+};
+
+const ACHV_LIST = [
+  { id: 'collector', name: '🏆 Коллекционер', desc: 'Поймать всех рыб', bonus: '+10% к очкам', check: () => FISH_ONLY.every(f => catalog[f.name] > 0), progress: () => FISH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + FISH_ONLY.length },
+  // [FIX] Текст бонуса приведён к реальности
+  { id: 'trashman', name: '🗑️ Мусорщик', desc: 'Собрать весь мусор', bonus: '+15% к скорости вываживания, +4% к зоне', check: () => TRASH_ONLY.every(f => catalog[f.name] > 0), progress: () => TRASH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + TRASH_ONLY.length },
+  { id: 'pro', name: '🎣 Рыбак-профи', desc: 'Поймать 100 рыб', bonus: '+5% к очкам', check: () => totalCaught >= 100, progress: () => Math.min(totalCaught, 100) + '/100' },
+  { id: 'night', name: '🌙 Ночной охотник', desc: 'Поймать 10 рыб ночью', bonus: '+5% к шансу редкой рыбы ночью', check: () => (achievements.nightCount || 0) >= 10, progress: () => Math.min(achievements.nightCount || 0, 10) + '/10' },
+  { id: 'millionaire', name: '💎 Миллионер', desc: 'Накопить 5000 очков', bonus: '+2% к очкам', check: () => bestScore >= 5000, progress: () => Math.min(bestScore, 5000) + '/5000' },
+  { id: 'rodmaster', name: '🎣 Мастер удочек', desc: 'Прокачать все ветки дерева', bonus: '+10% к скорости вываживания', check: () => Object.keys(TREE_DATA).every(k => treeUpgrades[k] >= TREE_DATA[k].levels.length - 1), progress: () => Object.keys(TREE_DATA).filter(k => treeUpgrades[k] >= TREE_DATA[k].levels.length - 1).length + '/' + Object.keys(TREE_DATA).length },
+  { id: 'leviathan', name: '🐋 Убийца Сома-Гиганта', desc: 'Секретное достижение', bonus: '+5000 очков', check: () => bossDefeated, progress: () => bossDefeated ? '✓' : '???', secret: true }
+];
+
+let lastCatch = null;
+let particles = [], rippleEffects = [], floatingTexts = [], bubbles = [], rainDrops = [];
+let reelPos = 0, zoneStart = 0, zoneEnd = 0, reelSpeed = 85;
+let lastReelSoundTime = 0;
+const rod = { baseX: 100, baseY: 480, tipX: 180, tipY: 380 };
+const bobber = { x: 0, y: 0, tx: 0, ty: 0, vx: 0, vy: 0, phase: 0, mx: 600, my: 450 };
+
+let bgFish = [];
+for (let i = 0; i < 12; i++) bgFish.push({ x: Math.random()*W, y: 340+Math.random()*230, speed: 0.3+Math.random()*0.7, dir: Math.random()>0.5?1:-1, size: 6+Math.random()*10, color: FISH_ONLY[Math.floor(Math.random()*FISH_ONLY.length)].color, wobble: Math.random()*Math.PI*2, depth: 0.3+Math.random()*0.7 });
+for (let i = 0; i < 20; i++) bubbles.push({ x: Math.random()*W, y: 340+Math.random()*250, size: 1+Math.random()*3, speed: 0.2+Math.random()*0.5, depth: Math.random() });
+for (let i = 0; i < 80; i++) rainDrops.push({ x: Math.random()*W, y: Math.random()*H, speed: 400+Math.random()*400, len: 10+Math.random()*20 });
+
+const BOSS_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+let boss = null;
+let qteSequence = [];
+let qteIndex = 0;
+let qteTimer = 0;
+let qteMaxTime = 1.0;
+
+// ==================================================================
+// ЧАСТЬ 2: СОХРАНЕНИЕ, ЗАГРУЗКА И АУДИО
+// ==================================================================
+function saveProgress() {
+  localStorage.setItem('fishScore', score);
+  localStorage.setItem('fishBest', bestScore);
+  localStorage.setItem('fishTotal', totalCaught);
+  localStorage.setItem('fishCatalog', JSON.stringify(catalog));
+  localStorage.setItem('fishUpgrades', JSON.stringify(upgrades));
+  localStorage.setItem('fishBaitCount', baitCount); // [CHANGE]
+  localStorage.setItem('fishEncyclopedia', JSON.stringify(encyclopedia));
+  localStorage.setItem('fishNewAchievements', JSON.stringify(achievements));
+  localStorage.setItem('fishBossDefeated', bossDefeated);
+  localStorage.setItem('fishHasHarpoon', hasHarpoon);
+  localStorage.setItem('fishHarpoonInShop', harpoonInShop);
+  localStorage.setItem('fishBossMet', bossMet);
+  localStorage.setItem('fishTreeUpgrades', JSON.stringify(treeUpgrades));
+}
+
+function checkBossTrigger() {
+  if (bossDefeated || state === S.BOSS_INSTRUCTION || state === S.BOSS_INTRO || state === S.BOSS_QTE) return false;
+  const hasCollector = FISH_ONLY.every(f => catalog[f.name] > 0);
+  const hasTrashman = TRASH_ONLY.every(f => catalog[f.name] > 0);
+  const hasPro = totalCaught >= 100;
+  const hasNight = (achievements.nightCount || 0) >= 10;
+  return hasCollector && hasTrashman && hasPro && hasNight;
+}
+
+let audioCtx = null;
+let soundEnabled = localStorage.getItem('fishSoundEnabled') !== 'false';
+let bgNoiseNode = null;
+
+function initAudio() {
+  if (audioCtx) return;
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+}
+function playSound(type) {
+  if (!soundEnabled || !audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  if (type === 'cast') {
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = 'sine'; osc.frequency.setValueAtTime(800, now); osc.frequency.exponentialRampToValueAtTime(300, now + 0.2);
+    gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.2);
+  } else if (type === 'splash') {
+    const bufferSize = audioCtx.sampleRate * 0.3; const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const source = audioCtx.createBufferSource(); source.buffer = buffer;
+    const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 1000;
+    const gain = audioCtx.createGain(); gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    source.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); source.start(now);
+  } else if (type === 'bite') {
+    [880, 1320].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.value = freq; gain.gain.setValueAtTime(0.2, now + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.15);
+      osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.15);
+    });
+  } else if (type === 'reel') {
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = 'sawtooth'; osc.frequency.value = 120; gain.gain.setValueAtTime(0.08, now); gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.1);
+  } else if (type === 'catch') {
+    [523, 659, 784, 1046].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+      osc.type = 'triangle'; osc.frequency.value = freq; gain.gain.setValueAtTime(0.15, now + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.3);
+      osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.3);
+    });
+  } else if (type === 'rare') {
+    [659, 784, 987, 1318, 1568].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+      osc.type = 'triangle'; osc.frequency.value = freq; gain.gain.setValueAtTime(0.2, now + i * 0.07);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.07 + 0.4);
+      osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now + i * 0.07); osc.stop(now + i * 0.07 + 0.4);
+    });
+  } else if (type === 'achv') {
+    [523, 659, 784, 1046, 1318].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+      osc.type = 'sine'; osc.frequency.value = freq; gain.gain.setValueAtTime(0.2, now + i * 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.1 + 0.5);
+      osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now + i * 0.1); osc.stop(now + i * 0.1 + 0.5);
+    });
+  } else if (type === 'miss') {
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(300, now); osc.frequency.exponentialRampToValueAtTime(100, now + 0.3);
+    gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.3);
+  } else if (type === 'buy') {
+    [660, 880].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+      osc.type = 'square'; osc.frequency.value = freq; gain.gain.setValueAtTime(0.1, now + i * 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.05 + 0.15);
+      osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now + i * 0.05); osc.stop(now + i * 0.05 + 0.15);
+    });
+  } else if (type === 'roar') {
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(60, now); osc.frequency.linearRampToValueAtTime(40, now + 1.5);
+    gain.gain.setValueAtTime(0.5, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 1.5);
+  } else if (type === 'hurt') {
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = 'square'; osc.frequency.setValueAtTime(200, now); osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+    gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+    osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.3);
+  }
+}
+function startAmbientSound() {
+  if (!soundEnabled || !audioCtx || bgNoiseNode) return;
+  const bufferSize = audioCtx.sampleRate * 2; const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.1;
+  const source = audioCtx.createBufferSource(); source.buffer = buffer; source.loop = true;
+  const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 400;
+  const gain = audioCtx.createGain(); gain.gain.value = 0.15;
+  source.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); source.start(); bgNoiseNode = { source, gain };
+}
+function stopAmbientSound() {
+  if (bgNoiseNode) { try { bgNoiseNode.source.stop(); } catch(e) {} bgNoiseNode = null; }
+}
+function toggleSound(e) {
+  if (e) e.stopPropagation();
+  soundEnabled = !soundEnabled;
+  localStorage.setItem('fishSoundEnabled', soundEnabled);
+  document.getElementById('soundBtn').textContent = soundEnabled ? '🔊' : '🔇';
+  if (soundEnabled) { initAudio(); if (!bgNoiseNode) startAmbientSound(); playSound('buy'); } else { stopAmbientSound(); }
+}
+function ensureAudioStarted() {
+  if (!audioCtx) initAudio();
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  if (soundEnabled && audioCtx && !bgNoiseNode) startAmbientSound();
+}
+document.getElementById('soundBtn').textContent = soundEnabled ? '🔊' : '🔇';
+
+// ==================================================================
+// ЧАСТЬ 3: УТИЛИТЫ И АДАПТАЦИЯ
+// ==================================================================
+function vibrate(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
+function toggleFullscreen(e) {
+  if (e) e.stopPropagation();
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {
+      if (document.documentElement.webkitRequestFullscreen) document.documentElement.webkitRequestFullscreen();
+    });
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+}
+document.addEventListener('fullscreenchange', () => setTimeout(resizeCanvas, 100));
+
+function drawPreview(canvasId, type) {
+  const c = document.getElementById(canvasId);
+  if (!c) return;
+  const cCtx = c.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  c.width = 120 * dpr; c.height = 120 * dpr;
+  c.style.width = '90px'; c.style.height = '90px';
+  cCtx.scale(dpr, dpr);
+  drawCharacterBody(cCtx, 60, 80, type, 1.1, true);
+}
+function drawCharacterBody(cCtx, x, y, type, scale = 1, isPreview = false) {
+  cCtx.save(); cCtx.translate(x, y); cCtx.scale(scale, scale);
+  const isWoman = type === 'fisherwoman';
+  if (isPreview) {
+    cCtx.fillStyle = '#6a4a2a'; cCtx.beginPath(); cCtx.ellipse(0, 40, 45, 12, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#8a6a3a'; cCtx.beginPath(); cCtx.ellipse(0, 38, 40, 8, 0, 0, Math.PI * 2); cCtx.fill();
+  }
+  cCtx.fillStyle = isWoman ? '#c0392b' : '#2a4a6a';
+  cCtx.beginPath(); cCtx.ellipse(0, 10, 20, 35, 0, 0, Math.PI * 2); cCtx.fill();
+  if (isWoman) {
+    cCtx.fillStyle = '#c0392b'; cCtx.beginPath();
+    cCtx.moveTo(-20, 10); cCtx.lineTo(-25, 45); cCtx.lineTo(25, 45); cCtx.lineTo(20, 10); cCtx.closePath(); cCtx.fill();
+    cCtx.strokeStyle = '#8a2a1a'; cCtx.lineWidth = 1.5;
+    cCtx.beginPath(); cCtx.moveTo(-10, 15); cCtx.lineTo(-12, 42); cCtx.stroke();
+    cCtx.beginPath(); cCtx.moveTo(10, 15); cCtx.lineTo(12, 42); cCtx.stroke();
+  } else {
+    cCtx.fillStyle = '#1a2a3a'; cCtx.beginPath(); cCtx.ellipse(0, 35, 18, 15, 0, 0, Math.PI * 2); cCtx.fill();
+  }
+  cCtx.strokeStyle = isWoman ? '#c0392b' : '#2a4a6a'; cCtx.lineWidth = 10; cCtx.lineCap = 'round';
+  cCtx.beginPath(); cCtx.moveTo(-12, 0); cCtx.lineTo(-25, 15); cCtx.stroke();
+  cCtx.beginPath(); cCtx.moveTo(12, 0); cCtx.lineTo(25, 15); cCtx.stroke();
+  cCtx.fillStyle = '#f0c090'; cCtx.beginPath(); cCtx.arc(0, -25, 20, 0, Math.PI * 2); cCtx.fill();
+  if (isWoman) {
+    cCtx.fillStyle = '#8a5a2a'; cCtx.beginPath(); cCtx.ellipse(0, -20, 24, 28, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#f0c090'; cCtx.beginPath(); cCtx.ellipse(0, -25, 16, 18, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#8a5a2a'; cCtx.beginPath(); cCtx.ellipse(0, -5, 6, 15, 0, 0, Math.PI * 2); cCtx.fill();
+  } else {
+    cCtx.fillStyle = '#2a3a2a'; cCtx.beginPath(); cCtx.ellipse(0, -35, 24, 8, 0, 0, Math.PI * 2); cCtx.fill();
+    cCtx.fillStyle = '#3a4a3a'; cCtx.beginPath(); cCtx.ellipse(0, -42, 20, 12, 0, Math.PI, 0); cCtx.fill();
+  }
+  cCtx.restore();
+}
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+}
+window.addEventListener('resize', resizeCanvas);
+window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 200));
+resizeCanvas();
+
+drawPreview('previewFisher', 'fisher');
+drawPreview('previewFisherwoman', 'fisherwoman');
+
+if (character) document.getElementById('charSelect').classList.remove('show');
+function selectCharacter(type, e) {
+  if (e) e.stopPropagation();
+  character = type;
+  localStorage.setItem('fishCharacter', type);
+  document.getElementById('charSelect').classList.remove('show');
+  ensureAudioStarted();
+}
+
+// ==================================================================
+// ЧАСТЬ 4: МАГАЗИН
+// ==================================================================
+const SHOP_ITEMS = [
+  { id: 'reel', name: '⚡ Скорость', desc: 'Замедляет индикатор', max: 5, baseCost: 50, costMult: 2 },
+  { id: 'zone', name: '🎯 Зона', desc: 'Шире зелёная зона', max: 5, baseCost: 60, costMult: 2 },
+  { id: 'luck', name: '🍀 Удача', desc: 'Меньше мусора', max: 5, baseCost: 80, costMult: 2.5 },
+  // [CHANGE] Наживка теперь стопкой
+  { id: 'bait', name: '🪱 Наживка', desc: '×3 шанс редкой рыбы. Тратится при улове.', max: 99, baseCost: 150, costMult: 1, isConsumable: true }
+];
+let currentShopTab = 'upgrades';
+function getShopCost(item) {
+  if (item.isConsumable) return item.baseCost;
+  const currentLvl = upgrades[item.id] || 0;
+  return Math.floor(item.baseCost * Math.pow(item.costMult, currentLvl));
+}
+function buyUpgrade(id) {
+  const item = SHOP_ITEMS.find(i => i.id === id);
+  if (!item) return;
+  const cost = getShopCost(item);
+  if (score < cost) return;
+  if (item.isConsumable) {
+    baitCount++; // [CHANGE]
+  } else {
+    if ((upgrades[id] || 0) >= item.max) return;
+    upgrades[id] = (upgrades[id] || 0) + 1;
+  }
+  score -= cost; playSound('buy'); saveProgress(); renderShop(); checkNewAchievements();
+}
+// [NEW] Покупка наживки пачкой
+function buyBaitPack(count) {
+  const item = SHOP_ITEMS.find(i => i.id === 'bait');
+  const cost = item.baseCost * count;
+  if (score < cost) return;
+  score -= cost;
+  baitCount += count;
+  playSound('buy'); saveProgress(); renderShop(); checkNewAchievements();
+  vibrate(50);
+}
+function buyBook(bookId) {
+  const book = BOOKS.find(b => b.id === bookId);
+  if (!book || encyclopedia[bookId] || score < book.cost) return;
+  score -= book.cost; encyclopedia[bookId] = true;
+  book.opens.forEach(f => { if (!catalog[f]) catalog[f] = 0; });
+  playSound('buy'); saveProgress(); renderShop(); checkNewAchievements();
+}
+function buyHarpoon() {
+  if (hasHarpoon || score < 1000) return;
+  score -= 1000;
+  hasHarpoon = true;
+  playSound('buy'); saveProgress(); renderShop();
+}
+
+function buyTreeUpgrade(branch, levelIndex) {
+  const branchData = TREE_DATA[branch];
+  const currentLevel = treeUpgrades[branch] || 0;
+  if (levelIndex !== currentLevel + 1) return;
+  
+  const levelData = branchData.levels[levelIndex];
+  if (score < levelData.cost) return;
+  
+  if (levelData.requires) {
+    const reqBranch = levelData.requires.branch;
+    const reqLevel = levelData.requires.level;
+    if ((treeUpgrades[reqBranch] || 0) < reqLevel) return;
+  }
+  
+  score -= levelData.cost;
+  treeUpgrades[branch] = levelIndex;
+  playSound('buy');
+  saveProgress();
+  renderShop();
+  checkNewAchievements();
+  vibrate(100);
+}
+
+function switchShopTab(tab) {
+  currentShopTab = tab;
+  document.getElementById('tabUpgrades').classList.toggle('active', tab === 'upgrades');
+  document.getElementById('tabTree').classList.toggle('active', tab === 'tree');
+  document.getElementById('tabBooks').classList.toggle('active', tab === 'books');
+  renderShop();
+}
+function toggleShop(e) { if (e) e.stopPropagation(); const overlay = document.getElementById('shopOverlay'); overlay.classList.toggle('show'); if (overlay.classList.contains('show')) renderShop(); else document.getElementById('catalogOverlay').classList.remove('show'); }
+
+function renderShop() {
+  document.getElementById('shopScore').textContent = score;
+  const container = document.getElementById('shopItems');
+  
+  if (currentShopTab === 'upgrades') {
+    container.innerHTML = SHOP_ITEMS.map(item => {
+      const cost = getShopCost(item);
+      
+      // [CHANGE] Наживка: отдельная отрисовка со стопкой и кнопками ×1/×5/×10
+      if (item.isConsumable) {
+        const canBuy1 = score >= cost;
+        const canBuy5 = score >= cost * 5;
+        const canBuy10 = score >= cost * 10;
+        return `
+          <div class="shop-item ${baitCount > 0 ? 'owned' : ''}">
+            <div class="icon">${item.name.split(' ')[0]}</div>
+            <div class="info">
+              <div class="name">${item.name.substring(2)} <span style="color:#ffd700;">(в запасе: ${baitCount})</span></div>
+              <div class="desc">${item.desc}</div>
+            </div>
+            <div class="bait-buy-row">
+              <button class="buy-btn" onclick="buyBaitPack(1)" ${canBuy1 ? '' : 'disabled'}>×1<br>${cost}</button>
+              <button class="buy-btn" onclick="buyBaitPack(5)" ${canBuy5 ? '' : 'disabled'}>×5<br>${cost*5}</button>
+              <button class="buy-btn" onclick="buyBaitPack(10)" ${canBuy10 ? '' : 'disabled'}>×10<br>${cost*10}</button>
+            </div>
+          </div>`;
+      }
+      
+      const lvl = upgrades[item.id] || 0;
+      const isMax = lvl >= item.max;
+      const canBuy = !isMax && score >= cost;
+      let btnText = isMax ? 'MAX' : `Купить (${cost})`;
+      return `
+        <div class="shop-item">
+          <div class="icon">${item.name.split(' ')[0]}</div>
+          <div class="info"><div class="name">${item.name.substring(2)} (ур. ${lvl}/${item.max})</div><div class="desc">${item.desc}</div></div>
+          <button class="buy-btn" onclick="buyUpgrade('${item.id}')" ${canBuy ? '' : 'disabled'}>${btnText}</button>
+        </div>`;
+    }).join('');
+  } else if (currentShopTab === 'tree') {
+    let html = '';
+    for (const [branchKey, branchData] of Object.entries(TREE_DATA)) {
+      const currentLevel = treeUpgrades[branchKey] || 0;
+      html += `<div class="tree-branch">`;
+      html += `<div class="tree-branch-title">${branchData.icon} ${branchData.name}</div>`;
+      html += `<div class="tree-nodes">`;
+      
+      branchData.levels.forEach((level, idx) => {
+        const isUnlocked = idx <= currentLevel;
+        const isNext = idx === currentLevel + 1;
+        
+        let reqMet = true;
+        let reqText = '';
+        if (level.requires) {
+          const reqLvl = treeUpgrades[level.requires.branch] || 0;
+          if (reqLvl < level.requires.level) {
+            reqMet = false;
+            const reqName = TREE_DATA[level.requires.branch].name;
+            const reqLevelName = TREE_DATA[level.requires.branch].levels[level.requires.level].name;
+            reqText = `Требуется: ${reqName} — ${reqLevelName}`;
+          }
+        }
+        
+        const canBuy = isNext && reqMet && score >= level.cost;
+        const bonusText = level.bonus > 0 ? `+${Math.round(level.bonus * 100)}% к эффективности` : 'Базовая экипировка';
+        
+        let nodeClass = 'tree-node';
+        if (isUnlocked) nodeClass += ' unlocked';
+        else if (isNext) nodeClass += ' next';
+        else nodeClass += ' locked';
+        
+        html += `
+          <div class="${nodeClass}">
+            <div class="node-icon">${isUnlocked ? '✅' : '🔒'}</div>
+            <div class="node-info">
+              <div class="node-name">${level.name} <span class="node-level">Ур. ${idx}</span></div>
+              <div class="node-desc">${level.desc}</div>
+              <div class="node-bonus">${bonusText}</div>
+              ${!reqMet ? `<div class="node-req">${reqText}</div>` : ''}
+            </div>
+            ${isUnlocked 
+              ? `<button class="buy-btn owned-btn" disabled>✓ Куплено</button>` 
+              : `<button class="buy-btn" onclick="buyTreeUpgrade('${branchKey}', ${idx})" ${canBuy ? '' : 'disabled'}>Купить (${level.cost})</button>`
+            }
+          </div>`;
+      });
+      
+      html += `</div></div>`;
+    }
+    
+    if (harpoonInShop && !hasHarpoon) {
+      html += `
+        <div class="tree-branch" style="border-color:rgba(255,100,100,0.5); background:rgba(255,100,100,0.1);">
+          <div class="tree-branch-title" style="color:#ff8888;">🔱 Спецснаряжение</div>
+          <div class="tree-nodes">
+            <div class="tree-node" style="border-color:rgba(255,100,100,0.5);">
+              <div class="node-icon">🔱</div>
+              <div class="node-info">
+                <div class="node-name">Острога Рыбака</div>
+                <div class="node-desc">Позволяет победить Сома-Гиганта во второй раз</div>
+                <div class="node-bonus">Значительно упрощает бой</div>
+              </div>
+              <button class="buy-btn" onclick="buyHarpoon()" ${score >= 1000 ? '' : 'disabled'}>Купить (1000)</button>
+            </div>
+          </div>
+        </div>`;
+    } else if (hasHarpoon) {
+      html += `
+        <div class="tree-branch" style="border-color:rgba(255,100,100,0.5); background:rgba(255,100,100,0.1);">
+          <div class="tree-branch-title" style="color:#ff8888;">🔱 Спецснаряжение</div>
+          <div class="tree-nodes">
+            <div class="tree-node unlocked">
+              <div class="node-icon">✅</div>
+              <div class="node-info">
+                <div class="node-name">Острога Рыбака</div>
+                <div class="node-desc">Куплена и готова к бою!</div>
+                <div class="node-bonus">✓ Активна</div>
+              </div>
+              <button class="buy-btn owned-btn" disabled>✓ Есть</button>
+            </div>
+          </div>
+        </div>`;
+    }
+    
+    container.innerHTML = html;
+  } else if (currentShopTab === 'books') {
+    container.innerHTML = BOOKS.map(book => {
+      const owned = encyclopedia[book.id];
+      const canBuy = !owned && score >= book.cost;
+      return `
+        <div class="shop-item ${owned ? 'owned' : ''}">
+          <div class="icon">📕</div>
+          <div class="info"><div class="name">${book.name}</div><div class="desc">Открывает: ${book.opens.join(', ')}</div></div>
+          <button class="buy-btn" onclick="buyBook('${book.id}')" ${canBuy ? '' : 'disabled'}>${owned ? '✓ Куплено' : `Купить (${book.cost})`}</button>
+        </div>`;
+    }).join('');
+  }
+}
+
+// ==================================================================
+// ЧАСТЬ 5: КАТАЛОГ И ДОСТИЖЕНИЯ
+// ==================================================================
+function addToCatalog(name) {
+  if (!catalog[name]) catalog[name] = 0;
+  catalog[name]++;
+  if (getWeather() === 'night') achievements.nightCount = (achievements.nightCount || 0) + 1;
+  saveProgress();
+  checkNewAchievements();
+}
+function checkNewAchievements() {
+  for (const a of ACHV_LIST) {
+    if (!achievements[a.id] && a.check()) {
+      achievements[a.id] = true;
+      saveProgress();
+      if (!a.secret || bossMet) {
+        showAchievementToast(a.name);
+        playSound('achv');
+        vibrate([100, 50, 100, 50, 200]);
+      }
+    }
+  }
+}
+function showAchievementToast(text) {
+  const el = document.getElementById('achvToast');
+  el.innerHTML = `🏆 Достижение!<br><span style="font-size:11px;">${text}</span>`;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+function toggleCatalog(e) { if (e) e.stopPropagation(); const overlay = document.getElementById('catalogOverlay'); overlay.classList.toggle('show'); if (overlay.classList.contains('show')) renderCatalog(); else document.getElementById('shopOverlay').classList.remove('show'); }
+function isFishKnown(fishName) {
+  if (catalog[fishName] > 0) return true;
+  for (const book of BOOKS) { if (encyclopedia[book.id] && book.opens.includes(fishName)) return true; }
+  return false;
+}
+function renderCatalog() {
+  document.getElementById('fishGrid').innerHTML = FISH_ONLY.map(f => {
+    const count = catalog[f.name] || 0;
+    const known = isFishKnown(f.name);
+    const desc = FISH_DESCRIPTIONS[f.name];
+    return `<div class="fish-card ${count > 0 ? 'caught' : ''} ${known && count === 0 ? 'known' : ''}">
+        <span class="emoji">${f.emoji}</span><div class="name">${known ? f.name : '???'}</div>
+        <div class="pts">${count > 0 ? '+' + f.pts + ' ×' + count : (known ? 'не поймана' : '')}</div>
+        ${known && desc ? `<div class="desc">📍 ${desc.where}<br>⏰ ${desc.when}<br>💡 ${desc.how}</div>` : ''}
+      </div>`;
+  }).join('');
+  document.getElementById('trashGrid').innerHTML = TRASH_ONLY.map(f => {
+    const count = catalog[f.name] || 0;
+    const known = isFishKnown(f.name);
+    const desc = FISH_DESCRIPTIONS[f.name];
+    return `<div class="fish-card trash-card ${count > 0 ? 'caught' : ''} ${known && count === 0 ? 'known' : ''}">
+        <span class="emoji">${f.emoji}</span><div class="name">${known ? f.name : '???'}</div>
+        <div class="pts">${count > 0 ? '🗑 ×' + count : (known ? 'не найден' : '')}</div>
+        ${known && desc ? `<div class="desc">📍 ${desc.where}<br>⏰ ${desc.when}<br>💡 ${desc.how}</div>` : ''}
+      </div>`;
+  }).join('');
+  document.getElementById('achvGrid').innerHTML = ACHV_LIST.map(a => {
+    const done = achievements[a.id];
+    const isSecret = a.secret && !bossMet;
+    let pct = 0;
+    if (a.id === 'pro') pct = Math.min(totalCaught, 100);
+    else if (a.id === 'night') pct = Math.min((achievements.nightCount||0), 10) * 10;
+    else if (a.id === 'millionaire') pct = Math.min(bestScore/5000*100, 100);
+    else if (a.id === 'rodmaster') pct = Object.keys(TREE_DATA).filter(k => treeUpgrades[k] >= TREE_DATA[k].levels.length - 1).length / Object.keys(TREE_DATA).length * 100;
+    else if (a.id === 'collector') pct = FISH_ONLY.filter(f => catalog[f.name] > 0).length / FISH_ONLY.length * 100;
+    else if (a.id === 'trashman') pct = TRASH_ONLY.filter(f => catalog[f.name] > 0).length / TRASH_ONLY.length * 100;
+    else if (a.id === 'leviathan') pct = bossDefeated ? 100 : 0;
+    
+    if (isSecret) {
+      return `<div class="achv secret">
+        <div class="title">❓ Секретное достижение</div>
+        <div class="desc">Продолжайте играть, чтобы узнать...</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:0%"></div></div>
+      </div>`;
+    }
+    
+    return `<div class="achv ${done ? 'done' : ''} ${a.secret ? 'secret' : ''}">
+        <div class="title">${a.name}</div><div class="desc">${a.desc}</div>
+        <div class="desc" style="margin-top:2px;">Прогресс: ${a.progress()}</div>
+        ${done ? `<div class="bonus">✓ ${a.bonus}</div>` : `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>`}
+      </div>`;
+  }).join('');
+}
+
+// ==================================================================
+// ЧАСТЬ 6: ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И ВВОД
+// ==================================================================
+function addParticles(x, y, color, count, spread = 4) {
+  for (let i = 0; i < count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*spread*2, vy: (Math.random()-0.5)*spread*2-1, life: 1, color, size: 2+Math.random()*4 });
+}
+function addRipple(x, y) { rippleEffects.push({ x, y, radius: 5, life: 1 }); }
+function addFloatingText(text, x, y, color) { floatingTexts.push({ text, x, y, color, life: 1.5, vy: -50 }); }
+
+function resetProgress(e) {
+  if (e) e.stopPropagation();
+  if (!confirm('Сбросить ВЕСЬ прогресс?')) return;
+  score = 0; bestScore = 0; totalCaught = 0; catalog = {}; upgrades = {reel:0, zone:0, luck:0}; baitCount = 0; // [CHANGE]
+  encyclopedia = {}; achievements = {}; bossDefeated = false; hasHarpoon = false; harpoonInShop = false; bossMet = false;
+  treeUpgrades = {body:0, line:0, float:0, hook:0, keeper:0, reel:0, handle:0, net:0, bait:0};
+  catchStreak = 0; missStreak = 0;
+  localStorage.clear();
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1500);
+  character = null;
+  document.getElementById('charSelect').classList.add('show');
+}
+
+function getCanvasCoords(e) {
+  const rect = canvas.getBoundingClientRect();
+  let clientX, clientY;
+  if (e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+  else if (e.changedTouches && e.changedTouches.length > 0) { clientX = e.changedTouches[0].clientX; clientY = e.changedTouches[0].clientY; }
+  else { clientX = e.clientX; clientY = e.clientY; }
+  const canvasAspect = W / H; const rectAspect = rect.width / rect.height;
+  let renderedW, renderedH, offsetX, offsetY;
+  
+  if (rectAspect > canvasAspect) { renderedH = rect.height; renderedW = rect.height * canvasAspect; }
+  else { renderedW = rect.width; renderedH = rect.width / canvasAspect; }
+  offsetX = (rect.width - renderedW) / 2; offsetY = (rect.height - renderedH) / 2;
+  
+  const scale = renderedW / W;
+  return { x: (clientX - rect.left - offsetX) / scale, y: (clientY - rect.top - offsetY) / scale };
+}
+
+let touchTimeout = null;
+let swipe = { active: false, startX: 0, startY: 0, curX: 0, curY: 0 };
+
+function handleInput(e) {
+  ensureAudioStarted();
+  if (document.querySelector('.overlay.show')) return;
+  if (state === S.BOSS_QTE) return;
+  if (state === S.BOSS_INSTRUCTION) return; // [NEW] блокируем клики по канвасу во время инструкции
+  
+  if (e.type === 'touchstart' && e.touches && e.touches.length > 0) {
+    e.preventDefault();
+    if (touchTimeout) return;
+    touchTimeout = setTimeout(() => { touchTimeout = null; }, 200);
+  }
+  const { x, y } = getCanvasCoords(e);
+  bobber.mx = x; bobber.my = y;
+  handleAction(x, y);
+}
+
+function handleAction(mx, my) {
+  if (state === S.IDLE) castRod(mx, my);
+  else if (state === S.BITE) startReeling();
+  else if (state === S.REELING) checkReel();
+  else if (state === S.RESULT && stateTime > 0.8) resetToIdle();
+  else if (state === S.BOSS_INTRO && stateTime > 2.5) { state = S.BOSS_QTE; startQte(); }
+  else if (state === S.BOSS_DEATH && stateTime > 3) { state = S.IDLE; stateTime = 0; }
+  else if (state === S.BOSS_WIN && stateTime > 3) { state = S.IDLE; stateTime = 0; }
+}
+
+function handleSwipeStart(e) {
+  ensureAudioStarted();
+  if (state === S.BOSS_QTE || state === S.BOSS_INSTRUCTION) return;
+  if (document.querySelector('.overlay.show')) return;
+  if (state !== S.IDLE) { handleInput(e); return; }
+  e.preventDefault();
+  const { x, y } = getCanvasCoords(e);
+  swipe.active = true; swipe.startX = x; swipe.startY = y; swipe.curX = x; swipe.curY = y;
+}
+function handleSwipeMove(e) {
+  if (!swipe.active) return;
+  e.preventDefault();
+  const { x, y } = getCanvasCoords(e);
+  swipe.curX = x; swipe.curY = y;
+}
+function handleSwipeEnd(e) {
+  if (!swipe.active) return;
+  e.preventDefault();
+  swipe.active = false;
+  const dx = swipe.curX - swipe.startX; const dy = swipe.curY - swipe.startY;
+  if (Math.hypot(dx, dy) > 50 && dy > 0) castRod(swipe.curX, swipe.curY);
+  else handleInput(e);
+}
+
+canvas.addEventListener('mousedown', handleInput);
+canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); handleInput(e); });
+canvas.addEventListener('touchstart', handleSwipeStart, { passive: false });
+canvas.addEventListener('touchmove', handleSwipeMove, { passive: false });
+canvas.addEventListener('touchend', handleSwipeEnd, { passive: false });
+
+window.addEventListener('keydown', (e) => {
+  if (state === S.BOSS_QTE) {
+    if (BOSS_KEYS.includes(e.key)) { handleQteKey(e.key); e.preventDefault(); }
+    return;
+  }
+  if (e.code === 'Space' || e.code === 'Enter') {
+    e.preventDefault();
+    ensureAudioStarted();
+    if (document.querySelector('.overlay.show')) return;
+    if (state === S.REELING) { checkReel(); return; }
+    if (state === S.BITE) { startReeling(); return; }
+    if (state === S.IDLE) { handleAction(bobber.mx, bobber.my); return; }
+    handleAction(0, 0);
+  }
+});
+
+// ==================================================================
+// ЧАСТЬ 7: ЛОГИКА РЫБАЛКИ
+// ==================================================================
+function castRod(mx, my) {
+  // [NEW] Вместо мгновенного старта боя — показываем инструкцию
+  if (checkBossTrigger() && !bossDefeated) {
+    state = S.BOSS_INSTRUCTION;
+    stateTime = 0;
+    document.getElementById('bossInstruction').classList.add('show');
+    return;
+  }
+  bobber.x = rod.tipX; bobber.y = rod.tipY;
+  bobber.tx = Math.max(300, Math.min(W - 60, mx));
+  bobber.ty = Math.max(340, Math.min(H - 60, my));
+  const dx = bobber.tx - bobber.x, dy = bobber.ty - bobber.y;
+  const dist = Math.hypot(dx, dy);
+  const flightTime = Math.max(0.3, dist / 900);
+  bobber.vx = dx / flightTime; bobber.vy = dy / flightTime - 400 * flightTime;
+  state = S.CASTING; stateTime = 0;
+  playSound('cast'); vibrate(30);
+}
+
+// [NEW] Игрок нажал «В БОЙ!» на инструкции
+function startBossFromInstruction(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('bossInstruction').classList.remove('show');
+  startBossFight();
+}
+
+function startReeling() {
+  state = S.REELING; stateTime = 0;
+  reelPos = 0; lastReelSoundTime = 0;
+  
+  const lineBonus = (TREE_DATA.line.levels[treeUpgrades.line || 0]?.bonus || 0);
+  const keeperBonus = (TREE_DATA.keeper.levels[treeUpgrades.keeper || 0]?.bonus || 0);
+  const reelBonus = (TREE_DATA.reel.levels[treeUpgrades.reel || 0]?.bonus || 0);
+  const netBonus = (TREE_DATA.net.levels[treeUpgrades.net || 0]?.bonus || 0);
+  
+  let speedReduction = (upgrades.reel || 0) * 0.15 + lineBonus + reelBonus;
+  if (achievements.trashman) speedReduction += 0.15;
+  if (achievements.rodmaster) speedReduction += 0.10;
+  let difficultyMultiplier = 1;
+  if (catchStreak >= 3) difficultyMultiplier = 1 + (catchStreak - 2) * 0.15;
+  if (missStreak >= 2) difficultyMultiplier = Math.max(0.5, 1 - (missStreak - 1) * 0.2);
+  reelSpeed = (85 + Math.random() * 40) * Math.max(0.2, 1 - speedReduction) * difficultyMultiplier;
+  
+  zoneStart = 35 + Math.random() * 25;
+  let baseZone = 18 + Math.random() * 12;
+  let bonusZone = (upgrades.zone || 0) * 4;
+  if (achievements.trashman) bonusZone += 4;
+  
+  let finalZone = baseZone + bonusZone + (keeperBonus * 20) + (netBonus * 10);
+  if (catchStreak >= 3) finalZone *= 0.8;
+  if (missStreak >= 2) finalZone *= 1.3;
+  zoneEnd = Math.min(95, zoneStart + finalZone);
+  
+  addParticles(bobber.x, bobber.y, '#fff', 15);
+  addRipple(bobber.x, bobber.y);
+  vibrate(80);
+}
+
+function pickFish() {
+  const w = getWeather();
+  const trashMult = getTrashMultiplier();
+  const allTrashCollected = TRASH_ONLY.every(f => catalog[f.name] > 0);
+  const rareBonus = (TREE_DATA.hook.levels[treeUpgrades.hook || 0]?.bonus || 0);
+  const netBonus = (TREE_DATA.net.levels[treeUpgrades.net || 0]?.bonus || 0);
+  
+  const adjusted = FISH_TYPES.map(f => {
+    let weight = f.baseWeight;
+    if (f.isTrash) {
+      weight *= trashMult * (1 - netBonus);
+      if (allTrashCollected) {
+        const luckReduction = 1 - (upgrades.luck || 0) * 0.15;
+        weight *= Math.max(0.05, luckReduction);
+      } else {
+        weight = Math.max(1, weight);
+      }
+    }
+    if (w === 'night') {
+      if (f.name === 'Сом' || f.name === 'Угорь') weight *= 3;
+      if (f.name === 'Золотая рыбка') weight = 0;
+    } else if (w === 'sunset') {
+      if (f.name === 'Золотая рыбка') weight *= 3;
+      if (f.name === 'Щука') weight *= 1.5;
+    } else if (w === 'fog') {
+      if (!f.isTrash) weight *= 1.5;
+    } else if (w === 'rain') {
+      if (f.isTrash) weight *= 1.2;
+    }
+    // [CHANGE] Наживка: любая купленная наживка даёт ×3 (тратится при улове)
+    if (baitCount > 0 && !f.isTrash && f.isRare) weight *= 3;
+    if (!f.isTrash && f.isRare) weight *= (1 + rareBonus);
+    if (w === 'night' && achievements.night && !f.isTrash && f.isRare) weight *= 1.05;
+    return { ...f, weight };
+  });
+  
+  const total = adjusted.reduce((s, f) => s + f.weight, 0);
+  let r = Math.random() * total;
+  for (const f of adjusted) { r -= f.weight; if (r <= 0) return f; }
+  return adjusted[0];
+}
+
+function getTrashMultiplier() {
+  const caughtCount = Object.values(catalog).reduce((a, b) => a + b, 0);
+  if (caughtCount < 10) return 2.5;
+  if (caughtCount < 25) return 1.8;
+  if (caughtCount < 50) return 1.3;
+  return 0.8;
+}
+
+// [NEW] Единый расчёт очков — используется и при улове, и в UI
+function calcPoints(fish) {
+  const bodyBonus = TREE_DATA.body.levels[treeUpgrades.body || 0]?.bonus || 0;
+  const handleBonus = TREE_DATA.handle.levels[treeUpgrades.handle || 0]?.bonus || 0;
+  
+  let points = fish.pts;
+  if (achievements.collector) points = Math.floor(points * 1.1);
+  if (achievements.pro) points = Math.floor(points * 1.05);
+  if (achievements.millionaire) points = Math.floor(points * 1.02);
+  points = Math.floor(points * (1 + bodyBonus + handleBonus));
+  return points;
+}
+
+function checkReel() {
+  if (reelPos >= zoneStart && reelPos <= zoneEnd) {
+    catchStreak++; missStreak = 0;
+    const fish = pickFish();
+    lastCatch = fish;
+    
+    // [FIX] Используем единый calcPoints
+    const points = calcPoints(fish);
+    
+    score += points; totalCaught++;
+    if (score > bestScore) bestScore = score;
+    // [CHANGE] Тратим наживку только при успешном улове
+    if (baitCount > 0) { baitCount--; saveProgress(); } // [NEW]
+    
+    addToCatalog(fish.name);
+    state = S.RETURNING; stateTime = 0;
+    addParticles(bobber.x, bobber.y, fish.color, 25, 6);
+    addRipple(bobber.x, bobber.y);
+    addFloatingText(`+${points}`, bobber.x, bobber.y - 20, fish.color);
+    if (fish.isRare) { playSound('rare'); vibrate([50, 30, 50, 30, 100]); }
+    else { playSound('catch'); vibrate(50); }
+  } else {
+    catchStreak = 0; missStreak++;
+    state = S.RESULT; stateTime = 0;
+    addFloatingText('Сорвалась!', bobber.x, bobber.y - 20, '#ff6666');
+    playSound('miss'); vibrate([50, 50, 50]);
+  }
+}
+function resetToIdle() { state = S.IDLE; stateTime = 0; lastCatch = null; }
+
+// ==================================================================
+// ЧАСТЬ 8: БОСС РЕЧНОЙ МОНСТР
+// ==================================================================
+function startBossFight() {
+  state = S.BOSS_INTRO; stateTime = 0;
+  boss = { x: W / 2, y: 800, targetY: 350, shake: 0 };
+  bossMet = true;
+  saveProgress();
+  playSound('roar');
+  vibrate([200, 100, 200, 100, 300]);
+  document.getElementById('qteControls').classList.remove('show');
+}
+
+function startQte() {
+  qteIndex = 0;
+  qteSequence = [];
+  const isSecondFight = hasHarpoon;
+  const length = isSecondFight ? 5 : 8;
+  const baseTime = isSecondFight ? 1.8 : 0.45;
+  
+  for (let i = 0; i < length; i++) {
+    qteSequence.push({
+      key: BOSS_KEYS[Math.floor(Math.random() * BOSS_KEYS.length)],
+      time: baseTime
+    });
+  }
+  qteMaxTime = baseTime;
+  qteTimer = qteMaxTime;
+  document.getElementById('qteControls').classList.add('show');
+}
+
+// [FIX] Защита от «двойного проскока» и обработка только при активном QTE
+function handleQteKey(key) {
+  if (state !== S.BOSS_QTE) return;
+  if (qteTimer <= 0) return; // [FIX] нельзя нажать после истечения
+  if (qteSequence[qteIndex] && qteSequence[qteIndex].key === key) {
+    qteIndex++;
+    qteTimer = qteSequence[qteIndex] ? qteSequence[qteIndex].time : 0;
+    playSound('buy');
+    vibrate(30);
+    if (qteIndex >= qteSequence.length) winBossFight();
+  } else {
+    loseBossFight();
+  }
+}
+
+document.querySelectorAll('.qte-btn').forEach(btn => {
+  btn.addEventListener('mousedown', (e) => { e.preventDefault(); e.stopPropagation(); if (state === S.BOSS_QTE) handleQteKey(btn.dataset.key); });
+  btn.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); if (state === S.BOSS_QTE) handleQteKey(btn.dataset.key); }, { passive: false });
+});
+
+function winBossFight() {
+  state = S.BOSS_WIN; stateTime = 0;
+  bossDefeated = true;
+  score += 5000;
+  playSound('achv');
+  saveProgress();
+  document.getElementById('qteControls').classList.remove('show');
+  showAchievementToast('Убийца Сома-Гиганта!');
+  vibrate([100, 50, 100, 50, 300]);
+}
+
+// [FIX] Коллекция рыб обнуляется, totalCaught НЕ трогаем (подтверждено)
+function loseBossFight() {
+  state = S.BOSS_DEATH; stateTime = 0;
+  playSound('hurt');
+  document.getElementById('qteControls').classList.remove('show');
+  vibrate([200, 100, 200]);
+  
+  // Обнуляем только коллекцию рыб. totalCaught (общее число уловов) сохраняется.
+  FISH_ONLY.forEach(f => { delete catalog[f.name]; });
+  achievements.collector = false;
+  harpoonInShop = true;
+  
+  saveProgress();
+}
+
+// ==================================================================
+// ЧАСТЬ 9: ОБНОВЛЕНИЕ (ИГРОВАЯ ЛОГИКА)
+// ==================================================================
+function update(dt) {
+  stateTime += dt;
+  weatherTimer += dt;
+  updateGameTime(dt);
+  const t = performance.now() / 1000;
+  
+  // [NEW] Во время инструкции погода не меняется, босс не анимируется
+  if (state !== S.BOSS_INSTRUCTION && state !== S.BOSS_INTRO && state !== S.BOSS_QTE && state !== S.BOSS_DEATH && state !== S.BOSS_WIN) {
+    if (weatherTimer > WEATHER_DURATION) changeWeather();
+  }
+  
+  if (boss) {
+    if (state === S.BOSS_INTRO) {
+      boss.y += (boss.targetY - boss.y) * 0.05;
+      boss.shake = Math.sin(t * 30) * 5;
+      if (boss.y > boss.targetY + 5) boss.y = boss.targetY;
+    } else if (state === S.BOSS_DEATH) {
+      boss.y += 200 * dt;
+    } else if (state === S.BOSS_WIN) {
+      boss.y -= 100 * dt;
+    }
+  }
+
+  if (state === S.BOSS_QTE) {
+    qteTimer -= dt;
+    if (qteTimer <= 0) loseBossFight();
+  }
+  
+  for (const f of bgFish) {
+    f.x += f.speed * f.dir; f.wobble += dt * 3; f.y += Math.sin(f.wobble) * 0.3;
+    if (f.x > W + 40) { f.x = -40; f.y = 340 + Math.random() * 230; }
+    if (f.x < -40) { f.x = W + 40; f.y = 340 + Math.random() * 230; }
+  }
+  for (const b of bubbles) {
+    b.y -= b.speed; b.x += Math.sin(t + b.y * 0.05) * 0.3;
+    if (b.y < 320) { b.y = H; b.x = Math.random() * W; }
+  }
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 8 * dt; p.life -= dt * 1.5;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+  for (let i = rippleEffects.length - 1; i >= 0; i--) {
+    const r = rippleEffects[i]; r.radius += dt * 60; r.life -= dt * 1.2;
+    if (r.life <= 0) rippleEffects.splice(i, 1);
+  }
+  for (let i = floatingTexts.length - 1; i >= 0; i--) {
+    const ft = floatingTexts[i]; ft.y += ft.vy * dt; ft.vy *= 0.95; ft.life -= dt * 1.2;
+    if (ft.life <= 0) floatingTexts.splice(i, 1);
+  }
+  
+  if (getWeather() === 'rain') {
+    for (const r of rainDrops) {
+      r.y += r.speed * dt;
+      if (r.y > H) { r.y = -20; r.x = Math.random() * W; }
+    }
+  }
+  
+  if (state === S.CASTING) {
+    bobber.x += bobber.vx * dt; bobber.y += bobber.vy * dt; bobber.vy += 800 * dt;
+    if (bobber.y >= bobber.ty && bobber.vy > 0) {
+      bobber.y = bobber.ty; state = S.WAITING; stateTime = 0;
+      bobber.waitSeed = 1.5 + Math.random() * 4;
+      addRipple(bobber.x, bobber.y); addParticles(bobber.x, bobber.y, '#aaddff', 10);
+      playSound('splash'); vibrate(30);
+    }
+  } else if (state === S.WAITING) {
+    bobber.phase += dt * 2;
+    if (stateTime > (bobber.waitSeed || 3)) {
+      state = S.BITE; stateTime = 0;
+      addParticles(bobber.x, bobber.y, '#fff', 20); addRipple(bobber.x, bobber.y);
+      playSound('bite'); vibrate([100, 50, 100]);
+    }
+  } else if (state === S.BITE) {
+    if (stateTime > 0.9) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); missStreak++; }
+  } else if (state === S.REELING) {
+    reelPos += reelSpeed * dt;
+    if (performance.now() - lastReelSoundTime > 120) { playSound('reel'); lastReelSoundTime = performance.now(); }
+    if (reelPos > 100) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); missStreak++; catchStreak = 0; }
+  } else if (state === S.RETURNING) {
+    const progress = Math.min(1, stateTime / 0.8);
+    const ease = 1 - Math.pow(1 - progress, 3);
+    bobber.x = bobber.tx + (rod.tipX - bobber.tx) * ease;
+    bobber.y = bobber.ty + (rod.tipY - bobber.ty) * ease;
+    if (progress >= 1) { state = S.RESULT; stateTime = 0; }
+  } else if (state === S.RESULT) {
+    if (stateTime > 2) resetToIdle();
+  }
+}
+
+// ==================================================================
+// ЧАСТЬ 10: РИСОВАНИЕ
+// ==================================================================
+function drawFishBody(x, y, size, color, dir = 1, alpha = 1) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1); ctx.globalAlpha = alpha;
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.ellipse(0, 0, size, size * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-size * 0.9, 0); ctx.lineTo(-size * 1.5, -size * 0.5); ctx.lineTo(-size * 1.5, size * 0.5); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(size * 0.5, -size * 0.1, size * 0.1, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+function drawTrashBody(x, y, size, color, emoji) {
+  ctx.save(); ctx.translate(x, y);
+  ctx.fillStyle = color; ctx.beginPath(); ctx.ellipse(0, 0, size * 0.8, size * 0.6, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(0, 0, size * 0.6, size * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.font = `${size * 1.2}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(emoji, 0, 0);
+  ctx.restore();
+}
+function drawBobber(x, y) {
+  const floatLvl = treeUpgrades.float || 0;
+  
+  let lineColor = 'rgba(255,255,255,0.4)';
+  if (treeUpgrades.line === 1) lineColor = 'rgba(200,255,200,0.6)';
+  if (treeUpgrades.line === 2) lineColor = 'rgba(150,150,150,0.8)';
+  if (treeUpgrades.line === 3) lineColor = 'rgba(100,200,255,0.9)';
+  
+  ctx.strokeStyle = lineColor; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(rod.tipX, rod.tipY); ctx.quadraticCurveTo((rod.tipX+x)/2, Math.min(rod.tipY,y)-30, x, y); ctx.stroke();
+  if (getWeather() === 'night' || floatLvl >= 2) { ctx.shadowColor = floatLvl >= 2 ? '#00ffff' : '#ffff88'; ctx.shadowBlur = 15; }
+  
+  if (floatLvl === 0) {
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(x, y, 4, 12, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.arc(x, y - 8, 5, 0, Math.PI * 2); ctx.fill();
+  } else if (floatLvl === 1 || floatLvl === 3) {
+    ctx.strokeStyle = '#ff3333'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x, y - 22); ctx.stroke();
+    ctx.fillStyle = '#ff4444'; ctx.beginPath(); ctx.arc(x, y, 9, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI); ctx.fill();
+    ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
+  } else {
+    ctx.strokeStyle = '#00ffff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x, y - 22); ctx.stroke();
+    ctx.fillStyle = '#00ffff'; ctx.beginPath(); ctx.arc(x, y, 9, Math.PI, 0); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI); ctx.fill();
+    ctx.strokeStyle = '#005555'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
+}
+
+function drawEnvironment(t) {
+  const weather = getWeather();
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, 320);
+  if (weather === 'day') { skyGrad.addColorStop(0, '#87CEEB'); skyGrad.addColorStop(1, '#ffd9a0'); }
+  else if (weather === 'sunset') { skyGrad.addColorStop(0, '#ff7e5f'); skyGrad.addColorStop(1, '#ffe29a'); }
+  else if (weather === 'night') { skyGrad.addColorStop(0, '#0b1021'); skyGrad.addColorStop(1, '#2a3a5a'); }
+  else if (weather === 'rain') { skyGrad.addColorStop(0, '#4a5a6a'); skyGrad.addColorStop(1, '#8a9aaa'); }
+  else if (weather === 'fog') { skyGrad.addColorStop(0, '#b0b8c0'); skyGrad.addColorStop(1, '#e0e8f0'); }
+  ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, W, 320);
+  
+  if (weather === 'day' || weather === 'sunset') {
+    const sunGrad = ctx.createRadialGradient(750, 100, 10, 750, 100, 100);
+    sunGrad.addColorStop(0, weather === 'sunset' ? 'rgba(255,150,50,1)' : 'rgba(255,250,200,1)');
+    sunGrad.addColorStop(1, 'rgba(255,220,100,0)');
+    ctx.fillStyle = sunGrad; ctx.beginPath(); ctx.arc(750, 100, 100, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff8d0'; ctx.beginPath(); ctx.arc(750, 100, 35, 0, Math.PI * 2); ctx.fill();
+  } else if (weather === 'night') {
+    ctx.fillStyle = '#f0f0ff'; ctx.beginPath(); ctx.arc(750, 100, 40, 0, Math.PI * 2); ctx.fill();
+    for (let i = 0; i < 30; i++) {
+      const sx = (i * 37 + Math.sin(i) * 20) % W; const sy = (i * 23) % 200;
+      ctx.fillStyle = `rgba(255,255,255,${0.3 + Math.sin(t * 2 + i) * 0.3})`; ctx.fillRect(sx, sy, 2, 2);
+    }
+  }
+  if (weather !== 'night' && weather !== 'fog') {
+    ctx.fillStyle = weather === 'rain' ? 'rgba(100,110,120,0.5)' : 'rgba(255,255,255,0.6)';
+    for (const [cx, cy, sc] of [[200, 80, 1], [500, 130, 0.8]]) {
+      const offset = (t * 5 * sc) % (W + 200) - 100;
+      ctx.beginPath(); ctx.arc(offset, cy, 25 * sc, 0, Math.PI * 2); ctx.arc(offset + 25 * sc, cy + 5, 30 * sc, 0, Math.PI * 2); ctx.arc(offset + 55 * sc, cy, 22 * sc, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  ctx.fillStyle = weather === 'night' ? '#1a2a1a' : weather === 'sunset' ? '#5a4a3a' : '#6a8a5a';
+  ctx.beginPath(); ctx.moveTo(0, 320); for (let x = 0; x <= W; x += 40) ctx.lineTo(x, 290 + Math.sin(x * 0.008) * 25); ctx.lineTo(W, 320); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = weather === 'night' ? '#0a1a0a' : weather === 'sunset' ? '#4a3a2a' : '#4a6a3a';
+  ctx.beginPath(); ctx.moveTo(0, 320); for (let x = 0; x <= W; x += 40) ctx.lineTo(x, 305 + Math.sin(x * 0.012 + 2) * 18); ctx.lineTo(W, 320); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = weather === 'night' ? '#0a150a' : weather === 'sunset' ? '#3a2a1a' : '#2a4a2a';
+  for (const tx of [50, 130, 210, 800, 870]) {
+    ctx.beginPath(); ctx.moveTo(tx, 315); ctx.lineTo(tx - 15, 315); ctx.lineTo(tx, 260); ctx.lineTo(tx + 15, 315); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(tx, 290); ctx.lineTo(tx - 12, 290); ctx.lineTo(tx, 240); ctx.lineTo(tx + 12, 290); ctx.fill();
+  }
+  const waterGrad = ctx.createLinearGradient(0, 320, 0, H);
+  if (weather === 'day') { waterGrad.addColorStop(0, '#3a7ca8'); waterGrad.addColorStop(1, '#1a3a5a'); }
+  else if (weather === 'sunset') { waterGrad.addColorStop(0, '#8a5a4a'); waterGrad.addColorStop(1, '#2a1a3a'); }
+  else if (weather === 'night') { waterGrad.addColorStop(0, '#0a1a3a'); waterGrad.addColorStop(1, '#050a15'); }
+  else if (weather === 'rain') { waterGrad.addColorStop(0, '#4a5a6a'); waterGrad.addColorStop(1, '#1a2a3a'); }
+  else if (weather === 'fog') { waterGrad.addColorStop(0, '#8a9aaa'); waterGrad.addColorStop(1, '#3a4a5a'); }
+  ctx.fillStyle = waterGrad; ctx.fillRect(0, 320, W, H - 320);
+  ctx.strokeStyle = weather === 'night' ? 'rgba(100,150,200,0.15)' : 'rgba(150,200,255,0.25)'; ctx.lineWidth = 2;
+  for (let i = 0; i < 8; i++) {
+    const wy = 340 + i * 35; ctx.beginPath();
+    for (let x = 0; x <= W; x += 10) { const y = wy + Math.sin(x * 0.02 + t * 1.5 + i) * 3; if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke();
+  }
+  if (weather === 'day' || weather === 'sunset') {
+    for (let i = 0; i < 25; i++) {
+      const bx = 400 + Math.sin(t * 0.5 + i * 1.7) * 380; const by = 340 + (i * 23) % 240;
+      const alpha = 0.1 + Math.sin(t * 2 + i) * 0.08;
+      ctx.fillStyle = `rgba(255, 250, 200, ${Math.max(0, alpha)})`; ctx.fillRect(bx, by, 20 + Math.sin(t + i) * 10, 2);
+    }
+  }
+  for (const f of bgFish) drawFishBody(f.x, f.y, f.size, f.color, f.dir, weather === 'night' ? 0.2 : 0.4 + f.depth * 0.4);
+  for (const b of bubbles) { ctx.fillStyle = `rgba(200, 230, 255, ${0.3 * b.depth})`; ctx.beginPath(); ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2); ctx.fill(); }
+  if (weather === 'rain') {
+    ctx.strokeStyle = 'rgba(180, 200, 220, 0.4)'; ctx.lineWidth = 1.5;
+    for (const r of rainDrops) { ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x - 2, r.y + r.len); ctx.stroke(); }
+    for (let i = 0; i < 5; i++) {
+      const rx = (i * 173 + t * 50) % W; const ry = 340 + (i * 67) % 250; const rr = (t * 100 + i * 30) % 30;
+      if (rr > 0) { ctx.strokeStyle = `rgba(200, 220, 240, ${1 - rr/30})`; ctx.beginPath(); ctx.ellipse(rx, ry, rr, rr * 0.3, 0, 0, Math.PI * 2); ctx.stroke(); }
+    }
+  }
+  if (weather === 'fog') {
+    ctx.fillStyle = 'rgba(200, 210, 220, 0.4)';
+    for (let i = 0; i < 5; i++) { ctx.beginPath(); ctx.arc((i * 200 + t * 10) % W, 350 + i * 40, 150, 0, Math.PI * 2); ctx.fill(); }
+  }
+}
+
+function drawFisherman() {
+  const weather = getWeather();
+  const isWoman = character === 'fisherwoman';
+  ctx.fillStyle = '#6a4a2a'; ctx.beginPath(); ctx.ellipse(82, 490, 60, 18, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#8a6a3a'; ctx.beginPath(); ctx.ellipse(82, 487, 52, 12, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#5a3a1a'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(50, 490); ctx.lineTo(30, 520); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(114, 490); ctx.lineTo(134, 520); ctx.stroke();
+  ctx.fillStyle = '#7a5a2a'; ctx.beginPath(); ctx.ellipse(30, 525, 10, 4, -0.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(134, 525, 10, 4, 0.5, 0, Math.PI * 2); ctx.fill();
+  if (isWoman) {
+    ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.moveTo(62, 460); ctx.lineTo(52, 500); ctx.lineTo(112, 500); ctx.lineTo(102, 460); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#8a2a1a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(72, 470); ctx.lineTo(68, 495); ctx.stroke(); ctx.beginPath(); ctx.moveTo(92, 470); ctx.lineTo(96, 495); ctx.stroke();
+  } else {
+    ctx.fillStyle = '#1a2a3a'; ctx.fillRect(65, 480, 18, 30); ctx.fillRect(88, 480, 18, 30);
+  }
+  ctx.fillStyle = isWoman ? '#c0392b' : '#2a4a6a'; ctx.beginPath(); ctx.ellipse(82, 460, 28, 40, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = isWoman ? '#c0392b' : '#2a4a6a'; ctx.lineWidth = 11; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(70, 440); ctx.lineTo(115, 460); ctx.lineTo(rod.baseX, rod.baseY); ctx.stroke();
+  ctx.fillStyle = '#f0c090'; ctx.beginPath(); ctx.arc(82, 400, 23, 0, Math.PI * 2); ctx.fill();
+  if (isWoman) {
+    ctx.fillStyle = '#8a5a2a'; ctx.beginPath(); ctx.ellipse(82, 400, 28, 32, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#f0c090'; ctx.beginPath(); ctx.ellipse(82, 400, 18, 22, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#8a5a2a'; ctx.beginPath(); ctx.ellipse(82, 430, 8, 20, 0, 0, Math.PI * 2); ctx.fill();
+  } else {
+    ctx.fillStyle = '#2a3a2a'; ctx.beginPath(); ctx.ellipse(82, 388, 28, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#3a4a3a'; ctx.beginPath(); ctx.ellipse(82, 378, 22, 14, 0, Math.PI, 0); ctx.fill();
+  }
+  if (weather === 'night') {
+    ctx.fillStyle = 'rgba(255, 220, 100, 0.2)'; ctx.beginPath(); ctx.arc(100, 450, 40, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffdd44'; ctx.beginPath(); ctx.arc(100, 450, 6, 0, Math.PI * 2); ctx.fill();
+  }
+}
+
+function drawSundial(x, y, radius) {
+  ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.beginPath(); ctx.arc(x, y, radius + 8, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,215,0,0.4)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, radius + 8, 0, Math.PI * 2); ctx.stroke();
+  ctx.fillStyle = '#c8b888'; ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#e0d0a0'; ctx.beginPath(); ctx.arc(x, y, radius - 4, 0, Math.PI * 2); ctx.fill();
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2 - Math.PI / 2; const innerR = radius - 12; const outerR = i % 3 === 0 ? radius - 3 : radius - 7;
+    ctx.strokeStyle = i % 3 === 0 ? '#6a5a3a' : '#8a7a5a'; ctx.lineWidth = i % 3 === 0 ? 2.5 : 1.5;
+    ctx.beginPath(); ctx.moveTo(x + Math.cos(angle) * innerR, y + Math.sin(angle) * innerR); ctx.lineTo(x + Math.cos(angle) * outerR, y + Math.sin(angle) * outerR); ctx.stroke();
+  }
+  const hourAngle = ((gameTimeMinutes / 60) / 24) * Math.PI * 2 - Math.PI / 2; const shadowLen = radius - 10;
+  ctx.strokeStyle = 'rgba(60,40,20,0.7)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(hourAngle) * shadowLen, y + Math.sin(hourAngle) * shadowLen); ctx.stroke();
+  ctx.fillStyle = '#5a4a2a'; ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.font = 'bold 13px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(formatTime(), x, y + radius + 20);
+  ctx.font = '12px "Segoe UI", sans-serif'; ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.fillText(`${WEATHER_ICONS[getWeather()]} ${Math.max(0, Math.ceil(WEATHER_DURATION - weatherTimer))}с → ${WEATHER_ICONS[getNextWeather()]}`, x, y + radius + 36);
+}
+
+function drawUI() {
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'; ctx.beginPath(); ctx.roundRect(15, 15, 250, 110, 10); ctx.fill();
+  ctx.font = 'bold 20px "Segoe UI", sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
+  ctx.fillText(`💰 Очки: ${score}`, 30, 45);
+  ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700'; ctx.fillText(`🏆 Рекорд: ${bestScore}`, 30, 70);
+  ctx.fillStyle = '#aaddff'; ctx.fillText(`🎣 Поймано: ${totalCaught}`, 30, 90);
+  // [CHANGE] Показываем количество наживки
+  if (baitCount > 0) { ctx.fillStyle = '#ff9966'; ctx.fillText(`🪱 Наживка: ×${baitCount} (×3 к редким!)`, 30, 110); }
+  if (catchStreak >= 3) { ctx.fillStyle = '#ff9966'; ctx.font = 'bold 12px "Segoe UI"'; ctx.fillText(`🔥 Серия ${catchStreak}!`, 30, 130); }
+  else if (missStreak >= 2) { ctx.fillStyle = '#99ff99'; ctx.font = 'bold 12px "Segoe UI"'; ctx.fillText(`🍀 Удача рыбака`, 30, 130); }
+  drawSundial(W - 80, 75, 40);
+  if (lastCatch && (state === S.RESULT || state === S.RETURNING)) {
+    const panelW = 240;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.beginPath(); ctx.roundRect(W - panelW - 15, 160, panelW, 60, 10); ctx.fill();
+    ctx.font = 'bold 20px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = lastCatch.color;
+    ctx.fillText(`${lastCatch.emoji} ${lastCatch.name}`, W - panelW/2 - 15, 190);
+    ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = lastCatch.isTrash ? '#ff8888' : '#fff';
+    // [FIX] Используем единый calcPoints
+    const pts = calcPoints(lastCatch);
+    ctx.fillText(lastCatch.isTrash ? '🗑 Мусор...' : `+${pts} очков`, W - panelW/2 - 15, 210);
+  }
+}
+
+function drawReelUI() {
+  const barW = 500, barH = 32, barX = (W - barW) / 2, barY = H - 130;
+  ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.beginPath(); ctx.roundRect(barX - 25, barY - 55, barW + 50, barH + 100, 16); ctx.fill();
+  ctx.strokeStyle = 'rgba(100,200,100,0.5)'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.font = 'bold 22px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText('🎣 Кликни в зелёной зоне!', W/2, barY - 22);
+  ctx.fillStyle = '#222'; ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 8); ctx.fill();
+  const zx = barX + (zoneStart / 100) * barW, zw = ((zoneEnd - zoneStart) / 100) * barW;
+  const grad = ctx.createLinearGradient(zx, barY, zx + zw, barY); grad.addColorStop(0, '#4CAF50'); grad.addColorStop(0.5, '#7fff7f'); grad.addColorStop(1, '#4CAF50');
+  ctx.fillStyle = grad; ctx.beginPath(); ctx.roundRect(zx, barY, zw, barH, 6); ctx.fill();
+  ctx.strokeStyle = '#aaffaa'; ctx.lineWidth = 2; ctx.strokeRect(zx, barY, zw, barH);
+  const ix = barX + (reelPos / 100) * barW;
+  ctx.shadowColor = '#fff'; ctx.shadowBlur = 20; ctx.fillStyle = '#fff'; ctx.fillRect(ix - 3, barY - 8, 6, barH + 16); ctx.shadowBlur = 0;
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(ix, barY - 12); ctx.lineTo(ix - 6, barY - 20); ctx.lineTo(ix + 6, barY - 20); ctx.closePath(); ctx.fill();
+}
+
+function drawSwipeIndicator() {
+  if (!swipe.active) return;
+  const dx = swipe.curX - swipe.startX; const dy = swipe.curY - swipe.startY;
+  if (Math.hypot(dx, dy) < 20) return;
+  ctx.strokeStyle = 'rgba(255, 255, 100, 0.6)'; ctx.lineWidth = 3; ctx.setLineDash([10, 8]);
+  ctx.beginPath(); ctx.moveTo(rod.tipX, rod.tipY); ctx.quadraticCurveTo((rod.tipX + swipe.curX)/2, Math.min(rod.tipY, swipe.curY) - 50, swipe.curX, swipe.curY); ctx.stroke();
+  ctx.setLineDash([]); ctx.strokeStyle = 'rgba(255, 255, 100, 0.8)'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(swipe.curX, swipe.curY, 20, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(swipe.curX, swipe.curY, 4, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255, 255, 100, 0.8)'; ctx.fill();
+}
+
+function drawHints() {
+  ctx.font = 'bold 18px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+  let hint = '', color = '#fff';
+  switch (state) {
+    case S.IDLE: hint = '👆 Нажми на воду или свайпни вниз'; break;
+    case S.WAITING: hint = '⏳ Ждём поклёвки...'; break;
+    case S.BITE: hint = '❗ КЛЮЁТ! Скорее нажми!'; color = '#ffdd44'; break;
+    case S.RETURNING: hint = '✨ Тянешь улов...'; break;
+    case S.RESULT: hint = '👉 Нажми, чтобы продолжить'; break;
+    case S.BOSS_INSTRUCTION: hint = '📖 Прочти инструкцию и жми «В БОЙ!»'; color = '#ff8888'; break;
+    case S.BOSS_INTRO: hint = '🐋 ИЗ ВОДЫ ПОКАЗАЛСЯ ГИГАНТСКИЙ СОМ!'; color = '#ff4444'; break;
+    case S.BOSS_QTE: hint = '⌨️ НАЖИМАЙ КНОПКИ!'; color = '#ffdd44'; break;
+    case S.BOSS_DEATH: hint = '💀 СОМ УТАЩИЛ ТЕБЯ В ОМУТ!'; color = '#ff4444'; break;
+    case S.BOSS_WIN: hint = '🏆 ТЫ ОДОЛЕЛ РЕЧНОГО МОНСТРА!'; color = '#ffd700'; break;
+  }
+  if (hint && state !== S.BOSS_INSTRUCTION) {
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.beginPath(); ctx.roundRect(W/2 - 230, H - 55, 460, 38, 10); ctx.fill();
+    ctx.fillStyle = color; ctx.fillText(hint, W/2, H - 30);
+  }
+}
+
+// ==================================================================
+// РИСОВАНИЕ БОССА (СОМ-ГИГАНТ)
+// ==================================================================
+function drawBoss() {
+  if (!boss) return;
+  let shakeX = 0, shakeY = 0;
+  if (state === S.BOSS_INTRO) { shakeX = (Math.random() - 0.5) * 10; shakeY = (Math.random() - 0.5) * 10; }
+  
+  ctx.save(); ctx.translate(shakeX, shakeY);
+  
+  // Длинное тело сома
+  ctx.fillStyle = '#2a2a2a';
+  ctx.beginPath();
+  ctx.ellipse(boss.x - 100, boss.y, 250, 80, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Хвост
+  ctx.beginPath();
+  ctx.moveTo(boss.x - 300, boss.y);
+  ctx.lineTo(boss.x - 400, boss.y - 100);
+  ctx.lineTo(boss.x - 400, boss.y + 100);
+  ctx.closePath();
+  ctx.fill();
+  
+  // Огромная голова
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath();
+  ctx.ellipse(boss.x + 150, boss.y, 120, 90, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Огромный рот
+  ctx.fillStyle = '#000';
+  ctx.beginPath();
+  ctx.ellipse(boss.x + 220, boss.y + 20, 80, 50, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Зубы
+  ctx.fillStyle = '#ddd';
+  for (let i = 0; i < 12; i++) {
+    const tx = boss.x + 160 + (i % 6) * 20;
+    const ty = boss.y - 20 + Math.floor(i / 6) * 60;
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(tx + 10, ty + 15);
+    ctx.lineTo(tx + 20, ty);
+    ctx.fill();
+  }
+  
+  // Усы (главная фишка сома)
+  ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 8; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(boss.x + 200, boss.y - 40); ctx.quadraticCurveTo(boss.x + 300, boss.y - 150, boss.x + 400, boss.y - 100); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(boss.x + 200, boss.y + 60); ctx.quadraticCurveTo(boss.x + 300, boss.y + 150, boss.x + 400, boss.y + 100); ctx.stroke();
+  
+  // Глаза
+  ctx.fillStyle = '#ff0000';
+  ctx.beginPath(); ctx.arc(boss.x + 120, boss.y - 40, 20, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(boss.x + 120, boss.y + 40, 20, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffff00';
+  ctx.beginPath(); ctx.arc(boss.x + 120, boss.y - 40, 8, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(boss.x + 120, boss.y + 40, 8, 0, Math.PI * 2); ctx.fill();
+  
+  // Плавники
+  ctx.fillStyle = '#2a2a2a';
+  ctx.beginPath(); ctx.moveTo(boss.x - 50, boss.y - 60); ctx.lineTo(boss.x - 100, boss.y - 180); ctx.lineTo(boss.x + 20, boss.y - 80); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(boss.x - 50, boss.y + 60); ctx.lineTo(boss.x - 100, boss.y + 180); ctx.lineTo(boss.x + 20, boss.y + 80); ctx.fill();
+  
+  // Волны
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 4;
+  ctx.beginPath(); ctx.ellipse(boss.x, boss.y + 100, 350, 50, 0, 0, Math.PI * 2); ctx.stroke();
+  
+  ctx.restore();
+}
+
+function drawBossQte() {
+  if (state !== S.BOSS_QTE || !qteSequence[qteIndex]) return;
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, W, H);
+  ctx.font = 'bold 28px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+  ctx.fillText(`Атака ${qteIndex + 1} / ${qteSequence.length}`, W/2, 100);
+  const timerWidth = 400; const timerX = (W - timerWidth) / 2;
+  ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(timerX, 130, timerWidth, 20);
+  ctx.fillStyle = qteTimer / qteMaxTime > 0.5 ? '#4CAF50' : qteTimer / qteMaxTime > 0.25 ? '#ffa000' : '#ff3333';
+  ctx.fillRect(timerX, 130, timerWidth * (qteTimer / qteMaxTime), 20);
+  const key = qteSequence[qteIndex].key;
+  const symbols = { 'ArrowUp': '↑', 'ArrowDown': '↓', 'ArrowLeft': '←', 'ArrowRight': '→' };
+  ctx.font = 'bold 200px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffdd44';
+  ctx.shadowColor = '#ff4444'; ctx.shadowBlur = 40;
+  ctx.fillText(symbols[key], W/2, H/2 + 60); ctx.shadowBlur = 0;
+  ctx.font = 'bold 24px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
+  ctx.fillText('Нажми правильную кнопку!', W/2, H/2 + 180);
+}
+
+// ==================================================================
+// ЧАСТЬ 11: ГЛАВНЫЙ ЦИКЛ
+// ==================================================================
+function draw() {
+  const t = performance.now() / 1000;
+  ctx.clearRect(0, 0, W, H);
+  
+  if (state === S.BOSS_INSTRUCTION) {
+    // [NEW] Фон рисуем, но без активных элементов — сверху DOM-панель инструкции
+    drawEnvironment(t);
+    drawFisherman();
+    drawBoss();
+    drawHints();
+    return;
+  }
+  
+  if (state === S.BOSS_INTRO || state === S.BOSS_QTE || state === S.BOSS_DEATH || state === S.BOSS_WIN) {
+    drawEnvironment(t);
+    if (boss) drawBoss();
+    if (state === S.BOSS_QTE) drawBossQte();
+    
+    if (state === S.BOSS_DEATH) {
+      ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.fillRect(0, 0, W, H);
+      ctx.font = 'bold 44px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ff4444';
+      ctx.fillText('СОМ-ГИГАНТ ПОБЕДИЛ!', W/2, 120);
+      ctx.font = 'bold 28px "Segoe UI", sans-serif'; ctx.fillStyle = '#ff8888';
+      ctx.fillText('❌ Потеряно:', W/2, 190);
+      ctx.font = '22px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
+      ctx.fillText('Коллекция рыб', W/2, 225);
+      ctx.fillText('Достижение «Коллекционер»', W/2, 255);
+      ctx.font = 'bold 28px "Segoe UI", sans-serif'; ctx.fillStyle = '#88ff88';
+      ctx.fillText('✅ Сохранено:', W/2, 310);
+      ctx.font = '22px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
+      ctx.fillText('Очки, прокачка, удочки, мусор', W/2, 345);
+      ctx.fillStyle = 'rgba(255, 215, 0, 0.2)'; ctx.beginPath(); ctx.roundRect(W/2 - 300, 390, 600, 100, 16); ctx.fill();
+      ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.font = 'bold 22px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700';
+      ctx.fillText('💡 Совет:', W/2, 425);
+      ctx.font = '18px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
+      ctx.fillText('Купите «Острогу Рыбака» в магазине,', W/2, 455);
+      ctx.fillText('чтобы одолеть Сома в следующий раз!', W/2, 480);
+      if (stateTime > 3) {
+        ctx.font = '16px "Segoe UI", sans-serif'; ctx.fillStyle = '#aaa';
+        ctx.fillText('Кликни, чтобы продолжить', W/2, 560);
+      }
+    }
+    
+    if (state === S.BOSS_WIN) {
+      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 0, W, H);
+      ctx.font = 'bold 44px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#ffd700';
+      ctx.fillText('РЕЧНОЙ МОНСТР ПОВЕРЖЕН!', W/2, H/2 - 60);
+      ctx.font = '28px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
+      ctx.fillText('+5000 очков', W/2, H/2);
+      ctx.fillStyle = '#aaffaa'; ctx.font = '22px "Segoe UI", sans-serif';
+      ctx.fillText('Сом больше никогда не появится.', W/2, H/2 + 50);
+      if (stateTime > 3) {
+        ctx.font = '16px "Segoe UI", sans-serif'; ctx.fillStyle = '#aaa';
+        ctx.fillText('Кликни, чтобы продолжить', W/2, H/2 + 120);
+      }
+    }
+    
+    drawHints();
+    return;
+  }
+  
+  drawEnvironment(t);
+  
+  for (const r of rippleEffects) {
+    ctx.strokeStyle = `rgba(200, 230, 255, ${r.life * 0.6})`; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(r.x, r.y, r.radius, r.radius * 0.3, 0, 0, Math.PI * 2); ctx.stroke();
+  }
+  
+  if (state !== S.IDLE) {
+    let by = bobber.y;
+    if (state === S.WAITING) by += Math.sin(bobber.phase * 2) * 3;
+    else if (state === S.BITE) by += Math.sin(t * 30) * 6;
+    else if ((state === S.RETURNING || state === S.RESULT) && lastCatch) {
+      if (lastCatch.isTrash) drawTrashBody(bobber.x, by + 22, lastCatch.size * 0.7, lastCatch.color, lastCatch.emoji);
+      else drawFishBody(bobber.x, by + 22, lastCatch.size * 0.8, lastCatch.color, 1, 1);
+    }
+    drawBobber(bobber.x, by);
+  }
+  
+  drawFisherman();
+  
+  // Отрисовка удилища с учётом дерева
+  const bodyLvl = treeUpgrades.body || 0;
+  let rodColor = '#8B4513';
+  let rodColor2 = '#a06030';
+  
+  if (bodyLvl === 1) { rodColor = '#8a9aaa'; rodColor2 = '#aaccee'; }
+  else if (bodyLvl === 2) { rodColor = '#2a2a2a'; rodColor2 = '#4a4a4a'; }
+  else if (bodyLvl === 3) { rodColor = '#1a1a1a'; rodColor2 = '#2a2a2a'; }
+  else if (bodyLvl === 4) { rodColor = '#3a3a3a'; rodColor2 = '#5a5a5a'; }
+  
+  ctx.strokeStyle = rodColor; ctx.lineWidth = 6; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(rod.baseX, rod.baseY); ctx.quadraticCurveTo(140, 420, rod.tipX, rod.tipY); ctx.stroke();
+  ctx.strokeStyle = rodColor2; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(140, 420); ctx.quadraticCurveTo(165, 400, rod.tipX, rod.tipY); ctx.stroke();
+  
+  if (swipe.active) drawSwipeIndicator();
+  
+  for (const p of particles) { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill(); }
+  ctx.globalAlpha = 1;
+  
+  for (const ft of floatingTexts) {
+    ctx.globalAlpha = Math.min(1, ft.life * 2); ctx.font = 'bold 24px "Segoe UI", sans-serif'; ctx.textAlign = 'center';
+    ctx.strokeStyle = 'rgba(0,0,0,0.7)'; ctx.lineWidth = 4; ctx.strokeText(ft.text, ft.x, ft.y);
+    ctx.fillStyle = ft.color; ctx.fillText(ft.text, ft.x, ft.y);
+  }
+  ctx.globalAlpha = 1;
+  
+  drawUI();
+  if (state === S.REELING) drawReelUI();
+  drawHints();
+}
+
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    if (typeof r === 'number') r = { tl: r, tr: r, br: r, bl: r };
+    this.beginPath(); this.moveTo(x + r.tl, y); this.lineTo(x + w - r.tr, y);
+    this.quadraticCurveTo(x + w, y, x + w, y + r.tr); this.lineTo(x + w, y + h - r.br);
+    this.quadraticCurveTo(x + w, y + h, x + w - r.br, y + h); this.lineTo(x + r.bl, y + h);
+    this.quadraticCurveTo(x, y + h, x, y + h - r.bl); this.lineTo(x, y + r.tl);
+    this.quadraticCurveTo(x, y, x + r.tl, y); this.closePath(); return this;
+  };
+}
+
+let lastTime = performance.now();
+function loop(now) {
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
 </body>
 </html>
