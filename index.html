@@ -1740,13 +1740,15 @@ function drawReelUI() {
   ctx.roundRect(barX, barY, barW, barH, 8); 
   ctx.fill();
   
-  const safeStart = Math.max(0, Math.min(100, zoneStart || 0));
-  const safeEnd = Math.max(0, Math.min(100, zoneEnd || 0));
+  // ЗАЩИЩЕННАЯ ОТРИСОВКА ЗОНЫ
+  const safeStart = Math.max(0, Math.min(100, Number(zoneStart) || 0));
+  const safeEnd = Math.max(0, Math.min(100, Number(zoneEnd) || 0));
+  const safeWidth = Math.max(0.1, safeEnd - safeStart); // Минимальная ширина 0.1%, чтобы не было ошибок
   
   const zx = barX + (safeStart / 100) * barW;
-  const zw = Math.max(0, ((safeEnd - safeStart) / 100) * barW);
+  const zw = (safeWidth / 100) * barW;
   
-  if (zw > 0) {
+  if (zw > 0.1) {
     const grad = ctx.createLinearGradient(zx, barY, zx + zw, barY); 
     grad.addColorStop(0, '#4CAF50'); 
     grad.addColorStop(0.5, '#7fff7f'); 
@@ -1762,6 +1764,7 @@ function drawReelUI() {
     ctx.strokeRect(zx, barY, zw, barH);
   }
   
+  // ИНДИКАТОР
   const ix = barX + (Math.max(0, Math.min(100, reelPos)) / 100) * barW;
   
   ctx.shadowColor = '#fff'; 
