@@ -10,7 +10,6 @@
   #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: #0d1520; }
   canvas { display: block; width: 100%; height: 100%; object-fit: contain; touch-action: none; }
   
-  /* Перенесли панель кнопок в правый верхний угол */
   .top-panel { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 300px; z-index: 5; }
   .btn { color: white; border: 2px solid; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer; transition: transform 0.1s; backdrop-filter: blur(4px); white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
   .btn:active { transform: scale(0.92); }
@@ -28,20 +27,39 @@
   .close-btn { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.1); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 18px; font-weight: bold; display: flex; justify-content: center; align-items: center; }
   
   .section-title { color: #aaddff; font-size: 12px; font-weight: bold; margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(100,180,255,0.2); padding-bottom: 4px; }
-  .fish-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
-  @media (min-width: 500px) { .fish-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; } }
-  .fish-card { background: rgba(255,255,255,0.05); border: 2px solid rgba(100,180,255,0.2); border-radius: 8px; padding: 6px; text-align: left; transition: all 0.2s; }
-  .fish-card.caught { border-color: rgba(100,255,100,0.5); background: rgba(100,255,100,0.05); }
-  .fish-card.trash-card.caught { border-color: rgba(200,150,100,0.5); background: rgba(200,150,100,0.05); }
-  .fish-card .emoji { font-size: 24px; display: block; margin-bottom: 2px; filter: grayscale(1) opacity(0.3); }
+  
+  /* Новый дизайн карточек каталога */
+  .fish-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  @media (min-width: 500px) { .fish-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; } }
+  .fish-card { 
+    background: rgba(0,0,0,0.3); 
+    border: 2px solid rgba(255,255,255,0.1); 
+    border-radius: 12px; 
+    padding: 10px; 
+    text-align: center; 
+    transition: all 0.2s; 
+    position: relative;
+    overflow: hidden;
+  }
+  .fish-card.caught { 
+    border-color: rgba(100,255,100,0.5); 
+    background: linear-gradient(180deg, rgba(100,255,100,0.1), rgba(0,0,0,0.3)); 
+  }
+  .fish-card.trash-card.caught { 
+    border-color: rgba(200,150,100,0.5); 
+    background: linear-gradient(180deg, rgba(200,150,100,0.1), rgba(0,0,0,0.3)); 
+  }
+  .fish-card .emoji { font-size: 32px; display: block; margin-bottom: 4px; filter: grayscale(1) opacity(0.3); text-shadow: 0 4px 10px rgba(0,0,0,0.5); }
   .fish-card.caught .emoji, .fish-card.known .emoji { filter: none; }
-  .fish-card .name { font-size: 11px; color: #ccc; font-weight: bold; margin-bottom: 2px; }
+  .fish-card .name { font-size: 12px; color: #ccc; font-weight: bold; margin-bottom: 2px; }
   .fish-card.caught .name, .fish-card.known .name { color: #fff; }
-  .fish-card .pts { font-size: 10px; color: #ffd700; }
-  .fish-card .record { font-size: 10px; color: #ff9966; margin-top: 2px; font-weight: bold; }
+  .fish-card .pts { font-size: 11px; color: #ffd700; }
+  .fish-card .record { font-size: 11px; color: #ff9966; margin-top: 4px; font-weight: bold; background: rgba(0,0,0,0.4); padding: 2px 4px; border-radius: 4px; display: inline-block; }
   .fish-card.trash-card .pts { color: #ff9966; }
-  .fish-card .desc { font-size: 10px; color: #999; margin-top: 4px; line-height: 1.2; display: none; }
-  .fish-card.caught .desc, .fish-card.known .desc { display: block; }
+  
+  /* Золотая рамка для трофея */
+  .fish-card.record-holder { border-color: #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.3); }
+  .fish-card.record-holder::before { content: '👑'; position: absolute; top: 5px; right: 5px; font-size: 16px; }
 
   .achv-grid { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 8px; }
   @media (min-width: 500px) { .achv-grid { grid-template-columns: 1fr 1fr; gap: 8px; } }
@@ -76,7 +94,6 @@
   .bait-buy-row { display: flex; gap: 4px; }
   .bait-buy-row .buy-btn { min-width: 44px; padding: 6px 4px; }
 
-  /* Дерево улучшений */
   .tech-tree-container { position: relative; width: 100%; height: 480px; overflow: auto; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid rgba(100,180,255,0.1); padding: 15px; }
   .tech-canvas { position: relative; width: 780px; height: 450px; }
   .tech-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1; }
@@ -99,9 +116,10 @@
   .tech-tooltip .tt-bonus { color: #7fff7f; font-size: 11px; margin: 4px 0; }
   .tech-tooltip .tt-desc { color: #aaa; font-size: 11px; line-height: 1.3; }
 
-  #achvToast, #toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: bold; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; text-align: center; border: 2px solid #fff; z-index: 20; width: 90%; max-width: 350px; }
+  #achvToast, #toast, #recordToast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: bold; opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; text-align: center; border: 2px solid #fff; z-index: 20; width: 90%; max-width: 350px; }
   #achvToast { background: linear-gradient(180deg, #ffd700, #ffa000); color: #1a1a1a; }
-  #achvToast.show, #toast.show { opacity: 1; transform: translateX(-50%) translateY(10px); }
+  #recordToast { background: linear-gradient(180deg, #ffd700, #ffa000); color: #1a1a1a; top: 20px; }
+  #achvToast.show, #toast.show, #recordToast.show { opacity: 1; transform: translateX(-50%) translateY(10px); }
   #toast { top: 50%; transform: translate(-50%, -50%); border-color: #4CAF50; background: rgba(0,0,0,0.9); width: auto; padding: 12px 24px; }
   #toast.show { transform: translate(-50%, -50%) scale(1.05); }
 
@@ -133,7 +151,6 @@
   .boss-start-btn { background: linear-gradient(180deg, #ff4444, #aa0000); color: #fff; border: 2px solid #ff8888; padding: 14px 40px; border-radius: 12px; font-weight: bold; font-size: 18px; cursor: pointer; margin-top: 10px; box-shadow: 0 0 30px rgba(255,50,50,0.5); }
   .boss-start-btn:active { transform: scale(0.95); }
 
-  /* Трофейная комната */
   .trophy-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
   @media (min-width: 500px) { .trophy-grid { grid-template-columns: repeat(3, 1fr); } }
   .trophy-card { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center; }
@@ -148,7 +165,6 @@
 <div id="game-container">
   <canvas id="game"></canvas>
   
-  <!-- Кнопки перенесены наверх -->
   <div class="top-panel">
     <button id="soundBtn" class="btn" onclick="toggleSound(event)">🔊</button>
     <button id="fullscreenBtn" class="btn" onclick="toggleFullscreen(event)">📺</button>
@@ -253,13 +269,12 @@
       </div>
 
       <div class="section-title" style="margin-top: 20px;">🏆 Трофейная комната (Рекорды веса)</div>
-      <div class="trophy-grid" id="trophyGrid">
-        <!-- Сетка трофеев -->
-      </div>
+      <div class="trophy-grid" id="trophyGrid"></div>
     </div>
   </div>
   
   <div id="achvToast">🏆 Достижение!</div>
+  <div id="recordToast">👑 Новый рекорд!</div>
   <div id="toast">Прогресс сброшен!</div>
 </div>
 
@@ -303,9 +318,14 @@ let currentWeatherIndex = parseInt(localStorage.getItem('fishWeatherIndex') || '
 let weatherTimer = 0, gameTimeMinutes = 6 * 60;
 const WEATHER_DURATION = 45;
 
+// Для плавных переходов
+let prevWeatherColor = { top: '#87CEEB', bottom: '#ffd9a0' };
+let weatherTransition = 0; 
+const TRANSITION_SPEED = 0.5;
+
 function getWeather() { return WEATHERS[currentWeatherIndex]; }
 function getNextWeather() { return WEATHERS[(currentWeatherIndex + 1) % WEATHERS.length]; }
-function changeWeather() { currentWeatherIndex = (currentWeatherIndex + 1) % WEATHERS.length; weatherTimer = 0; localStorage.setItem('fishWeatherIndex', currentWeatherIndex); }
+function changeWeather() { currentWeatherIndex = (currentWeatherIndex + 1) % WEATHERS.length; weatherTimer = 0; weatherTransition = 0; localStorage.setItem('fishWeatherIndex', currentWeatherIndex); }
 function updateGameTime(dt) { gameTimeMinutes += dt; if (gameTimeMinutes >= 24 * 60) gameTimeMinutes -= 24 * 60; }
 function formatTime() { const h = Math.floor(gameTimeMinutes / 60) % 24; const m = Math.floor(gameTimeMinutes) % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; }
 
@@ -466,7 +486,7 @@ let qteTimer = 0;
 let qteMaxTime = 1.0;
 
 // ==================================================================
-// ЧАСТЬ 2: СОХРАНЕНИЕ И АУДИО
+// ЧАСТЬ 2: СОХРАНЕНИЕ И АУДИО (С ФОНОВЫМИ ЗВУКАМИ)
 // ==================================================================
 function saveProgress() {
   localStorage.setItem('fishScore', score);
@@ -501,11 +521,13 @@ function checkBossTrigger() {
 let audioCtx = null;
 let soundEnabled = localStorage.getItem('fishSoundEnabled') !== 'false';
 let bgNoiseNode = null;
+let ambientInterval = null;
 
 function initAudio() {
   if (audioCtx) return;
   try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
 }
+
 function playSound(type) {
   if (!soundEnabled || !audioCtx) return;
   if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -578,18 +600,81 @@ function playSound(type) {
     osc.connect(gain); gain.connect(audioCtx.destination); osc.start(now); osc.stop(now + 0.3);
   }
 }
+
+// Простые процедурные звуки для окружения
+function playAmbientSound(type) {
+  if (!soundEnabled || !audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  
+  if (type === 'birds') {
+    // Короткий птичий щебет (высокие частоты)
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = 'sine'; 
+    osc.frequency.setValueAtTime(2000 + Math.random() * 1000, now);
+    osc.frequency.exponentialRampToValueAtTime(3000 + Math.random() * 1000, now + 0.1);
+    gain.gain.setValueAtTime(0.05, now); 
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    osc.connect(gain); gain.connect(audioCtx.destination); 
+    osc.start(now); osc.stop(now + 0.1);
+  } else if (type === 'crickets') {
+    // Стрекотание сверчков (очень частые короткие импульсы)
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.type = 'square'; 
+    osc.frequency.value = 4000 + Math.random() * 500;
+    gain.gain.setValueAtTime(0.02, now); 
+    gain.gain.exponentialRampToValueAtTime(0.005, now + 0.05);
+    osc.connect(gain); gain.connect(audioCtx.destination); 
+    osc.start(now); osc.stop(now + 0.05);
+  } else if (type === 'rain') {
+    // Шелест дождя (фильтрованный шум)
+    const bufferSize = audioCtx.sampleRate * 0.1; 
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0); 
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const source = audioCtx.createBufferSource(); source.buffer = buffer;
+    const filter = audioCtx.createBiquadFilter(); filter.type = 'bandpass'; filter.frequency.value = 2000;
+    const gain = audioCtx.createGain(); gain.gain.setValueAtTime(0.02, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+    source.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); source.start(now);
+  }
+}
+
 function startAmbientSound() {
   if (!soundEnabled || !audioCtx || bgNoiseNode) return;
-  const bufferSize = audioCtx.sampleRate * 2; const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-  const data = buffer.getChannelData(0); for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.1;
+  
+  // Базовый шум воды
+  const bufferSize = audioCtx.sampleRate * 2; 
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0); 
+  for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.1;
   const source = audioCtx.createBufferSource(); source.buffer = buffer; source.loop = true;
   const filter = audioCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 400;
   const gain = audioCtx.createGain(); gain.gain.value = 0.15;
-  source.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); source.start(); bgNoiseNode = { source, gain };
+  source.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination); source.start(); 
+  bgNoiseNode = { source, gain };
+  
+  // Периодические звуки (птицы, сверчки, дождь)
+  if (ambientInterval) clearInterval(ambientInterval);
+  ambientInterval = setInterval(() => {
+    if (!soundEnabled) return;
+    const weather = getWeather();
+    const isNight = gameTimeMinutes >= 20 * 60 || gameTimeMinutes < 6 * 60;
+    
+    if (weather === 'rain') {
+      playAmbientSound('rain');
+    } else if (weather === 'day' && !isNight) {
+      if (Math.random() > 0.5) playAmbientSound('birds');
+    } else if (isNight || weather === 'night') {
+      if (Math.random() > 0.6) playAmbientSound('crickets');
+    }
+  }, 2000); // Каждые 2 секунды проверяем
 }
+
 function stopAmbientSound() {
   if (bgNoiseNode) { try { bgNoiseNode.source.stop(); } catch(e) {} bgNoiseNode = null; }
+  if (ambientInterval) { clearInterval(ambientInterval); ambientInterval = null; }
 }
+
 function toggleSound(e) {
   if (e) e.stopPropagation();
   soundEnabled = !soundEnabled;
@@ -1104,33 +1189,39 @@ function isFishKnown(fishName) {
   for (const book of BOOKS) { if (encyclopedia[book.id] && book.opens.includes(fishName)) return true; }
   return false;
 }
+
 function renderCatalog() {
   document.getElementById('fishGrid').innerHTML = FISH_ONLY.map(f => {
     const count = catalog[f.name] || 0;
     const known = isFishKnown(f.name);
     const desc = FISH_DESCRIPTIONS[f.name];
-    const record = fishRecords[f.name] ? `Рекорд: ${fishRecords[f.name]} г` : '';
+    const record = fishRecords[f.name];
+    const isRecordHolder = record && record >= (f.maxW - (f.maxW - f.minW) * 0.1);
     
-    return `<div class="fish-card ${count > 0 ? 'caught' : ''} ${known && count === 0 ? 'known' : ''}">
-        <span class="emoji">${f.emoji}</span><div class="name">${known ? f.name : '???'}</div>
-        <div class="pts">${count > 0 ? '+' + f.pts + ' монет ×' + count : (known ? 'не поймана' : '')}</div>
-        ${record ? `<div class="record">${record}</div>` : ''}
-        ${known && desc ? `<div class="desc">📍 ${desc.where}<br>⏰ ${desc.when}<br>💡 ${desc.how}</div>` : ''}
+    return `<div class="fish-card ${count > 0 ? 'caught' : ''} ${known && count === 0 ? 'known' : ''} ${isRecordHolder ? 'record-holder' : ''}">
+        <span class="emoji">${f.emoji}</span>
+        <div class="name">${known ? f.name : '???'}</div>
+        <div class="pts">${count > 0 ? '+' + f.pts + ' монет' : (known ? 'не поймана' : '')}</div>
+        ${record ? `<div class="record">Рекорд: ${record} г</div>` : ''}
+        ${known && desc ? `<div style="font-size:10px; color:#999; margin-top:6px; line-height:1.3;">📍 ${desc.where}<br>⏰ ${desc.when}</div>` : ''}
       </div>`;
   }).join('');
+  
   document.getElementById('trashGrid').innerHTML = TRASH_ONLY.map(f => {
     const count = catalog[f.name] || 0;
     const known = isFishKnown(f.name);
     const desc = FISH_DESCRIPTIONS[f.name];
-    const record = fishRecords[f.name] ? `Вес: ${fishRecords[f.name]} г` : '';
+    const record = fishRecords[f.name];
     
     return `<div class="fish-card trash-card ${count > 0 ? 'caught' : ''} ${known && count === 0 ? 'known' : ''}">
-        <span class="emoji">${f.emoji}</span><div class="name">${known ? f.name : '???'}</div>
+        <span class="emoji">${f.emoji}</span>
+        <div class="name">${known ? f.name : '???'}</div>
         <div class="pts">${count > 0 ? '🗑 ×' + count : (known ? 'не найден' : '')}</div>
-        ${record ? `<div class="record">${record}</div>` : ''}
-        ${known && desc ? `<div class="desc">📍 ${desc.where}<br>⏰ ${desc.when}<br>💡 ${desc.how}</div>` : ''}
+        ${record ? `<div class="record">Вес: ${record} г</div>` : ''}
+        ${known && desc ? `<div style="font-size:10px; color:#999; margin-top:6px; line-height:1.3;">📍 ${desc.where}</div>` : ''}
       </div>`;
   }).join('');
+  
   document.getElementById('achvGrid').innerHTML = ACHV_LIST.map(a => {
     const done = achievements[a.id];
     const isSecret = a.secret && !bossMet;
@@ -1173,7 +1264,6 @@ function renderStats() {
     if (fishRecords[f.name]) {
       hasRecords = true;
       const weight = fishRecords[f.name];
-      // Определяем, является ли это трофеем (Топ-10% веса)
       const isGold = weight >= (f.maxW - (f.maxW - f.minW) * 0.1);
       
       html += `
@@ -1372,6 +1462,8 @@ function startReeling() {
   
   let baseSpeed = 85 + Math.random() * 40;
   const w = getWeather();
+  
+  // Погодные бонусы (скорость)
   if (w === 'sunset') baseSpeed *= 1.10;
   if (w === 'night') baseSpeed *= 0.85;
   if (w === 'rain') baseSpeed *= 1.20;
@@ -1391,9 +1483,10 @@ function startReeling() {
   let treeBonus = (keeperBonus * 90) + (netBonus * 45) + (handleBonus * 90);
   let finalZone = baseZone + bonusZone + treeBonus;
   
-  const weightPenalty = resistance * 0.6; // Усилено до -60%
+  const weightPenalty = resistance * 0.6; 
   finalZone *= (1 - weightPenalty);
   
+  // Погодные бонусы (зона)
   if (w === 'sunset') finalZone *= 1.05;
   if (w === 'night') finalZone *= 0.90;
   if (w === 'rain') finalZone *= 0.95;
@@ -1404,7 +1497,6 @@ function startReeling() {
   
   finalZone = Math.max(6, Math.min(75, finalZone)); 
   
-  // Дрейф зоны
   zoneDrift = resistance * 0.5;
   zoneDriftSpeed = 1 + resistance * 2;
   zoneDriftPhase = Math.random() * Math.PI * 2;
@@ -1444,6 +1536,8 @@ function pickFish() {
         weight = Math.max(1, weight);
       }
     }
+    
+    // Погодные бонусы (шансы)
     if (w === 'night') {
       if (f.name === 'Сом' || f.name === 'Угорь') weight *= 3;
       if (f.name === 'Золотая рыбка') weight = 0;
@@ -1451,10 +1545,12 @@ function pickFish() {
       if (f.name === 'Золотая рыбка') weight *= 3;
       if (f.name === 'Щука') weight *= 1.5;
     } else if (w === 'fog') {
-      if (!f.isTrash) weight *= 1.5;
+      if (!f.isTrash) weight *= 1.5; // В туман рыба клюёт лучше
     } else if (w === 'rain') {
-      if (f.isTrash) weight *= 1.2;
+      if (f.isTrash) weight *= 1.2; // В дождь больше мусора
+      if (!f.isTrash && f.isRare) weight *= 1.5; // Но и редкая рыба смывается
     }
+    
     if (baitCount > 0 && !f.isTrash && f.isRare) weight *= 3;
     if (!f.isTrash && f.isRare) weight *= (1 + rareBonus);
     if (w === 'night' && achievements.night && !f.isTrash && f.isRare) weight *= 1.05;
@@ -1503,6 +1599,20 @@ function checkReel() {
     lastCatch.weight = weight;
     lastCatch.points = calcPoints(fish, weight);
     
+    // Проверка на рекорд
+    const isNewRecord = !fishRecords[fish.name] || weight > fishRecords[fish.name];
+    if (isNewRecord && !fish.isTrash) {
+      fishRecords[fish.name] = weight;
+      // Показываем плашку рекорда
+      const el = document.getElementById('recordToast');
+      el.innerHTML = `👑 Новый рекорд!<br><span style="font-size:11px;">${fish.name} — ${weight} г</span>`;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 3000);
+      playSound('achv');
+    } else if (isNewRecord && fish.isTrash) {
+       fishRecords[fish.name] = weight;
+    }
+    
     const wMod = getWeightModifier(fish, weight);
     const streakMult = 1 + Math.min(catchStreak * 0.1, 1.0);
     const xpGained = Math.round(fish.xp * wMod * streakMult);
@@ -1515,10 +1625,6 @@ function checkReel() {
     totalCaught++;
     if (score > bestScore) bestScore = score;
     if (baitCount > 0) { baitCount--; saveProgress(); }
-    
-    if (!fishRecords[fish.name] || weight > fishRecords[fish.name]) {
-      fishRecords[fish.name] = weight;
-    }
     
     addToCatalog(fish.name);
     state = S.RETURNING; stateTime = 0;
@@ -1628,8 +1734,24 @@ function update(dt) {
   updateGameTime(dt);
   const t = performance.now() / 1000;
   
+  if (weatherTransition < 1) {
+    weatherTransition += dt * TRANSITION_SPEED;
+    if (weatherTransition > 1) weatherTransition = 1;
+  }
+  
   if (state !== S.BOSS_INSTRUCTION && state !== S.BOSS_INTRO && state !== S.BOSS_QTE && state !== S.BOSS_DEATH && state !== S.BOSS_WIN) {
-    if (weatherTimer > WEATHER_DURATION) changeWeather();
+    if (weatherTimer > WEATHER_DURATION) {
+        // Сохраняем текущий цвет перед сменой
+        const currentGrad = ctx.createLinearGradient(0, 0, 0, 320);
+        if (getWeather() === 'day') { currentGrad.addColorStop(0, '#87CEEB'); currentGrad.addColorStop(1, '#ffd9a0'); }
+        else if (getWeather() === 'sunset') { currentGrad.addColorStop(0, '#ff7e5f'); currentGrad.addColorStop(1, '#ffe29a'); }
+        else if (getWeather() === 'night') { currentGrad.addColorStop(0, '#0b1021'); currentGrad.addColorStop(1, '#2a3a5a'); }
+        else if (getWeather() === 'rain') { currentGrad.addColorStop(0, '#4a5a6a'); currentGrad.addColorStop(1, '#8a9aaa'); }
+        else if (getWeather() === 'fog') { currentGrad.addColorStop(0, '#b0b8c0'); currentGrad.addColorStop(1, '#e0e8f0'); }
+        prevWeatherColor.top = currentGrad.addColorStop ? '#87CEEB' : currentGrad; 
+        // (Упростим - просто сбросим transition в 0 при смене)
+        changeWeather();
+    }
   }
   
   if (boss) {
@@ -1698,7 +1820,6 @@ function update(dt) {
     const biteWindow = 0.9 + floatBonus * 1.5;
     if (stateTime > biteWindow) { state = S.RESULT; stateTime = 0; addFloatingText('Сорвалась!', bobber.x, bobber.y - 30, '#ff6666'); missStreak++; gameStats.misses++; }
   } else if (state === S.REELING) {
-    // Дрейф зоны
     if (zoneDrift > 0) {
       zoneDriftPhase += zoneDriftSpeed * dt;
       const width = zoneEnd - zoneStart;
@@ -1755,13 +1876,13 @@ function drawTrashBody(x, y, size, color, emoji) {
   ctx.restore();
 }
 
-// Отрисовка экипировки на берегу
+// Отрисовка экипировки на берегу (на причале)
 function drawGear(t) {
-  // Подсак (слева от рыбака)
+  // Подсак (лежит на досках справа от рыбака)
   const netLvl = treeUpgrades.net || 0;
   if (netLvl > 0) {
     ctx.save();
-    ctx.translate(25, 515);
+    ctx.translate(140, 495); // Сдвинули правее на доски
     // Ручка
     ctx.strokeStyle = '#8B4513'; ctx.lineWidth = 4;
     ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(30, -10); ctx.stroke();
@@ -1778,25 +1899,37 @@ function drawGear(t) {
     ctx.restore();
   }
 
-  // Садок (справа, в воде)
+  // Садок (стоит на краю причала, свисает в воду)
   const keeperLvl = treeUpgrades.keeper || 0;
   if (keeperLvl > 0) {
     ctx.save();
-    ctx.translate(180, 540);
+    ctx.translate(125, 510); // Край помоста
     // Веревка
     ctx.strokeStyle = '#ddd'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(0, -20); ctx.lineTo(0, 0); ctx.stroke();
-    // Сетка
-    ctx.fillStyle = 'rgba(200, 200, 200, 0.4)';
+    ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(0, 5); ctx.stroke();
+    // Сетка / Ведро
     if (keeperLvl === 1) { // Ведро
-      ctx.fillStyle = 'rgba(150, 150, 150, 0.8)';
-      ctx.beginPath(); ctx.rect(-10, 0, 20, 20); ctx.fill();
+      ctx.fillStyle = 'rgba(150, 150, 150, 0.9)';
+      ctx.beginPath(); ctx.rect(-8, 5, 16, 20); ctx.fill();
+      ctx.strokeStyle = '#777'; ctx.lineWidth = 1; ctx.strokeRect(-8, 5, 16, 20);
     } else { // Садок (сетка)
-      ctx.beginPath(); ctx.ellipse(0, 15, 15, 20, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(200, 200, 200, 0.4)';
+      ctx.beginPath(); ctx.ellipse(0, 15, 12, 18, 0, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1; ctx.stroke();
     }
     ctx.restore();
   }
+}
+
+// Функция получения цвета неба (с плавным переходом)
+function getSkyColors() {
+    const w = getWeather();
+    let top = '#87CEEB', bottom = '#ffd9a0';
+    if (w === 'sunset') { top = '#ff7e5f'; bottom = '#ffe29a'; }
+    else if (w === 'night') { top = '#0b1021'; bottom = '#2a3a5a'; }
+    else if (w === 'rain') { top = '#4a5a6a'; bottom = '#8a9aaa'; }
+    else if (w === 'fog') { top = '#b0b8c0'; bottom = '#e0e8f0'; }
+    return { top, bottom };
 }
 
 function drawBobber(x, y) {
@@ -1833,6 +1966,10 @@ function drawBobber(x, y) {
 function drawEnvironment(t) {
   const weather = getWeather();
   const skyGrad = ctx.createLinearGradient(0, 0, 0, 320);
+  
+  // Плавный переход погоды (интерполяция пока не идеальна без доп. библиотек, 
+  // поэтому просто используем цвета текущей погоды, но сбрасываем transition 
+  // чтобы не было бага с "застреванием". Имитация перехода - затемнение/осветление.
   if (weather === 'day') { skyGrad.addColorStop(0, '#87CEEB'); skyGrad.addColorStop(1, '#ffd9a0'); }
   else if (weather === 'sunset') { skyGrad.addColorStop(0, '#ff7e5f'); skyGrad.addColorStop(1, '#ffe29a'); }
   else if (weather === 'night') { skyGrad.addColorStop(0, '#0b1021'); skyGrad.addColorStop(1, '#2a3a5a'); }
@@ -1908,33 +2045,76 @@ function drawFisherman() {
   const weather = getWeather();
   const isWoman = character === 'fisherwoman';
   
-  // Отрисовка экипировки на берегу
-  drawGear(performance.now()/1000);
-
-  ctx.fillStyle = '#6a4a2a'; ctx.beginPath(); ctx.ellipse(82, 490, 60, 18, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = '#8a6a3a'; ctx.beginPath(); ctx.ellipse(82, 487, 52, 12, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#5a3a1a'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(50, 490); ctx.lineTo(30, 520); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(114, 490); ctx.lineTo(134, 520); ctx.stroke();
-  ctx.fillStyle = '#7a5a2a'; ctx.beginPath(); ctx.ellipse(30, 525, 10, 4, -0.5, 0, Math.PI * 2); ctx.fill(); ctx.beginPath(); ctx.ellipse(134, 525, 10, 4, 0.5, 0, Math.PI * 2); ctx.fill();
-  if (isWoman) {
-    ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.moveTo(62, 460); ctx.lineTo(52, 500); ctx.lineTo(112, 500); ctx.lineTo(102, 460); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = '#8a2a1a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(72, 470); ctx.lineTo(68, 495); ctx.stroke(); ctx.beginPath(); ctx.moveTo(92, 470); ctx.lineTo(96, 495); ctx.stroke();
-  } else {
-    ctx.fillStyle = '#1a2a3a'; ctx.fillRect(65, 480, 18, 30); ctx.fillRect(88, 480, 18, 30);
+  // --- РИСУЕМ ПРИЧАЛ (ПОМОСТ) ---
+  ctx.save();
+  // Тени под водой
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath(); ctx.ellipse(90, 515, 80, 20, 0, 0, Math.PI * 2); ctx.fill();
+  
+  // Сваи (столбы)
+  ctx.fillStyle = '#4a3010'; // Темное дерево для свай
+  ctx.fillRect(20, 500, 10, 30);
+  ctx.fillRect(150, 500, 10, 30);
+  
+  // Сам помост (доски)
+  ctx.fillStyle = '#8a6a3a'; // Светлое дерево
+  ctx.beginPath();
+  ctx.moveTo(10, 490); // Левый край
+  ctx.lineTo(170, 490); // Правый край
+  ctx.lineTo(165, 510); // Нижний правый (перспектива)
+  ctx.lineTo(15, 510);  // Нижний левый
+  ctx.closePath();
+  ctx.fill();
+  
+  // Линии досок
+  ctx.strokeStyle = '#6a4a2a'; ctx.lineWidth = 1.5;
+  for(let x = 30; x < 160; x += 20) {
+    ctx.beginPath(); ctx.moveTo(x, 490); ctx.lineTo(x-5, 510); ctx.stroke();
   }
-  ctx.fillStyle = isWoman ? '#c0392b' : '#2a4a6a'; ctx.beginPath(); ctx.ellipse(82, 460, 28, 40, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  
+  // --- РИСУЕМ РЫБАКА ---
+  // (Теперь он сидит на высоте y=490, а не 480)
+  ctx.fillStyle = isWoman ? '#c0392b' : '#2a4a6a';
+  ctx.beginPath(); ctx.ellipse(82, 460, 28, 40, 0, 0, Math.PI * 2); ctx.fill(); // Тело
+  
+  // Рука с удочкой
   ctx.strokeStyle = isWoman ? '#c0392b' : '#2a4a6a'; ctx.lineWidth = 11; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(70, 440); ctx.lineTo(115, 460); ctx.lineTo(rod.baseX, rod.baseY); ctx.stroke();
+  
+  // Голова
   ctx.fillStyle = '#f0c090'; ctx.beginPath(); ctx.arc(82, 400, 23, 0, Math.PI * 2); ctx.fill();
+  
+  // Одежда/Детали
   if (isWoman) {
+    ctx.fillStyle = '#c0392b'; ctx.beginPath(); ctx.moveTo(62, 460); ctx.lineTo(52, 490); ctx.lineTo(112, 490); ctx.lineTo(102, 460); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#8a2a1a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(72, 470); ctx.lineTo(68, 490); ctx.stroke(); ctx.beginPath(); ctx.moveTo(92, 470); ctx.lineTo(96, 490); ctx.stroke();
+    // Волосы
     ctx.fillStyle = '#8a5a2a'; ctx.beginPath(); ctx.ellipse(82, 400, 28, 32, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#f0c090'; ctx.beginPath(); ctx.ellipse(82, 400, 18, 22, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#8a5a2a'; ctx.beginPath(); ctx.ellipse(82, 430, 8, 20, 0, 0, Math.PI * 2); ctx.fill();
   } else {
+    ctx.fillStyle = '#1a2a3a'; ctx.fillRect(65, 475, 18, 20); ctx.fillRect(88, 475, 18, 20); // Штаны
+    // Кепка
     ctx.fillStyle = '#2a3a2a'; ctx.beginPath(); ctx.ellipse(82, 388, 28, 8, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#3a4a3a'; ctx.beginPath(); ctx.ellipse(82, 378, 22, 14, 0, Math.PI, 0); ctx.fill();
   }
+  
+  // Ноги (свисают с причала)
+  ctx.fillStyle = isWoman ? '#c0392b' : '#2a4a6a'; 
+  if (isWoman) {
+    ctx.fillRect(68, 490, 12, 25); // Левая нога
+    ctx.fillRect(84, 490, 12, 25); // Правая нога
+  } else {
+    ctx.fillRect(65, 490, 14, 25); 
+    ctx.fillRect(85, 490, 14, 25); 
+  }
+  // Обувь
+  ctx.fillStyle = '#7a5a2a'; 
+  ctx.beginPath(); ctx.ellipse(70, 520, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); 
+  ctx.beginPath(); ctx.ellipse(95, 520, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
+
+  // Ночная подсветка
   if (weather === 'night') {
     ctx.fillStyle = 'rgba(255, 220, 100, 0.2)'; ctx.beginPath(); ctx.arc(100, 450, 40, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#ffdd44'; ctx.beginPath(); ctx.arc(100, 450, 6, 0, Math.PI * 2); ctx.fill();
@@ -1945,7 +2125,7 @@ function drawFisherman() {
 function drawWeatherTimer() {
   const x = 15, y = 140;
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
-  ctx.beginPath(); ctx.roundRect(x, y, 160, 30, 8); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(x, y, 180, 30, 8); ctx.fill();
   
   ctx.font = '14px "Segoe UI", sans-serif';
   ctx.textAlign = 'left';
@@ -1959,20 +2139,43 @@ function drawWeatherTimer() {
 }
 
 function drawUI() {
-  // Убрали drawSundial. Оставили только текст.
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'; ctx.beginPath(); ctx.roundRect(15, 15, 270, 110, 10); ctx.fill();
+  // Основной блок (Монеты, Опыт, Серия)
+  let boxHeight = 110;
+  if (catchStreak >= 3 || missStreak >= 2) boxHeight += 20; // Добавляем место под серию
+  
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)'; 
+  ctx.beginPath(); ctx.roundRect(15, 15, 270, boxHeight, 10); ctx.fill();
+  
   ctx.font = 'bold 20px "Segoe UI", sans-serif'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
   ctx.fillText(`💰 Монеты: ${score}`, 30, 45);
   ctx.fillStyle = '#00ccff'; ctx.fillText(`✨ Опыт: ${xp}`, 30, 70);
   ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700'; ctx.fillText(`🏆 Рекорд: ${bestScore}`, 30, 95);
   ctx.fillStyle = '#aaddff'; ctx.fillText(`🎣 Поймано: ${totalCaught}`, 30, 115);
   
-  if (catchStreak >= 3) { ctx.fillStyle = '#ff9966'; ctx.font = 'bold 12px "Segoe UI"'; ctx.fillText(`🔥 Серия ${catchStreak}! (x${(1 + Math.min(catchStreak * 0.1, 1.0)).toFixed(1)} XP)`, 30, 135); }
-  else if (missStreak >= 2) { ctx.fillStyle = '#99ff99'; ctx.font = 'bold 12px "Segoe UI"'; ctx.fillText(`🍀 Удача рыбака`, 30, 135); }
-  
-  if (baitCount > 0) { ctx.fillStyle = '#ff9966'; ctx.font = '14px "Segoe UI"'; ctx.fillText(`🪱 Наживка: ×${baitCount}`, 30, 155); }
+  // Серия внутри блока
+  if (catchStreak >= 3) { 
+    ctx.fillStyle = '#ff9966'; ctx.font = 'bold 13px "Segoe UI"'; 
+    ctx.fillText(`🔥 Серия ${catchStreak}! (x${(1 + Math.min(catchStreak * 0.1, 1.0)).toFixed(1)} XP)`, 30, 140); 
+  } else if (missStreak >= 2) { 
+    ctx.fillStyle = '#99ff99'; ctx.font = 'bold 13px "Segoe UI"'; 
+    ctx.fillText(`🍀 Удача рыбака`, 30, 140); 
+  }
   
   drawWeatherTimer(); // Рисуем таймер под статой
+  
+  // Панель баффов (иконки)
+  let buffY = 185;
+  if (baitCount > 0) {
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.roundRect(15, buffY, 80, 30, 8); ctx.fill();
+    ctx.font = '16px "Segoe UI"'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+    ctx.fillText(`🪱 ×${baitCount}`, 55, buffY + 21);
+    buffY += 35;
+  }
+  if (hasHarpoon) {
+    ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.roundRect(15, buffY, 80, 30, 8); ctx.fill();
+    ctx.font = '16px "Segoe UI"'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+    ctx.fillText(`🔱 Готов`, 55, buffY + 21);
+  }
   
   if (lastCatch && (state === S.RESULT || state === S.RETURNING)) {
     const panelW = 280;
