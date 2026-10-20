@@ -70,11 +70,10 @@
   .shop-item.equipped { border-color: #ffd700; background: rgba(255,215,0,0.1); }
   .shop-item.harpoon { border-color: rgba(255,100,100,0.5); background: rgba(255,100,100,0.1); }
 
-  /* Кнопки покупки наживки пачками */
   .bait-buy-row { display: flex; gap: 4px; }
   .bait-buy-row .buy-btn { min-width: 44px; padding: 6px 4px; }
 
-  /* [NEW] Дерево улучшений в стиле "танков" (Абсолютное позиционирование) */
+  /* Дерево улучшений в стиле "танков" */
   .tech-tree-container {
     position: relative;
     width: 100%;
@@ -178,7 +177,7 @@
   .qte-btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(200, 40, 40, 0.8); border: 3px solid #ff6666; color: #fff; font-size: 30px; font-weight: bold; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 20px rgba(255,60,60,0.5); user-select: none; cursor: pointer; }
   .qte-btn:active { transform: scale(0.9); background: #ff4444; }
 
-  /* [NEW] Экран инструкции перед боссом */
+  /* Экран инструкции перед боссом */
   #bossInstruction { background: rgba(5, 8, 15, 0.95); }
   .boss-instr-panel { text-align: center; border-color: rgba(255,100,100,0.6); box-shadow: 0 0 60px rgba(255,50,50,0.4); }
   .boss-instr-panel h2 { color: #ff6666; font-size: 26px; margin-bottom: 6px; text-shadow: 0 0 20px rgba(255,0,0,0.6); }
@@ -222,7 +221,7 @@
     </div>
   </div>
 
-  <!-- [NEW] Инструкция перед боссом -->
+  <!-- Инструкция перед боссом -->
   <div id="bossInstruction" class="overlay">
     <div class="panel boss-instr-panel">
       <h2>🐋 СОМ-ГИГАНТ</h2>
@@ -382,7 +381,7 @@ const FISH_TYPES = [
 const FISH_ONLY = FISH_TYPES.filter(f => !f.isTrash);
 const TRASH_ONLY = FISH_TYPES.filter(f => f.isTrash);
 
-// РЕАЛИСТИЧНОЕ ДЕРЕВО УДОЧКИ С ПЕРЕКРЕСТИЯМИ
+// ДЕРЕВО УДОЧКИ С ПЕРЕКРЕСТИЯМИ
 const TREE_DATA = {
   body: {
     name: 'Тело удилища', icon: '🎣',
@@ -726,7 +725,6 @@ function buyHarpoon() {
   playSound('buy'); saveProgress(); renderShop();
 }
 
-// [NEW] Честный текст бонуса для каждой ветки дерева
 function getBonusText(branch, level) {
   const b = level.bonus;
   if (b === 0) return 'Базовая экипировка';
@@ -793,9 +791,8 @@ function renderShop() {
         </div>`;
     }).join('');
   } else if (currentShopTab === 'tree') {
-    // Константы для сетки
-    const CELL_W = 140; // Расстояние между колонками по X
-    const CELL_H = 110; // Расстояние между рядами по Y
+    const CELL_W = 140;
+    const CELL_H = 110;
     const START_X = 20;
     const START_Y = 20;
 
@@ -803,14 +800,12 @@ function renderShop() {
       <div class="tech-canvas">
         <svg class="tech-lines" id="techLines"></svg>`;
 
-    // 1. Рисуем карточки
     for (const [branchKey, branchData] of Object.entries(TREE_DATA)) {
       branchData.levels.forEach((level, idx) => {
         const currentLevel = treeUpgrades[branchKey] || 0;
         const isUnlocked = idx <= currentLevel;
         const isNext = idx === currentLevel + 1;
         
-        // Проверяем ВСЕ требования (перекрестия)
         let reqMet = true;
         if (level.requires && level.requires.length > 0) {
           for (const req of level.requires) {
@@ -835,7 +830,6 @@ function renderShop() {
           priceHtml = `<div class="node-price" style="color:#4CAF50;">✓</div>`;
         }
 
-        // Вычисляем позицию (абсолютное позиционирование)
         const posX = START_X + level.col * CELL_W;
         const posY = START_Y + level.row * CELL_H;
 
@@ -856,7 +850,6 @@ function renderShop() {
 
     html += `</div></div>`;
     
-    // Добавляем Острогу
     if (harpoonInShop && !hasHarpoon) {
        html += `
         <div class="tree-branch" style="border-color:rgba(255,100,100,0.5); background:rgba(255,100,100,0.1); margin-top:15px;">
@@ -890,8 +883,6 @@ function renderShop() {
     }
 
     container.innerHTML = html;
-    
-    // Рисуем линии после вставки в DOM
     setTimeout(() => drawTreeLines(CELL_W, CELL_H, START_X, START_Y), 10);
   } else if (currentShopTab === 'books') {
     container.innerHTML = BOOKS.map(book => {
@@ -907,18 +898,16 @@ function renderShop() {
   }
 }
 
-// [NEW] Обработка клика по узлу дерева
 function handleTreeClick(branch, levelIdx) {
   const branchData = TREE_DATA[branch];
   const currentLevel = treeUpgrades[branch] || 0;
   
-  if (levelIdx <= currentLevel) return; // Уже куплено
-  if (levelIdx !== currentLevel + 1) return; // Не следующий уровень
+  if (levelIdx <= currentLevel) return;
+  if (levelIdx !== currentLevel + 1) return;
   
   const level = branchData.levels[levelIdx];
   if (score < level.cost) { vibrate([50, 50, 50]); return; }
   
-  // Проверка перекрестных требований
   if (level.requires && level.requires.length > 0) {
     for (const req of level.requires) {
       if ((treeUpgrades[req.branch] || 0) < req.level) {
@@ -937,7 +926,6 @@ function handleTreeClick(branch, levelIdx) {
   vibrate(100);
 }
 
-// [NEW] Тултип для дерева
 function showTreeTooltip(e, branch, levelIdx) {
   const level = TREE_DATA[branch].levels[levelIdx];
   let tt = document.getElementById('techTooltip');
@@ -978,42 +966,33 @@ function hideTreeTooltip() {
   if (tt) tt.style.display = 'none';
 }
 
-// [NEW] Рисование линий между узлами (SVG)
 function drawTreeLines(CELL_W, CELL_H, START_X, START_Y) {
   const svg = document.getElementById('techLines');
   if (!svg) return;
   svg.innerHTML = '';
   
-  // Размеры карточки (должны совпадать с CSS)
   const NODE_W = 110;
   const NODE_H = 90;
 
-  // Проходим по всем веткам и уровням
   for (const [branch, data] of Object.entries(TREE_DATA)) {
     data.levels.forEach((level, idx) => {
       if (!level.requires || level.requires.length === 0) return;
 
-      // Целевая точка (центр текущей карточки)
       const toX = START_X + level.col * CELL_W + NODE_W / 2;
       const toY = START_Y + level.row * CELL_H + NODE_H / 2;
 
       level.requires.forEach(req => {
-        // Исходная точка (центр карточки-требования)
         const reqLevel = TREE_DATA[req.branch].levels[req.level];
         const fromX = START_X + reqLevel.col * CELL_W + NODE_W / 2;
         const fromY = START_Y + reqLevel.row * CELL_H + NODE_H / 2;
 
-        // Проверяем, куплено ли требование
         const isBought = (treeUpgrades[req.branch] || 0) >= req.level;
         const color = isBought ? '#4CAF50' : '#4a5a6a';
 
-        // Рисуем "танковую" линию (зигзагом)
         let pathD = '';
         if (fromY === toY) {
-          // Прямая горизонтальная
           pathD = `M ${fromX + NODE_W/2} ${fromY} L ${toX - NODE_W/2} ${toY}`;
         } else {
-          // Угловая (сначала вправо, потом вверх/вниз, потом вправо)
           const midX = fromX + (toX - fromX) / 2;
           pathD = `M ${fromX + NODE_W/2} ${fromY} 
                    L ${midX} ${fromY} 
@@ -1272,7 +1251,6 @@ function startReeling() {
   const netBonus    = (TREE_DATA.net.levels[treeUpgrades.net || 0]?.bonus || 0);
   const handleBonus = (TREE_DATA.handle.levels[treeUpgrades.handle || 0]?.bonus || 0);
   
-  // Скорость индикатора
   let speedReduction = (upgrades.reel || 0) * 0.15 + bodyBonus + lineBonus + reelBonus;
   if (achievements.trashman) speedReduction += 0.15;
   if (achievements.rodmaster) speedReduction += 0.10;
@@ -1281,25 +1259,22 @@ function startReeling() {
   if (missStreak >= 2) difficultyMultiplier = Math.max(0.5, 1 - (missStreak - 1) * 0.2);
   reelSpeed = (85 + Math.random() * 40) * Math.max(0.2, 1 - speedReduction) * difficultyMultiplier;
   
-  // ШИРИНА ЗОНЫ
-  zoneStart = 30 + Math.random() * 20; // Начинаем чуть раньше (30-50)
-  
-  // Базовая зона теперь больше (30-45 вместо 18-30)
-  let baseZone = 30 + Math.random() * 15; 
-  
-  // Бонусы от прокачки в магазине
-  let bonusZone = (upgrades.zone || 0) * 5; // Чуть увеличили бонус магазина
+  // Генерация зоны
+  let baseZone = 35 + Math.random() * 10;
+  let bonusZone = (upgrades.zone || 0) * 5;
   if (achievements.trashman) bonusZone += 5;
   
-  // Бонусы от дерева (теперь каждый уровень дает ощутимый прирост)
-  // handle и keeper дают по +25 к зоне за максимальный уровень
   let finalZone = baseZone + bonusZone + (keeperBonus * 25) + (netBonus * 15) + (handleBonus * 25);
+  if (catchStreak >= 3) finalZone *= 0.85;
+  if (missStreak >= 2) finalZone *= 1.2;
   
-  // Штрафы за серию (но не такие жесткие)
-  if (catchStreak >= 3) finalZone *= 0.85; // Было 0.8
-  if (missStreak >= 2) finalZone *= 1.2;   // Было 1.3
+  finalZone = Math.min(60, finalZone);
   
-  zoneEnd = Math.min(90, zoneStart + finalZone); // Ограничиваем правый край
+  const maxStart = 100 - finalZone - 10;
+  zoneStart = 15 + Math.random() * (maxStart - 15); 
+  zoneStart = Math.max(10, Math.min(zoneStart, maxStart)); 
+  
+  zoneEnd = zoneStart + finalZone;
   
   addParticles(bobber.x, bobber.y, '#fff', 15);
   addRipple(bobber.x, bobber.y);
@@ -1756,17 +1731,60 @@ function drawUI() {
 
 function drawReelUI() {
   const barW = 500, barH = 32, barX = (W - barW) / 2, barY = H - 130;
-  ctx.fillStyle = 'rgba(0,0,0,0.85)'; ctx.beginPath(); ctx.roundRect(barX - 25, barY - 55, barW + 50, barH + 100, 16); ctx.fill();
+  
+  ctx.fillStyle = 'rgba(0,0,0,0.85)'; 
+  ctx.beginPath(); 
+  ctx.roundRect(barX - 25, barY - 55, barW + 50, barH + 100, 16); 
+  ctx.fill();
   ctx.strokeStyle = 'rgba(100,200,100,0.5)'; ctx.lineWidth = 2; ctx.stroke();
-  ctx.font = 'bold 22px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.fillText('🎣 Кликни в зелёной зоне!', W/2, barY - 22);
-  ctx.fillStyle = '#222'; ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 8); ctx.fill();
-  const zx = barX + (zoneStart / 100) * barW, zw = ((zoneEnd - zoneStart) / 100) * barW;
-  const grad = ctx.createLinearGradient(zx, barY, zx + zw, barY); grad.addColorStop(0, '#4CAF50'); grad.addColorStop(0.5, '#7fff7f'); grad.addColorStop(1, '#4CAF50');
-  ctx.fillStyle = grad; ctx.beginPath(); ctx.roundRect(zx, barY, zw, barH, 6); ctx.fill();
-  ctx.strokeStyle = '#aaffaa'; ctx.lineWidth = 2; ctx.strokeRect(zx, barY, zw, barH);
-  const ix = barX + (reelPos / 100) * barW;
-  ctx.shadowColor = '#fff'; ctx.shadowBlur = 20; ctx.fillStyle = '#fff'; ctx.fillRect(ix - 3, barY - 8, 6, barH + 16); ctx.shadowBlur = 0;
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(ix, barY - 12); ctx.lineTo(ix - 6, barY - 20); ctx.lineTo(ix + 6, barY - 20); ctx.closePath(); ctx.fill();
+  
+  ctx.font = 'bold 22px "Segoe UI", sans-serif'; 
+  ctx.textAlign = 'center'; 
+  ctx.fillStyle = '#fff'; 
+  ctx.fillText('🎣 Кликни в зелёной зоне!', W/2, barY - 22);
+  
+  ctx.fillStyle = '#222'; 
+  ctx.beginPath(); 
+  ctx.roundRect(barX, barY, barW, barH, 8); 
+  ctx.fill();
+  
+  const safeStart = Math.max(0, Math.min(100, zoneStart || 0));
+  const safeEnd = Math.max(0, Math.min(100, zoneEnd || 0));
+  
+  const zx = barX + (safeStart / 100) * barW;
+  const zw = Math.max(0, ((safeEnd - safeStart) / 100) * barW);
+  
+  if (zw > 0) {
+    const grad = ctx.createLinearGradient(zx, barY, zx + zw, barY); 
+    grad.addColorStop(0, '#4CAF50'); 
+    grad.addColorStop(0.5, '#7fff7f'); 
+    grad.addColorStop(1, '#4CAF50');
+    
+    ctx.fillStyle = grad; 
+    ctx.beginPath(); 
+    ctx.roundRect(zx, barY, zw, barH, 6); 
+    ctx.fill();
+    
+    ctx.strokeStyle = '#aaffaa'; 
+    ctx.lineWidth = 2; 
+    ctx.strokeRect(zx, barY, zw, barH);
+  }
+  
+  const ix = barX + (Math.max(0, Math.min(100, reelPos)) / 100) * barW;
+  
+  ctx.shadowColor = '#fff'; 
+  ctx.shadowBlur = 20; 
+  ctx.fillStyle = '#fff'; 
+  ctx.fillRect(ix - 3, barY - 8, 6, barH + 16); 
+  ctx.shadowBlur = 0;
+  
+  ctx.fillStyle = '#fff'; 
+  ctx.beginPath(); 
+  ctx.moveTo(ix, barY - 12); 
+  ctx.lineTo(ix - 6, barY - 20); 
+  ctx.lineTo(ix + 6, barY - 20); 
+  ctx.closePath(); 
+  ctx.fill();
 }
 
 function drawSwipeIndicator() {
@@ -1811,13 +1829,11 @@ function drawBoss() {
   
   ctx.save(); ctx.translate(shakeX, shakeY);
   
-  // Длинное тело сома
   ctx.fillStyle = '#2a2a2a';
   ctx.beginPath();
   ctx.ellipse(boss.x - 100, boss.y, 250, 80, 0, 0, Math.PI * 2);
   ctx.fill();
   
-  // Хвост
   ctx.beginPath();
   ctx.moveTo(boss.x - 300, boss.y);
   ctx.lineTo(boss.x - 400, boss.y - 100);
@@ -1825,19 +1841,16 @@ function drawBoss() {
   ctx.closePath();
   ctx.fill();
   
-  // Огромная голова
   ctx.fillStyle = '#1a1a1a';
   ctx.beginPath();
   ctx.ellipse(boss.x + 150, boss.y, 120, 90, 0, 0, Math.PI * 2);
   ctx.fill();
   
-  // Огромный рот
   ctx.fillStyle = '#000';
   ctx.beginPath();
   ctx.ellipse(boss.x + 220, boss.y + 20, 80, 50, -0.2, 0, Math.PI * 2);
   ctx.fill();
   
-  // Зубы
   ctx.fillStyle = '#ddd';
   for (let i = 0; i < 12; i++) {
     const tx = boss.x + 160 + (i % 6) * 20;
@@ -1849,12 +1862,10 @@ function drawBoss() {
     ctx.fill();
   }
   
-  // Усы (главная фишка сома)
   ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 8; ctx.lineCap = 'round';
   ctx.beginPath(); ctx.moveTo(boss.x + 200, boss.y - 40); ctx.quadraticCurveTo(boss.x + 300, boss.y - 150, boss.x + 400, boss.y - 100); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(boss.x + 200, boss.y + 60); ctx.quadraticCurveTo(boss.x + 300, boss.y + 150, boss.x + 400, boss.y + 100); ctx.stroke();
   
-  // Глаза
   ctx.fillStyle = '#ff0000';
   ctx.beginPath(); ctx.arc(boss.x + 120, boss.y - 40, 20, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(boss.x + 120, boss.y + 40, 20, 0, Math.PI * 2); ctx.fill();
@@ -1862,12 +1873,10 @@ function drawBoss() {
   ctx.beginPath(); ctx.arc(boss.x + 120, boss.y - 40, 8, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(boss.x + 120, boss.y + 40, 8, 0, Math.PI * 2); ctx.fill();
   
-  // Плавники
   ctx.fillStyle = '#2a2a2a';
   ctx.beginPath(); ctx.moveTo(boss.x - 50, boss.y - 60); ctx.lineTo(boss.x - 100, boss.y - 180); ctx.lineTo(boss.x + 20, boss.y - 80); ctx.fill();
   ctx.beginPath(); ctx.moveTo(boss.x - 50, boss.y + 60); ctx.lineTo(boss.x - 100, boss.y + 180); ctx.lineTo(boss.x + 20, boss.y + 80); ctx.fill();
   
-  // Волны
   ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 4;
   ctx.beginPath(); ctx.ellipse(boss.x, boss.y + 100, 350, 50, 0, 0, Math.PI * 2); ctx.stroke();
   
@@ -1976,7 +1985,6 @@ function draw() {
   
   drawFisherman();
   
-  // Отрисовка удилища с учётом дерева
   const bodyLvl = treeUpgrades.body || 0;
   let rodColor = '#8B4513';
   let rodColor2 = '#a06030';
