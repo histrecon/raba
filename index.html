@@ -90,9 +90,9 @@
   .char-select-panel h2 { font-size: 24px; margin-bottom: 8px; color: #fff; }
   .char-select-panel p { color: #aaa; margin-bottom: 20px; font-size: 13px; }
   .char-options { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-  .char-card { background: rgba(255,255,255,0.05); border: 3px solid rgba(100,180,255,0.2); border-radius: 12px; padding: 15px; width: 140px; cursor: pointer; }
+  .char-card { background: rgba(255,255,255,0.05); border: 3px solid rgba(100,180,255,0.2); border-radius: 12px; padding: 15px; width: 140px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
   .char-card:active { border-color: #aaddff; background: rgba(100,180,255,0.1); transform: translateY(-3px); }
-  .char-card canvas { width: 90px; height: 90px; border-radius: 50%; background: rgba(0,0,0,0.3); margin-bottom: 8px; object-fit: contain; }
+  .char-card canvas { width: 90px; height: 90px; border-radius: 50%; background: rgba(0,0,0,0.3); margin-bottom: 8px; object-fit: contain; display: block; }
   .char-card .char-name { color: #fff; font-weight: bold; font-size: 15px; }
   .char-card .char-desc { color: #888; font-size: 11px; margin-top: 2px; }
 
@@ -127,8 +127,14 @@
       <h2>🎣 Кто сегодня рыбачит?</h2>
       <p>Выбери персонажа. Повлияет только на внешний вид.</p>
       <div class="char-options">
-        <div class="char-card" onclick="selectCharacter('fisher', event)"><canvas id="previewFisher" width="120" height="120"></canvas><div class="char-name">Рыбак</div></div>
-        <div class="char-card" onclick="selectCharacter('fisherwoman', event)"><canvas id="previewFisherwoman" width="120" height="120"></canvas><div class="char-name">Рыбачка</div></div>
+        <div class="char-card" onclick="selectCharacter('fisher', event)">
+          <canvas id="previewFisher" width="120" height="120"></canvas>
+          <div class="char-name">Рыбак</div>
+        </div>
+        <div class="char-card" onclick="selectCharacter('fisherwoman', event)">
+          <canvas id="previewFisherwoman" width="120" height="120"></canvas>
+          <div class="char-name">Рыбачка</div>
+        </div>
       </div>
     </div>
   </div>
@@ -295,7 +301,7 @@ let qteTimer = 0;
 let qteMaxTime = 1.0;
 
 // ==================================================================
-// ЧАСТЬ 2: СОХРАНЕНИЕ И ЗАГРУЗКА
+// ЧАСТЬ 2: СОХРАНЕНИЕ, ЗАГРУЗКА И АУДИО
 // ==================================================================
 function saveProgress() {
   localStorage.setItem('fishScore', score);
@@ -322,9 +328,7 @@ function checkBossTrigger() {
   const hasNight = (achievements.nightCount || 0) >= 10;
   return hasCollector && hasTrashman && hasPro && hasNight;
 }
- // ==================================================================
-// ЧАСТЬ 3: АУДИО СИСТЕМА (Web Audio API)
-// ==================================================================
+
 let audioCtx = null;
 let soundEnabled = localStorage.getItem('fishSoundEnabled') !== 'false';
 let bgNoiseNode = null;
@@ -432,7 +436,7 @@ function ensureAudioStarted() {
 document.getElementById('soundBtn').textContent = soundEnabled ? '🔊' : '🔇';
 
 // ==================================================================
-// ЧАСТЬ 4: УТИЛИТЫ И АДАПТАЦИЯ
+// ЧАСТЬ 3: УТИЛИТЫ И АДАПТАЦИЯ
 // ==================================================================
 function vibrate(pattern) { if (navigator.vibrate) navigator.vibrate(pattern); }
 function toggleFullscreen(e) {
@@ -450,6 +454,7 @@ document.addEventListener('fullscreenchange', () => setTimeout(resizeCanvas, 100
 
 function drawPreview(canvasId, type) {
   const c = document.getElementById(canvasId);
+  if (!c) return;
   const cCtx = c.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
   c.width = 120 * dpr; c.height = 120 * dpr;
@@ -489,16 +494,6 @@ function drawCharacterBody(cCtx, x, y, type, scale = 1, isPreview = false) {
   }
   cCtx.restore();
 }
-drawPreview('previewFisher', 'fisher');
-drawPreview('previewFisherwoman', 'fisherwoman');
-if (character) document.getElementById('charSelect').classList.remove('show');
-function selectCharacter(type, e) {
-  if (e) e.stopPropagation();
-  character = type;
-  localStorage.setItem('fishCharacter', type);
-  document.getElementById('charSelect').classList.remove('show');
-  ensureAudioStarted();
-}
 
 function resizeCanvas() {
   const dpr = window.devicePixelRatio || 1;
@@ -511,8 +506,21 @@ window.addEventListener('resize', resizeCanvas);
 window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 200));
 resizeCanvas();
 
+// ВАЖНО: Вызов превью ПОСЛЕ объявления функции drawCharacterBody
+drawPreview('previewFisher', 'fisher');
+drawPreview('previewFisherwoman', 'fisherwoman');
+
+if (character) document.getElementById('charSelect').classList.remove('show');
+function selectCharacter(type, e) {
+  if (e) e.stopPropagation();
+  character = type;
+  localStorage.setItem('fishCharacter', type);
+  document.getElementById('charSelect').classList.remove('show');
+  ensureAudioStarted();
+}
+
 // ==================================================================
-// ЧАСТЬ 5: МАГАЗИН
+// ЧАСТЬ 4: МАГАЗИН
 // ==================================================================
 const SHOP_ITEMS = [
   { id: 'reel', name: '⚡ Скорость', desc: 'Замедляет индикатор', max: 5, baseCost: 50, costMult: 2 },
@@ -621,7 +629,7 @@ function renderShop() {
 }
 
 // ==================================================================
-// ЧАСТЬ 6: КАТАЛОГ И ДОСТИЖЕНИЯ
+// ЧАСТЬ 5: КАТАЛОГ И ДОСТИЖЕНИЯ
 // ==================================================================
 function addToCatalog(name) {
   if (!catalog[name]) catalog[name] = 0;
@@ -705,7 +713,7 @@ function renderCatalog() {
 }
 
 // ==================================================================
-// ЧАСТЬ 7: ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// ЧАСТЬ 6: ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И ВВОД
 // ==================================================================
 function addParticles(x, y, color, count, spread = 4) {
   for (let i = 0; i < count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*spread*2, vy: (Math.random()-0.5)*spread*2-1, life: 1, color, size: 2+Math.random()*4 });
@@ -750,18 +758,12 @@ function getCanvasCoords(e) {
   return { x: (clientX - rect.left - offsetX) / scale, y: (clientY - rect.top - offsetY) / scale };
 }
 
-// ==================================================================
-// ЧАСТЬ 8: ВВОД (ИСПРАВЛЕНИЕ БАГА С ВЫВАЖИВАНИЕМ)
-// ==================================================================
 let touchTimeout = null;
 let swipe = { active: false, startX: 0, startY: 0, curX: 0, curY: 0 };
 
-// ГЛАВНАЯ ФУНКЦИЯ ОБРАБОТКИ КЛИКОВ
 function handleInput(e) {
   ensureAudioStarted();
   if (document.querySelector('.overlay.show')) return;
-  
-  // ВАЖНО: если кликнули во время QTE, передаём в handleQteKey (для мышки)
   if (state === S.BOSS_QTE) return;
   
   if (e.type === 'touchstart' && e.touches && e.touches.length > 0) {
@@ -769,7 +771,6 @@ function handleInput(e) {
     if (touchTimeout) return;
     touchTimeout = setTimeout(() => { touchTimeout = null; }, 200);
   }
-  
   const { x, y } = getCanvasCoords(e);
   bobber.mx = x; bobber.my = y;
   handleAction(x, y);
@@ -778,7 +779,7 @@ function handleInput(e) {
 function handleAction(mx, my) {
   if (state === S.IDLE) castRod(mx, my);
   else if (state === S.BITE) startReeling();
-  else if (state === S.REELING) checkReel();  // <-- Исправлено, теперь срабатывает
+  else if (state === S.REELING) checkReel();
   else if (state === S.RESULT && stateTime > 0.8) resetToIdle();
   else if (state === S.BOSS_INTRO && stateTime > 2.5) { state = S.BOSS_QTE; startQte(); }
   else if (state === S.BOSS_DEATH && stateTime > 3) { state = S.IDLE; stateTime = 0; }
@@ -809,38 +810,30 @@ function handleSwipeEnd(e) {
   else handleInput(e);
 }
 
-// ВЕШАЕМ СОБЫТИЯ
 canvas.addEventListener('mousedown', handleInput);
-canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); handleInput(e); }); // ПКМ
+canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); handleInput(e); });
 canvas.addEventListener('touchstart', handleSwipeStart, { passive: false });
 canvas.addEventListener('touchmove', handleSwipeMove, { passive: false });
 canvas.addEventListener('touchend', handleSwipeEnd, { passive: false });
 
-// КЛАВИАТУРА
 window.addEventListener('keydown', (e) => {
   if (state === S.BOSS_QTE) {
     if (BOSS_KEYS.includes(e.key)) { handleQteKey(e.key); e.preventDefault(); }
     return;
   }
-  
-  // ИСПРАВЛЕНИЕ: Space/Enter теперь работают везде
   if (e.code === 'Space' || e.code === 'Enter') {
     e.preventDefault();
     ensureAudioStarted();
     if (document.querySelector('.overlay.show')) return;
-    
-    // Если в мини-игре (зелёная зона) — проверяем попадание
     if (state === S.REELING) { checkReel(); return; }
-    // Если клюёт — подсекаем
     if (state === S.BITE) { startReeling(); return; }
-    // Иначе забрасываем
     if (state === S.IDLE) { handleAction(bobber.mx, bobber.my); return; }
-    // Иначе продолжаем
     handleAction(0, 0);
   }
 });
+
 // ==================================================================
-// ЧАСТЬ 9: ЛОГИКА РЫБАЛКИ
+// ЧАСТЬ 7: ЛОГИКА РЫБАЛКИ
 // ==================================================================
 function castRod(mx, my) {
   if (checkBossTrigger() && !bossDefeated) {
@@ -958,7 +951,7 @@ function checkReel() {
 function resetToIdle() { state = S.IDLE; stateTime = 0; lastCatch = null; }
 
 // ==================================================================
-// ЧАСТЬ 10: БОСС ЛЕВИАФАН
+// ЧАСТЬ 8: БОСС ЛЕВИАФАН
 // ==================================================================
 function startBossFight() {
   state = S.BOSS_INTRO; stateTime = 0;
@@ -1031,7 +1024,7 @@ function loseBossFight() {
 }
 
 // ==================================================================
-// ЧАСТЬ 11: ОБНОВЛЕНИЕ (ИГРОВАЯ ЛОГИКА)
+// ЧАСТЬ 9: ОБНОВЛЕНИЕ (ИГРОВАЯ ЛОГИКА)
 // ==================================================================
 function update(dt) {
   stateTime += dt;
@@ -1122,7 +1115,7 @@ function update(dt) {
 }
 
 // ==================================================================
-// ЧАСТЬ 12: РИСОВАНИЕ
+// ЧАСТЬ 10: РИСОВАНИЕ
 // ==================================================================
 function drawFishBody(x, y, size, color, dir = 1, alpha = 1) {
   ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1); ctx.globalAlpha = alpha;
@@ -1387,7 +1380,7 @@ function drawBossQte() {
 }
 
 // ==================================================================
-// ЧАСТЬ 13: ГЛАВНЫЙ ЦИКЛ
+// ЧАСТЬ 11: ГЛАВНЫЙ ЦИКЛ
 // ==================================================================
 function draw() {
   const t = performance.now() / 1000;
@@ -1507,3 +1500,6 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+</script>
+</body>
+</html>
