@@ -146,11 +146,22 @@
   .trophy-card .t-weight { font-size: 16px; color: #ffd700; font-weight: bold; margin-top: 2px; }
   .trophy-card .t-label { font-size: 10px; color: #888; }
   
-  /* Гардероб */
   .wardrobe-item { background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
   .wardrobe-item.unlocked { border-color: rgba(100,255,100,0.5); background: rgba(100,255,100,0.1); }
   .wardrobe-item.active { border-color: #ffd700; background: rgba(255,215,0,0.15); box-shadow: 0 0 10px rgba(255,215,0,0.3); }
   .wardrobe-item.locked { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+
+  .warning-box {
+    background: rgba(255, 200, 0, 0.15);
+    border: 2px solid #ffaa00;
+    border-radius: 8px;
+    padding: 8px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: #ffdd88;
+    text-align: center;
+    line-height: 1.4;
+  }
 </style>
 </head>
 <body>
@@ -258,6 +269,10 @@
         <button class="shop-tab" id="tabBooks" onclick="switchShopTab('books')">📕 Книги (Монеты)</button>
       </div>
       <div id="shopItems"></div>
+      
+      <div class="warning-box" style="margin: 10px 0;">
+        ⚠️ <b>Внимание!</b> Алкоголь вредит вашему здоровью. В игре он влияет на зрение и скорость реакции. Пейте ответственно.
+      </div>
     </div>
   </div>
   
@@ -301,6 +316,17 @@ let catchStreak = 0, missStreak = 0;
 let character = localStorage.getItem('fishCharacter') || null;
 let activeHat = localStorage.getItem('fishActiveHat') || null;
 let unlockedHats = JSON.parse(localStorage.getItem('fishUnlockedHats') || '[]');
+
+let boozeCount = parseInt(localStorage.getItem('fishBoozeCount') || '0');
+let drunkLevel = parseInt(localStorage.getItem('fishDrunkLevel') || '0');
+let drunkTimer = parseFloat(localStorage.getItem('fishDrunkTimer') || '0');
+let totalDrunk = parseInt(localStorage.getItem('fishTotalDrunk') || '0');
+let easterEggActive = localStorage.getItem('fishEasterEgg') === 'true';
+const DRUNK_DURATION = 90;
+const MAX_DRUNK_LEVEL = 5;
+const EASTER_EGG_TRIGGER = 8;
+
+let boozeBtnRect = null;
 
 const WEATHERS = ['day', 'sunset', 'night', 'rain', 'fog'];
 const WEATHER_ICONS = { day: '☀️', sunset: '🌅', night: '🌙', rain: '🌧️', fog: '🌫️' };
@@ -349,17 +375,17 @@ const BOOKS = [
 ];
 
 const FISH_TYPES = [
-  { name: 'Окунь',         color: '#e8a020', size: 25, pts: 10,  xp: 8,   baseWeight: 30, minW: 100, maxW: 800,  emoji: '🐟', isTrash: false, isRare: false },
-  { name: 'Карась',        color: '#d4b048', size: 30, pts: 15,  xp: 12,  baseWeight: 25, minW: 200, maxW: 1500, emoji: '🐠', isTrash: false, isRare: false },
-  { name: 'Щука',          color: '#4a8a3a', size: 45, pts: 30,  xp: 25,  baseWeight: 15, minW: 1000, maxW: 7000, emoji: '🦈', isTrash: false, isRare: false },
-  { name: 'Сом',           color: '#5a4a3a', size: 55, pts: 50,  xp: 40,  baseWeight: 8,  minW: 5000, maxW: 40000, emoji: '🐋', isTrash: false, isRare: true },
-  { name: 'Золотая рыбка', color: '#ffd700', size: 25, pts: 100, xp: 80,  baseWeight: 2,  minW: 50,   maxW: 200,  emoji: '✨', isTrash: false, isRare: true },
-  { name: 'Форель',        color: '#c08060', size: 35, pts: 40,  xp: 30,  baseWeight: 4,  minW: 300,  maxW: 3000, emoji: '🐡', isTrash: false, isRare: false },
-  { name: 'Лещ',           color: '#8a7a5a', size: 38, pts: 25,  xp: 20,  baseWeight: 5,  minW: 500,  maxW: 4000, emoji: '🎏', isTrash: false, isRare: false },
-  { name: 'Ёрш',           color: '#6a7a8a', size: 20, pts: 8,   xp: 5,   baseWeight: 6,  minW: 30,   maxW: 150,  emoji: '🐟', isTrash: false, isRare: false },
-  { name: 'Плотва',        color: '#aab0a0', size: 22, pts: 12,  xp: 8,   baseWeight: 8,  minW: 50,   maxW: 300,  emoji: '🐠', isTrash: false, isRare: false },
-  { name: 'Карп',          color: '#b08040', size: 50, pts: 60,  xp: 45,  baseWeight: 2,  minW: 2000, maxW: 15000, emoji: '🐳', isTrash: false, isRare: true },
-  { name: 'Угорь',         color: '#4a5a4a', size: 60, pts: 70,  xp: 50,  baseWeight: 3,  minW: 500,  maxW: 5000, emoji: '🐍', isTrash: false, isRare: true },
+  { name: 'Окунь',         color: '#e8a020', size: 25, pts: 15,  xp: 8,   baseWeight: 30, minW: 100, maxW: 800,  emoji: '🐟', isTrash: false, isRare: false },
+  { name: 'Карась',        color: '#d4b048', size: 30, pts: 25,  xp: 12,  baseWeight: 25, minW: 200, maxW: 1500, emoji: '🐠', isTrash: false, isRare: false },
+  { name: 'Щука',          color: '#4a8a3a', size: 45, pts: 50,  xp: 25,  baseWeight: 15, minW: 1000, maxW: 7000, emoji: '🦈', isTrash: false, isRare: false },
+  { name: 'Сом',           color: '#5a4a3a', size: 55, pts: 80,  xp: 40,  baseWeight: 8,  minW: 5000, maxW: 40000, emoji: '🐋', isTrash: false, isRare: true },
+  { name: 'Золотая рыбка', color: '#ffd700', size: 25, pts: 200, xp: 80,  baseWeight: 2,  minW: 50,   maxW: 200,  emoji: '✨', isTrash: false, isRare: true },
+  { name: 'Форель',        color: '#c08060', size: 35, pts: 65,  xp: 30,  baseWeight: 4,  minW: 300,  maxW: 3000, emoji: '🐡', isTrash: false, isRare: false },
+  { name: 'Лещ',           color: '#8a7a5a', size: 38, pts: 40,  xp: 20,  baseWeight: 5,  minW: 500,  maxW: 4000, emoji: '🎏', isTrash: false, isRare: false },
+  { name: 'Ёрш',           color: '#6a7a8a', size: 20, pts: 12,  xp: 5,   baseWeight: 6,  minW: 30,   maxW: 150,  emoji: '🐟', isTrash: false, isRare: false },
+  { name: 'Плотва',        color: '#aab0a0', size: 22, pts: 18,  xp: 8,   baseWeight: 8,  minW: 50,   maxW: 300,  emoji: '🐠', isTrash: false, isRare: false },
+  { name: 'Карп',          color: '#b08040', size: 50, pts: 100, xp: 45,  baseWeight: 2,  minW: 2000, maxW: 15000, emoji: '🐳', isTrash: false, isRare: true },
+  { name: 'Угорь',         color: '#4a5a4a', size: 60, pts: 120, xp: 50,  baseWeight: 3,  minW: 500,  maxW: 5000, emoji: '🐍', isTrash: false, isRare: true },
   { name: 'Ботинок',       color: '#3a3a3a', size: 35, pts: 1,   xp: 0,   baseWeight: 6,  minW: 300,  maxW: 1200, emoji: '👢', isTrash: true, isRare: false },
   { name: 'Бутылка',       color: '#4a8a4a', size: 28, pts: 1,   xp: 0,   baseWeight: 6,  minW: 100,  maxW: 500,  emoji: '🍾', isTrash: true, isRare: false },
   { name: 'Шина',          color: '#1a1a1a', size: 45, pts: 1,   xp: 0,   baseWeight: 6,  minW: 5000, maxW: 15000, emoji: '🛞', isTrash: true, isRare: false },
@@ -471,14 +497,30 @@ const ACHV_LIST = [
       { threshold: 1000,name: 'Легенда',   desc: 'Поймать 1000 рыб', bonus: '+500 монет + 👒',    check: () => totalCaught >= 1000,progress: () => Math.min(totalCaught, 1000) + '/1000' }
     ]
   },
-  { id: 'collector', name: '🏆 Коллекционер', desc: 'Поймать всех рыб', bonus: '+10% к монетам', check: () => FISH_ONLY.every(f => catalog[f.name] > 0), progress: () => FISH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + FISH_ONLY.length, isBossKey: true },
-  { id: 'trashman', name: '🗑️ Мусорщик', desc: 'Собрать весь мусор', bonus: '+15% к скорости, +4% к зоне', check: () => TRASH_ONLY.every(f => catalog[f.name] > 0), progress: () => TRASH_ONLY.filter(f => catalog[f.name] > 0).length + '/' + TRASH_ONLY.length, isBossKey: true },
+  { 
+    id: 'collector', 
+    name: '🏆 Коллекционер', 
+    desc: 'Поймать все 11 видов рыб', 
+    bonus: '+10% к монетам', 
+    check: () => FISH_ONLY.every(f => catalog[f.name] > 0), 
+    progress: () => `Собрано: ${FISH_ONLY.filter(f => catalog[f.name] > 0).length} / 11 видов`, 
+    isBossKey: true 
+  },
+  { 
+    id: 'trashman', 
+    name: '🗑️ Мусорщик', 
+    desc: 'Собрать все 4 вида мусора', 
+    bonus: '+15% к скорости, +4% к зоне', 
+    check: () => TRASH_ONLY.every(f => catalog[f.name] > 0), 
+    progress: () => `Собрано: ${TRASH_ONLY.filter(f => catalog[f.name] > 0).length} / 4 вида`, 
+    isBossKey: true 
+  },
   { id: 'night', name: '🌙 Ночной охотник', desc: 'Поймать 10 рыб ночью', bonus: '+5% к шансу редкой рыбы', check: () => (achievements.nightCount || 0) >= 10, progress: () => Math.min(achievements.nightCount || 0, 10) + '/10', isBossKey: true },
 
   { id: 'weight', name: '⚖️ Трофейщик', levels: [
-      { threshold: 1000, name: 'Первый трофей', desc: 'Поймать рыбу > 1 кг', bonus: '+50 монет', check: () => Object.values(fishRecords).some(w => w >= 1000), progress: () => '...' },
-      { threshold: 5000, name: 'Тяжеловес', desc: 'Поймать рыбу > 5 кг', bonus: '+150 монет', check: () => Object.values(fishRecords).some(w => w >= 5000), progress: () => '...' },
-      { threshold: 15000, name: 'Гигант', desc: 'Поймать рыбу > 15 кг', bonus: '+300 монет + 👑', check: () => Object.values(fishRecords).some(w => w >= 15000), progress: () => '...' }
+      { threshold: 1000,  name: 'Первый трофей', desc: 'Поймать любую рыбу весом от 1 кг',  bonus: '+50 монет',  check: () => Object.values(fishRecords).some(w => w >= 1000),  progress: () => `Макс. вес: ${Math.max(0, ...Object.values(fishRecords)).toLocaleString()} г` },
+      { threshold: 5000,  name: 'Тяжеловес',     desc: 'Поймать любую рыбу весом от 5 кг',  bonus: '+150 монет', check: () => Object.values(fishRecords).some(w => w >= 5000),  progress: () => `Макс. вес: ${Math.max(0, ...Object.values(fishRecords)).toLocaleString()} г` },
+      { threshold: 15000, name: 'Гигант',        desc: 'Поймать любую рыбу весом от 15 кг', bonus: '+300 монет + 👑', check: () => Object.values(fishRecords).some(w => w >= 15000), progress: () => `Макс. вес: ${Math.max(0, ...Object.values(fishRecords)).toLocaleString()} г` }
     ] 
   },
 
@@ -517,18 +559,19 @@ const ACHV_LIST = [
     ]
   },
 
+  { id: 'drunk_master', name: '🍺 Пьяный мастер', desc: 'Достичь 5-го уровня опьянения', bonus: '+1000 монет', check: () => drunkLevel >= 5, progress: () => drunkLevel + '/5' },
+
   { id: 'leviathan', name: '🐋 Убийца Сома-Гиганта', desc: 'Секретное достижение', bonus: '+5000 монет', check: () => bossDefeated, progress: () => bossDefeated ? '✓' : '???', secret: true }
 ];
 
-// --- Миграция старых достижений ---
 function migrateAchievements() {
-  if (localStorage.getItem('fishMigrated_v3')) return;
+  if (localStorage.getItem('fishMigrated_v4')) return;
   if (achievements.pro === true) achievements.pro = 3;
   if (achievements.millionaire) achievements.money = 4;
   if (achievements.rodmaster) achievements.engineer = 2;
   delete achievements.millionaire;
   delete achievements.rodmaster;
-  localStorage.setItem('fishMigrated_v3', 'true');
+  localStorage.setItem('fishMigrated_v4', 'true');
   saveProgress();
 }
 migrateAchievements();
@@ -577,6 +620,11 @@ function saveProgress() {
   localStorage.setItem('fishRecords', JSON.stringify(fishRecords));
   localStorage.setItem('fishActiveHat', activeHat || '');
   localStorage.setItem('fishUnlockedHats', JSON.stringify(unlockedHats));
+  localStorage.setItem('fishBoozeCount', boozeCount);
+  localStorage.setItem('fishDrunkLevel', drunkLevel);
+  localStorage.setItem('fishDrunkTimer', drunkTimer);
+  localStorage.setItem('fishTotalDrunk', totalDrunk);
+  localStorage.setItem('fishEasterEgg', easterEggActive);
 }
 
 function checkBossTrigger() {
@@ -801,34 +849,41 @@ function drawHat(cCtx, hatId, x, y, isWoman) {
   cCtx.scale(0.85, 0.85);
   
   if (hatId === 'straw') {
+    cCtx.translate(0, 4);
     cCtx.fillStyle = '#e0c080'; cCtx.beginPath(); cCtx.ellipse(0, -5, 38, 10, 0, 0, Math.PI * 2); cCtx.fill();
     cCtx.fillStyle = '#d0b070'; cCtx.beginPath(); cCtx.ellipse(0, -18, 22, 14, 0, Math.PI, 0); cCtx.fill();
     cCtx.fillStyle = '#c0392b'; cCtx.fillRect(-20, -12, 40, 4);
   } else if (hatId === 'tophat') {
+    cCtx.translate(0, 6);
     cCtx.fillStyle = '#111'; cCtx.beginPath(); cCtx.ellipse(0, -5, 32, 8, 0, 0, Math.PI * 2); cCtx.fill();
     cCtx.fillRect(-16, -45, 32, 40);
     cCtx.fillStyle = '#ffd700'; cCtx.fillRect(-16, -15, 32, 5);
   } else if (hatId === 'crown') {
+    cCtx.translate(0, 8);
     cCtx.fillStyle = '#ffd700'; cCtx.beginPath();
     cCtx.moveTo(-28, -10); cCtx.lineTo(-28, -32); cCtx.lineTo(-15, -22); cCtx.lineTo(0, -40); cCtx.lineTo(15, -22); cCtx.lineTo(28, -32); cCtx.lineTo(28, -10); cCtx.closePath(); cCtx.fill();
     cCtx.fillStyle = '#ff0000'; cCtx.beginPath(); cCtx.arc(0, -22, 4, 0, Math.PI * 2); cCtx.fill();
     cCtx.fillStyle = '#00aaff'; cCtx.beginPath(); cCtx.arc(-16, -18, 3, 0, Math.PI * 2); cCtx.fill();
     cCtx.beginPath(); cCtx.arc(16, -18, 3, 0, Math.PI * 2); cCtx.fill();
   } else if (hatId === 'grad') {
+    cCtx.translate(0, 5);
     cCtx.fillStyle = '#111'; cCtx.beginPath(); cCtx.moveTo(-32, -15); cCtx.lineTo(0, -32); cCtx.lineTo(32, -15); cCtx.lineTo(0, 2); cCtx.closePath(); cCtx.fill();
     cCtx.beginPath(); cCtx.ellipse(0, -15, 20, 10, 0, 0, Math.PI * 2); cCtx.fill();
     cCtx.fillStyle = '#ffd700'; cCtx.beginPath(); cCtx.arc(26, -15, 5, 0, Math.PI * 2); cCtx.fill();
     cCtx.strokeStyle = '#ffd700'; cCtx.lineWidth = 3; cCtx.beginPath(); cCtx.moveTo(26, -15); cCtx.lineTo(35, 8); cCtx.stroke();
     cCtx.fillStyle = '#ffd700'; cCtx.beginPath(); cCtx.arc(35, 8, 4, 0, Math.PI * 2); cCtx.fill();
   } else if (hatId === 'helmet') {
+    cCtx.translate(0, 5);
     cCtx.fillStyle = '#ffcc00'; cCtx.beginPath(); cCtx.ellipse(0, -12, 28, 22, 0, Math.PI, 0); cCtx.fill();
     cCtx.fillStyle = '#ffaa00'; cCtx.beginPath(); cCtx.ellipse(0, -5, 32, 6, 0, 0, Math.PI * 2); cCtx.fill();
   } else if (hatId === 'pumpkin') {
+    cCtx.translate(0, 7);
     cCtx.fillStyle = '#ff8800'; cCtx.beginPath(); cCtx.ellipse(0, -18, 24, 20, 0, 0, Math.PI * 2); cCtx.fill();
     cCtx.strokeStyle = '#cc6600'; cCtx.lineWidth = 1.5;
     for (let i = -12; i <= 12; i += 12) { cCtx.beginPath(); cCtx.ellipse(i, -18, 6, 20, 0, 0, Math.PI * 2); cCtx.stroke(); }
     cCtx.fillStyle = '#228b22'; cCtx.fillRect(-4, -40, 8, 10);
   } else if (hatId === 'cowboy') {
+    cCtx.translate(0, 6);
     cCtx.fillStyle = '#8B4513'; cCtx.beginPath(); cCtx.ellipse(0, -8, 42, 10, 0, 0, Math.PI * 2); cCtx.fill();
     cCtx.fillStyle = '#A0522D'; cCtx.beginPath();
     cCtx.moveTo(-22, -8); cCtx.lineTo(-18, -28); cCtx.quadraticCurveTo(0, -35, 18, -28); cCtx.lineTo(22, -8); cCtx.closePath(); cCtx.fill();
@@ -868,7 +923,8 @@ const SHOP_ITEMS = [
   { id: 'reel', name: '⚡ Скорость', desc: 'Замедляет индикатор', max: 5, baseCost: 50, costMult: 2, currency: 'xp' },
   { id: 'zone', name: '🎯 Удержание', desc: 'Шире зелёная зона', max: 5, baseCost: 60, costMult: 2, currency: 'xp' },
   { id: 'luck', name: '🍀 Удача', desc: 'Меньше мусора', max: 5, baseCost: 80, costMult: 2.5, currency: 'xp' },
-  { id: 'bait', name: '🪱 Наживка', desc: '×3 шанс редкой рыбы. Тратится при улове.', max: 99, baseCost: 150, costMult: 1, isConsumable: true, currency: 'coins' }
+  { id: 'bait', name: '🪱 Наживка', desc: '×3 шанс редкой рыбы. Тратится при улове.', max: 99, baseCost: 150, costMult: 1, isConsumable: true, currency: 'coins' },
+  { id: 'booze', name: '🍺 ПифКо', desc: 'Муть и рябь. Бонус к опыту: +20% за уровень.', max: 99, baseCost: 50, costMult: 1, isConsumable: true, currency: 'coins' }
 ];
 let currentShopTab = 'upgrades';
 
@@ -888,7 +944,7 @@ function buyUpgrade(id) {
   if (!isXp && score < cost) return;
   
   if (item.isConsumable) {
-    baitCount++;
+    if (item.id === 'bait') baitCount++;
   } else {
     if ((upgrades[id] || 0) >= item.max) return;
     upgrades[id] = (upgrades[id] || 0) + 1;
@@ -907,6 +963,59 @@ function buyBaitPack(count) {
   baitCount += count;
   playSound('buy'); saveProgress(); renderShop(); checkNewAchievements();
   vibrate(50);
+}
+
+function buyBoozePack(count) {
+  const item = SHOP_ITEMS.find(i => i.id === 'booze');
+  const cost = item.baseCost * count;
+  if (score < cost) return;
+  score -= cost;
+  gameStats.spent += cost;
+  boozeCount += count;
+  playSound('buy');
+  saveProgress();
+  renderShop();
+  checkNewAchievements();
+  vibrate(50);
+}
+
+function drinkBooze() {
+  if (boozeCount <= 0) return;
+  boozeCount--;
+  
+  if (drunkLevel < MAX_DRUNK_LEVEL) {
+    drunkLevel++;
+  }
+  drunkTimer = DRUNK_DURATION;
+  totalDrunk++;
+  
+  if (totalDrunk >= EASTER_EGG_TRIGGER && !easterEggActive) {
+    easterEggActive = true;
+    setTimeout(() => showAchievementToast('👙 Что-то изменилось...'), 1600);
+  }
+  
+  saveProgress();
+  renderShop();
+  playSound('buy');
+  vibrate([100, 50, 100, 50, 200]);
+  
+  const el = document.getElementById('toast');
+  el.textContent = `🍺 Уровень опьянения: ${drunkLevel}/${MAX_DRUNK_LEVEL}`;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1500);
+  
+  checkNewAchievements();
+
+  if (drunkLevel >= MAX_DRUNK_LEVEL && !achievements.drunk_master) {
+    achievements.drunk_master = true;
+    score += 1000;
+    gameStats.earned += 1000;
+    saveProgress();
+    showAchievementToast('🍺 Пьяный мастер');
+    playSound('achv');
+    vibrate([100, 50, 100, 50, 300]);
+    renderShop();
+  }
 }
 
 function buyBook(bookId) {
@@ -971,22 +1080,46 @@ function renderShop() {
       const canAfford = isXp ? xp >= cost : score >= cost;
       
       if (item.isConsumable) {
-        const canBuy1 = score >= cost;
-        const canBuy5 = score >= cost * 5;
-        const canBuy10 = score >= cost * 10;
-        return `
-          <div class="shop-item ${baitCount > 0 ? 'owned' : ''}">
-            <div class="icon">${item.name.split(' ')[0]}</div>
-            <div class="info">
-              <div class="name">${item.name.substring(2)} <span style="color:#ffd700;">(в запасе: ${baitCount})</span></div>
-              <div class="desc">${item.desc}</div>
-            </div>
-            <div class="bait-buy-row">
-              <button class="buy-btn" onclick="buyBaitPack(1)" ${canBuy1 ? '' : 'disabled'}>×1<br>${cost}</button>
-              <button class="buy-btn" onclick="buyBaitPack(5)" ${canBuy5 ? '' : 'disabled'}>×5<br>${cost*5}</button>
-              <button class="buy-btn" onclick="buyBaitPack(10)" ${canBuy10 ? '' : 'disabled'}>×10<br>${cost*10}</button>
-            </div>
-          </div>`;
+        if (item.id === 'bait') {
+          const canBuy1 = score >= cost;
+          const canBuy5 = score >= cost * 5;
+          const canBuy10 = score >= cost * 10;
+          return `
+            <div class="shop-item ${baitCount > 0 ? 'owned' : ''}">
+              <div class="icon">${item.name.split(' ')[0]}</div>
+              <div class="info">
+                <div class="name">${item.name.substring(2)} <span style="color:#ffd700;">(в запасе: ${baitCount})</span></div>
+                <div class="desc">${item.desc}</div>
+              </div>
+              <div class="bait-buy-row">
+                <button class="buy-btn" onclick="buyBaitPack(1)" ${canBuy1 ? '' : 'disabled'}>×1<br>${cost}</button>
+                <button class="buy-btn" onclick="buyBaitPack(5)" ${canBuy5 ? '' : 'disabled'}>×5<br>${cost*5}</button>
+                <button class="buy-btn" onclick="buyBaitPack(10)" ${canBuy10 ? '' : 'disabled'}>×10<br>${cost*10}</button>
+              </div>
+            </div>`;
+        } else if (item.id === 'booze') {
+          const canBuy1 = score >= cost;
+          const canBuy5 = score >= cost * 5;
+          const canBuy10 = score >= cost * 10;
+          const canDrink = boozeCount > 0;
+          return `
+            <div class="shop-item ${boozeCount > 0 ? 'owned' : ''}">
+              <div class="icon">🍺</div>
+              <div class="info">
+                <div class="name">ПифКо <span style="color:#ffd700;">(в запасе: ${boozeCount})</span></div>
+                <div class="desc">${item.desc}</div>
+                <div class="desc" style="color:#ff9966; font-size:9px;">Уровень: ${drunkLevel}/${MAX_DRUNK_LEVEL} ${drunkLevel > 0 ? `(осталось ${Math.ceil(drunkTimer)}с)` : ''}</div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:4px;">
+                <div class="bait-buy-row">
+                  <button class="buy-btn" onclick="buyBoozePack(1)" ${canBuy1 ? '' : 'disabled'}>×1<br>${cost}</button>
+                  <button class="buy-btn" onclick="buyBoozePack(5)" ${canBuy5 ? '' : 'disabled'}>×5<br>${cost*5}</button>
+                  <button class="buy-btn" onclick="buyBoozePack(10)" ${canBuy10 ? '' : 'disabled'}>×10<br>${cost*10}</button>
+                </div>
+                ${canDrink ? `<button class="buy-btn" style="background:#e67e22;" onclick="drinkBooze()">Выпить</button>` : ''}
+              </div>
+            </div>`;
+        }
       }
       
       const lvl = upgrades[item.id] || 0;
@@ -1266,6 +1399,14 @@ function checkNewAchievements() {
         const nextLevel = a.levels[currentLevel];
         if (nextLevel.check()) {
           achievements[a.id] = currentLevel + 1;
+          
+          const moneyMatch = nextLevel.bonus.match(/(\d+)\s*монет/);
+          if (moneyMatch) {
+            const reward = parseInt(moneyMatch[1]);
+            score += reward;
+            gameStats.earned += reward;
+          }
+          
           saveProgress();
           
           let hatId = null;
@@ -1291,6 +1432,16 @@ function checkNewAchievements() {
       }
     } else if (!achievements[a.id] && a.check()) {
       achievements[a.id] = true;
+      
+      if (a.bonus) {
+        const moneyMatch = a.bonus.match(/(\d+)\s*монет/);
+        if (moneyMatch) {
+          const reward = parseInt(moneyMatch[1]);
+          score += reward;
+          gameStats.earned += reward;
+        }
+      }
+      
       saveProgress();
       if (!a.secret || bossMet) {
         showAchievementToast(a.name);
@@ -1365,7 +1516,6 @@ function renderStats() {
   document.getElementById('statStreak').textContent = gameStats.bestStreak;
   document.getElementById('statMiss').textContent = gameStats.misses;
 
-  // Легенда
   const legendEl = document.getElementById('somLegend');
   if (bossDefeated) {
     legendEl.innerHTML = `<div style="text-align:center; color:#ffd700; font-weight:bold; padding:10px; background:rgba(255,215,0,0.1); border-radius:8px; border:1px solid #ffd700; margin-bottom:15px;">🏆 Сом-Гигант повержен. Река снова спокойна.</div>`;
@@ -1375,7 +1525,6 @@ function renderStats() {
     </div>`;
   }
 
-  // Трофеи
   const trophyGrid = document.getElementById('trophyGrid');
   let html = '';
   let hasRecords = false;
@@ -1413,7 +1562,6 @@ function renderStats() {
   if (!hasRecords) html = '<div style="grid-column: 1/-1; text-align:center; color:#888; padding:20px;">Пока нет рекордов. Ловите рыбу!</div>';
   trophyGrid.innerHTML = html;
 
-  // Гардероб
   const wardrobeGrid = document.getElementById('wardrobeGrid');
   wardrobeGrid.innerHTML = HATS.map(h => {
     const isUnlocked = unlockedHats.includes(h.id);
@@ -1425,7 +1573,6 @@ function renderStats() {
     </div>`;
   }).join('');
 
-  // Достижения
   const achvGrid = document.getElementById('achvGrid');
   const sortedAchv = [...ACHV_LIST].sort((a, b) => (b.isBossKey ? 1 : 0) - (a.isBossKey ? 1 : 0));
   
@@ -1460,10 +1607,23 @@ function renderStats() {
         </div>`;
       }
 
+      let obtainedText = '';
+      if (isMax) {
+        const lastLevel = a.levels[a.levels.length - 1];
+        if (a.id === 'weight') obtainedText = `✓ Получено: за рыбу весом более ${lastLevel.threshold / 1000} кг`;
+        else if (a.id === 'pro') obtainedText = `✓ Получено: за ${lastLevel.threshold} пойманных рыб`;
+        else if (a.id === 'money') obtainedText = `✓ Получено: за капитализацию ${lastLevel.threshold.toLocaleString()} монет`;
+        else if (a.id === 'engineer') obtainedText = `✓ Получено: за ${lastLevel.threshold} улучшений удочки`;
+        else if (a.id === 'eco') obtainedText = `✓ Получено: за ${lastLevel.threshold} единиц мусора`;
+        else if (a.id === 'fail') obtainedText = `✓ Получено: за ${lastLevel.threshold} срывов`;
+        else if (a.id === 'books') obtainedText = `✓ Получено: за ${lastLevel.threshold} купленных книг`;
+        else obtainedText = `✓ Получено: ${lastLevel.bonus}`;
+      }
+
       return `<div class="achv ${isMax ? 'done' : ''}">
           <div class="title">${a.isBossKey ? '🔴 ' : ''}${a.name} (Ур. ${currentLvl}/${a.levels.length})</div>
-          <div class="desc">${isMax ? 'Все уровни пройдены!' : `Следующий: ${nextLevel.name} (${nextLevel.desc})`}</div>
-          <div class="desc" style="margin-top:2px;">Прогресс: ${progressText}</div>
+          <div class="desc">${isMax ? obtainedText : `Следующий: ${nextLevel.name} (${nextLevel.desc})`}</div>
+          <div class="desc" style="margin-top:2px;">${isMax ? '' : `Прогресс: ${progressText}`}</div>
           <div class="bonus">${isMax ? '✓ ' + a.levels[a.levels.length-1].bonus : `Далее: ${nextLevel.bonus}`}</div>
           ${!isMax ? `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>` : ''}
         </div>`;
@@ -1488,9 +1648,12 @@ function renderStats() {
     let titlePrefix = a.isBossKey ? '🔴 ' : '';
     
     return `<div class="achv ${done ? 'done' : ''} ${a.secret ? 'secret' : ''}">
-        <div class="title">${titlePrefix}${a.name}</div><div class="desc">${a.desc}</div>
-        <div class="desc" style="margin-top:2px;">Прогресс: ${a.progress()}</div>
-        ${done ? `<div class="bonus">✓ ${a.bonus}</div>` : `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>`}
+        <div class="title">${titlePrefix}${a.name}</div>
+        <div class="desc">${a.desc}</div>
+        ${!done ? `<div class="desc" style="margin-top:2px;">${a.progress()}</div>` : ''}
+        ${done 
+          ? `<div class="bonus" style="color:#7fff7f;">✓ Получено: ${a.bonus}</div>` 
+          : `<div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>`}
       </div>`;
   }).join('');
 }
@@ -1522,14 +1685,20 @@ function resetProgress(e) {
   gameStats = {earned:0, spent:0, misses:0, bestStreak:0, totalWeight:0};
   fishRecords = {};
   unlockedHats = []; activeHat = null;
+  boozeCount = 0; drunkLevel = 0; drunkTimer = 0; totalDrunk = 0; easterEggActive = false;
   catchStreak = 0; missStreak = 0;
   character = null;
-  currentWeatherIndex = 0; weatherTimer = 0;
-  localStorage.clear();
+  currentWeatherIndex = 0; weatherTimer = 0; weatherFadeAlpha = 0;
+  Object.keys(localStorage).filter(k => k.startsWith('fish')).forEach(k => localStorage.removeItem(k));
+  localStorage.setItem('fishMigrated_v4', 'true');
+  soundEnabled = true;
+  document.getElementById('soundBtn').textContent = '🔊';
   const toast = document.getElementById('toast');
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 1500);
   document.getElementById('charSelect').classList.add('show');
+  drawPreview('previewFisher', 'fisher');
+  drawPreview('previewFisherwoman', 'fisherwoman');
 }
 
 function getCanvasCoords(e) {
@@ -1558,17 +1727,28 @@ function handleInput(e) {
   if (state === S.BOSS_QTE) return;
   if (state === S.BOSS_INSTRUCTION) return;
   
+  const { x, y } = getCanvasCoords(e);
+  
+  if (boozeBtnRect && x >= boozeBtnRect.x && x <= boozeBtnRect.x + boozeBtnRect.w && y >= boozeBtnRect.y && y <= boozeBtnRect.y + boozeBtnRect.h) {
+    drinkBooze();
+    return;
+  }
+  
   if (e.type === 'touchstart' && e.touches && e.touches.length > 0) {
     e.preventDefault();
     if (touchTimeout) return;
     touchTimeout = setTimeout(() => { touchTimeout = null; }, 200);
   }
-  const { x, y } = getCanvasCoords(e);
   bobber.mx = x; bobber.my = y;
   handleAction(x, y);
 }
 
 function handleAction(mx, my) {
+  if (boozeBtnRect && mx >= boozeBtnRect.x && mx <= boozeBtnRect.x + boozeBtnRect.w && my >= boozeBtnRect.y && my <= boozeBtnRect.y + boozeBtnRect.h) {
+    drinkBooze();
+    return;
+  }
+  
   if (state === S.IDLE) castRod(mx, my);
   else if (state === S.BITE) startReeling();
   else if (state === S.REELING) checkReel();
@@ -1635,7 +1815,14 @@ function getRandomWeight(min, max) {
 function getWeightModifier(fish, weight) {
   const avg = (fish.minW + fish.maxW) / 2;
   const diff = (weight - avg) / (fish.maxW - fish.minW);
-  return 1 + diff * 0.7; 
+  let modifier = 1 + diff * 0.8;
+  
+  const trophyThreshold = fish.maxW - (fish.maxW - fish.minW) * 0.1;
+  if (weight >= trophyThreshold) {
+    modifier += 0.5;
+  }
+  
+  return modifier;
 }
 
 function castRod(mx, my) {
@@ -1677,6 +1864,10 @@ function startReeling() {
   let speedReduction = (upgrades.reel || 0) * 0.15 + bodyBonus + lineBonus + reelBonus;
   if (achievements.trashman) speedReduction += 0.15;
   if (achievements.rodmaster) speedReduction += 0.10;
+  
+  if (drunkLevel > 0) {
+    speedReduction = Math.max(0, speedReduction - drunkLevel * 0.1);
+  }
   
   let baseSpeed = 85 + Math.random() * 40;
   const w = getWeather();
@@ -1828,7 +2019,8 @@ function checkReel() {
     
     const wMod = getWeightModifier(fish, weight);
     const streakMult = 1 + Math.min(catchStreak * 0.1, 1.0);
-    const xpGained = Math.round(fish.xp * wMod * streakMult);
+    const drunkMultiplier = 1 + (drunkLevel * 0.2);
+    const xpGained = Math.round(fish.xp * wMod * streakMult * drunkMultiplier);
     
     score += lastCatch.points; 
     xp += xpGained;
@@ -1872,6 +2064,12 @@ function startBossFight() {
   document.getElementById('qteControls').classList.remove('show');
 }
 
+function startBossFromInstruction(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('bossInstruction').classList.remove('show');
+  startBossFight();
+}
+
 function startQte() {
   qteIndex = 0;
   qteSequence = [];
@@ -1912,8 +2110,6 @@ document.querySelectorAll('.qte-btn').forEach(btn => {
 function winBossFight() {
   state = S.BOSS_WIN; stateTime = 0;
   bossDefeated = true;
-  score += 5000;
-  gameStats.earned += 5000;
   xp += 500;
   if (score > bestScore) bestScore = score;
   playSound('achv');
@@ -1948,6 +2144,18 @@ function update(dt) {
   weatherTimer += dt;
   updateGameTime(dt);
   const t = performance.now() / 1000;
+  
+  if (drunkTimer > 0) {
+    drunkTimer -= dt;
+    if (drunkTimer <= 0) {
+      drunkTimer = 0;
+      drunkLevel = 0;
+      easterEggActive = false;
+      saveProgress();
+    } else {
+      saveProgress();
+    }
+  }
   
   if (weatherFadeAlpha > 0) {
     weatherFadeAlpha -= dt * 1.5;
@@ -2062,6 +2270,8 @@ function update(dt) {
   } else if (state === S.RESULT) {
     if (stateTime > 2) resetToIdle();
   }
+
+  if (state === S.IDLE && !bossDefeated) hintCounter++;
 }
 
 // ==================================================================
@@ -2083,7 +2293,6 @@ function drawTrashBody(x, y, size, color, emoji) {
   ctx.restore();
 }
 
-// Отрисовка экипировки на берегу (на причале)
 function drawGear(t) {
   const netLvl = treeUpgrades.net || 0;
   if (netLvl > 0) {
@@ -2233,7 +2442,6 @@ function drawFisherman() {
   const weather = getWeather();
   const isWoman = character === 'fisherwoman';
   
-  // --- ПРИЧАЛ ---
   ctx.save();
   ctx.fillStyle = 'rgba(0,0,0,0.3)';
   ctx.beginPath(); ctx.ellipse(90, 515, 80, 20, 0, 0, Math.PI * 2); ctx.fill();
@@ -2246,10 +2454,8 @@ function drawFisherman() {
   for(let x = 30; x < 160; x += 20) { ctx.beginPath(); ctx.moveTo(x, 490); ctx.lineTo(x-5, 510); ctx.stroke(); }
   ctx.restore();
   
-  // --- ТЕЛО ПЕРСОНАЖА ---
   drawCharacterBody(ctx, 82, 460, character, 1.2, false, !!activeHat);
   
-  // --- РУКА С УДОЧКОЙ (исправлена) ---
   ctx.strokeStyle = isWoman ? '#d2a679' : '#2c3e50'; 
   ctx.lineWidth = 9; 
   ctx.lineCap = 'round';
@@ -2259,12 +2465,10 @@ function drawFisherman() {
   ctx.lineTo(rod.baseX, rod.baseY);
   ctx.stroke();
 
-  // Обувь
   ctx.fillStyle = '#7a5a2a'; 
   ctx.beginPath(); ctx.ellipse(70, 520, 10, 5, 0, 0, Math.PI * 2); ctx.fill(); 
   ctx.beginPath(); ctx.ellipse(95, 520, 10, 5, 0, 0, Math.PI * 2); ctx.fill();
 
-  // Ночная подсветка
   if (weather === 'night') {
     ctx.fillStyle = 'rgba(255, 220, 100, 0.2)'; 
     ctx.beginPath(); ctx.arc(100, 450, 40, 0, Math.PI * 2); ctx.fill();
@@ -2272,10 +2476,290 @@ function drawFisherman() {
     ctx.beginPath(); ctx.arc(100, 450, 6, 0, Math.PI * 2); ctx.fill();
   }
 
-  // --- ШЛЯПА (y=410, точная посадка) ---
   if (activeHat) {
-    drawHat(ctx, activeHat, 82, 410, isWoman);
+    drawHat(ctx, activeHat, 82, 415, isWoman);
   }
+}
+
+function drawEasterEgg() {
+  if (!easterEggActive) return;
+  const t = performance.now() / 1000;
+  const isWoman = character === 'fisherwoman';
+  const x = 30;
+  const y = 320;
+  const scale = 1.1;
+  const bob = Math.sin(t * 2) * 2;
+  
+  ctx.save();
+  ctx.translate(x, y + bob);
+  ctx.scale(-scale, scale);
+  
+  if (isWoman) {
+    // === РЫБАК В ПЛАВКАХ ===
+    // Тень
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath(); ctx.ellipse(0, 183, 30, 8, 0, 0, Math.PI * 2); ctx.fill();
+    
+    // Ноги (короче)
+    ctx.fillStyle = '#d9a066';
+    ctx.fillRect(-11, 106, 9, 22);
+    ctx.fillRect(2, 106, 9, 22);
+    ctx.beginPath(); ctx.ellipse(-6, 116, 6, 7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(6, 116, 6, 7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-6, 136, 5, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(6, 136, 5, 8, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#c8955f';
+    ctx.beginPath(); ctx.ellipse(-8, 171, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(8, 171, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
+    
+    // Плавки
+    ctx.fillStyle = '#e63946';
+    ctx.beginPath();
+    ctx.moveTo(-18, 84); ctx.lineTo(18, 84);
+    ctx.lineTo(20, 106); ctx.lineTo(2, 106); ctx.lineTo(0, 100); ctx.lineTo(-2, 106); ctx.lineTo(-20, 106);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.beginPath(); ctx.ellipse(-8, 94, 5, 8, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(-18, 84, 36, 3);
+    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-2, 87); ctx.quadraticCurveTo(-5, 92, -3, 96); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(2, 87); ctx.quadraticCurveTo(5, 92, 3, 96); ctx.stroke();
+    
+    // Торс
+    ctx.fillStyle = '#d2a679';
+    ctx.beginPath();
+    ctx.moveTo(-20, 62);
+    ctx.quadraticCurveTo(-24, 78, -18, 86);
+    ctx.lineTo(18, 86);
+    ctx.quadraticCurveTo(24, 78, 20, 62);
+    ctx.quadraticCurveTo(0, 56, -20, 62);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(120,80,50,0.45)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(0, 62); ctx.lineTo(0, 82); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-14, 68); ctx.lineTo(14, 68); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-14, 76); ctx.lineTo(14, 76); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-10, 82); ctx.lineTo(10, 82); ctx.stroke();
+    ctx.beginPath(); ctx.arc(-8, 62, 8, 0.2, Math.PI - 0.2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(8, 62, 8, 0.2, Math.PI - 0.2); ctx.stroke();
+    
+    // Плечи
+    ctx.fillStyle = '#d2a679';
+    ctx.beginPath(); ctx.ellipse(-20, 64, 7, 7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(20, 64, 7, 7, 0, 0, Math.PI * 2); ctx.fill();
+    
+    // Руки
+    ctx.strokeStyle = '#d2a679'; ctx.lineWidth = 8; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-20, 64); ctx.lineTo(-34, 82); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(20, 64); ctx.lineTo(34, 80); ctx.stroke();
+    ctx.fillStyle = '#c8955f';
+    ctx.beginPath(); ctx.ellipse(-27, 72, 5, 6, 0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(27, 72, 5, 6, -0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#d2a679';
+    ctx.beginPath(); ctx.arc(-35, 83, 4.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(35, 81, 4.5, 0, Math.PI * 2); ctx.fill();
+    
+    // Шея
+    ctx.fillStyle = '#c8955f';
+    ctx.fillRect(-6, 54, 12, 8);
+    
+    // Голова
+    ctx.fillStyle = '#f0c090';
+    ctx.beginPath(); ctx.arc(0, 40, 17, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e8b585';
+    ctx.beginPath(); ctx.arc(0, 47, 12, 0.1, Math.PI - 0.1); ctx.fill();
+    
+    // Волосы
+    ctx.fillStyle = '#3a2515';
+    ctx.beginPath();
+    ctx.arc(0, 36, 17, Math.PI * 1.05, Math.PI * 1.95);
+    ctx.quadraticCurveTo(14, 28, 18, 38);
+    ctx.quadraticCurveTo(12, 34, 0, 34);
+    ctx.quadraticCurveTo(-12, 34, -18, 38);
+    ctx.quadraticCurveTo(-14, 28, 0, 26);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-14, 30); ctx.quadraticCurveTo(-6, 26, 0, 26);
+    ctx.quadraticCurveTo(6, 26, 14, 30);
+    ctx.quadraticCurveTo(6, 30, 0, 30);
+    ctx.quadraticCurveTo(-6, 30, -14, 30);
+    ctx.fill();
+    
+    // Брови
+    ctx.strokeStyle = '#3a2515'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-11, 34); ctx.lineTo(-4, 33); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(11, 34); ctx.lineTo(4, 33); ctx.stroke();
+    
+    // Улыбка
+    ctx.strokeStyle = '#8a5a3a'; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.arc(0, 47, 8, 0.15, Math.PI - 0.15); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.ellipse(0, 48, 6, 2, 0, 0, Math.PI); ctx.fill();
+    
+    // Очки
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath(); ctx.ellipse(-7, 39, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(7, 39, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(-2, 38, 4, 2);
+    ctx.fillStyle = 'rgba(120,200,255,0.6)';
+    ctx.beginPath(); ctx.ellipse(-9, 38, 2.5, 1.5, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(5, 38, 2.5, 1.5, -0.3, 0, Math.PI * 2); ctx.fill();
+    
+    // Коктейль
+    ctx.fillStyle = '#ff6b9d';
+    ctx.beginPath();
+    ctx.moveTo(30, 78); ctx.lineTo(40, 78); ctx.lineTo(35, 90); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.beginPath(); ctx.moveTo(32, 79); ctx.lineTo(34, 79); ctx.lineTo(33, 88); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(36, 78); ctx.lineTo(38, 64); ctx.stroke();
+    ctx.fillStyle = '#ff2244';
+    ctx.beginPath(); ctx.arc(38, 63, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#228b22';
+    ctx.beginPath(); ctx.ellipse(38, 60, 2, 1, 0.5, 0, Math.PI * 2); ctx.fill();
+  } else {
+    // === РЫБАЧКА В БИКИНИ ===
+    // Тень
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.beginPath(); ctx.ellipse(0, 183, 30, 8, 0, 0, Math.PI * 2); ctx.fill();
+    
+    // Ноги (короче)
+    ctx.fillStyle = '#e0b080';
+    ctx.beginPath();
+    ctx.moveTo(-11, 105); ctx.quadraticCurveTo(-13, 135, -10, 168); ctx.lineTo(-4, 168);
+    ctx.quadraticCurveTo(-6, 135, -4, 105); ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(11, 105); ctx.quadraticCurveTo(13, 135, 10, 168); ctx.lineTo(4, 168);
+    ctx.quadraticCurveTo(6, 135, 4, 105); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#d9a066';
+    ctx.beginPath(); ctx.ellipse(-8, 171, 7, 4, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(8, 171, 7, 4, 0, 0, Math.PI * 2); ctx.fill();
+    
+    // Плавки-бикини
+    ctx.fillStyle = '#ff2e88';
+    ctx.beginPath();
+    ctx.moveTo(-15, 85); ctx.quadraticCurveTo(0, 83, 15, 85);
+    ctx.quadraticCurveTo(13, 95, 8, 103);
+    ctx.quadraticCurveTo(0, 105, -8, 103);
+    ctx.quadraticCurveTo(-13, 95, -15, 85);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.beginPath(); ctx.ellipse(-5, 91, 3, 5, -0.4, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ff2e88'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-15, 85); ctx.lineTo(-20, 80); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(15, 85); ctx.lineTo(20, 80); ctx.stroke();
+    
+    // Торс
+    ctx.fillStyle = '#d2a679';
+    ctx.beginPath();
+    ctx.moveTo(-14, 62);
+    ctx.quadraticCurveTo(-18, 74, -14, 86);
+    ctx.quadraticCurveTo(0, 88, 14, 86);
+    ctx.quadraticCurveTo(18, 74, 14, 62);
+    ctx.quadraticCurveTo(0, 58, -14, 62);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(160,100,60,0.35)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-10, 74); ctx.quadraticCurveTo(0, 77, 10, 74); ctx.stroke();
+    ctx.strokeStyle = 'rgba(140,90,60,0.5)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(0, 82, 1.5, 0, Math.PI * 2); ctx.stroke();
+    
+    // Руки
+    ctx.strokeStyle = '#d2a679'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-16, 63); ctx.lineTo(-32, 82); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(16, 63); ctx.lineTo(32, 82); ctx.stroke();
+    ctx.fillStyle = '#d2a679';
+    ctx.beginPath(); ctx.arc(-33, 83, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(33, 83, 4, 0, Math.PI * 2); ctx.fill();
+    
+    // Бикини-верх
+    ctx.fillStyle = '#ff2e88';
+    ctx.beginPath(); ctx.ellipse(-8, 67, 8, 7, -0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(8, 67, 8, 7, 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.beginPath(); ctx.ellipse(-10, 65, 2.5, 2, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(6, 65, 2.5, 2, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ff2e88'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-8, 61); ctx.lineTo(0, 55); ctx.lineTo(8, 61); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-8, 67); ctx.lineTo(-14, 63); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(8, 67); ctx.lineTo(14, 63); ctx.stroke();
+    
+    // Шея
+    ctx.fillStyle = '#c8955f';
+    ctx.fillRect(-5, 55, 10, 7);
+    
+    // Голова
+    ctx.fillStyle = '#f0c090';
+    ctx.beginPath(); ctx.arc(0, 41, 16, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#e8b585';
+    ctx.beginPath(); ctx.arc(0, 47, 10, 0.1, Math.PI - 0.1); ctx.fill();
+    
+    // Волосы
+    ctx.fillStyle = '#8b4513';
+    ctx.beginPath();
+    ctx.ellipse(0, 39, 20, 22, 0, Math.PI * 0.9, Math.PI * 2.1);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-16, 37);
+    ctx.quadraticCurveTo(-24, 61, -20, 89);
+    ctx.quadraticCurveTo(-16, 93, -12, 89);
+    ctx.quadraticCurveTo(-14, 61, -10, 39);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(16, 37);
+    ctx.quadraticCurveTo(24, 61, 20, 89);
+    ctx.quadraticCurveTo(16, 93, 12, 89);
+    ctx.quadraticCurveTo(14, 61, 10, 39);
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, 35, 17, Math.PI * 1.05, Math.PI * 1.95);
+    ctx.quadraticCurveTo(8, 29, 16, 37);
+    ctx.quadraticCurveTo(10, 33, 0, 33);
+    ctx.quadraticCurveTo(-10, 33, -16, 37);
+    ctx.quadraticCurveTo(-8, 29, 0, 27);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,200,150,0.3)';
+    ctx.beginPath(); ctx.ellipse(-8, 35, 6, 3, -0.3, 0, Math.PI * 2); ctx.fill();
+    
+    // Брови
+    ctx.strokeStyle = '#6a3520'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(-10, 35); ctx.lineTo(-4, 34); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(10, 35); ctx.lineTo(4, 34); ctx.stroke();
+    
+    // Улыбка
+    ctx.strokeStyle = '#c06060'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(0, 47, 7, 0.15, Math.PI - 0.15); ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.ellipse(0, 48, 5, 1.8, 0, 0, Math.PI); ctx.fill();
+    
+    // Очки
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath(); ctx.arc(-7, 39, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(7, 39, 6, 0, Math.PI * 2); ctx.fill();
+    ctx.fillRect(-2, 38, 4, 2);
+    ctx.fillStyle = 'rgba(255,180,220,0.7)';
+    ctx.beginPath(); ctx.arc(-9, 38, 2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(5, 38, 2, 0, Math.PI * 2); ctx.fill();
+    
+    // Серьги
+    ctx.fillStyle = '#ffd700';
+    ctx.beginPath(); ctx.arc(-15, 49, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(15, 49, 2.5, 0, Math.PI * 2); ctx.fill();
+    
+    // Коктейль
+    ctx.fillStyle = '#7fd8ff';
+    ctx.beginPath();
+    ctx.moveTo(28, 78); ctx.lineTo(38, 78); ctx.lineTo(33, 90); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.beginPath(); ctx.moveTo(30, 79); ctx.lineTo(32, 79); ctx.lineTo(31, 88); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(34, 78); ctx.lineTo(36, 64); ctx.stroke();
+    ctx.fillStyle = '#ffe44d';
+    ctx.beginPath(); ctx.arc(38, 76, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#ffcc00'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(38, 76, 3, 0, Math.PI * 2); ctx.stroke();
+  }
+  
+  ctx.restore();
 }
 
 function drawWeatherTimer() {
@@ -2317,7 +2801,27 @@ function drawUI() {
   
   drawWeatherTimer();
   
-  let buffY = 190;
+  if (drunkLevel > 0) {
+    ctx.fillStyle = 'rgba(200, 100, 0, 0.5)';
+    ctx.beginPath(); ctx.roundRect(15, 190, 180, 24, 8); ctx.fill();
+    ctx.font = 'bold 14px "Segoe UI"'; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
+    ctx.fillText(`🍺 ${drunkLevel}/${MAX_DRUNK_LEVEL} | ${Math.ceil(drunkTimer)}с`, 25, 207);
+  }
+  
+  boozeBtnRect = null;
+  if (boozeCount > 0) {
+    const btnX = 15;
+    const btnY = drunkLevel > 0 ? 220 : 190;
+    ctx.fillStyle = 'rgba(230, 126, 34, 0.85)';
+    ctx.beginPath(); ctx.roundRect(btnX, btnY, 110, 30, 8); ctx.fill();
+    ctx.strokeStyle = '#ffaa44'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.font = 'bold 14px "Segoe UI"'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
+    ctx.fillText(`🍺 Выпить ×${boozeCount}`, btnX + 55, btnY + 20);
+    boozeBtnRect = { x: btnX, y: btnY, w: 110, h: 30 };
+  }
+  
+  let buffY = (drunkLevel > 0 ? 220 : 190) + (boozeCount > 0 ? 38 : 0);
+  
   if (baitCount > 0) {
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.roundRect(15, buffY, 80, 30, 8); ctx.fill();
     ctx.font = '16px "Segoe UI"'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
@@ -2328,6 +2832,7 @@ function drawUI() {
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.roundRect(15, buffY, 80, 30, 8); ctx.fill();
     ctx.font = '16px "Segoe UI"'; ctx.textAlign = 'center'; ctx.fillStyle = '#fff';
     ctx.fillText(`🔱 Готов`, 55, buffY + 21);
+    buffY += 35;
   }
   
   if (lastCatch && (state === S.RESULT || state === S.RETURNING)) {
@@ -2629,6 +3134,75 @@ function draw() {
   
   drawEnvironment(t);
   
+  if (drunkLevel > 0) {
+    ctx.save();
+    
+    const shake = drunkLevel * 6;
+    const shakeX = Math.sin(t * (2 + drunkLevel * 0.5)) * shake;
+    const shakeY = Math.cos(t * (1.8 + drunkLevel * 0.4)) * shake;
+    ctx.translate(shakeX, shakeY);
+    
+    let alpha, r, g, b;
+    if (drunkLevel === 1) { alpha = 0.25; r = 100; g = 80; b = 60; }
+    else if (drunkLevel === 2) { alpha = 0.35; r = 120; g = 80; b = 60; }
+    else if (drunkLevel === 3) { alpha = 0.45; r = 140; g = 70; b = 60; }
+    else if (drunkLevel === 4) { alpha = 0.55; r = 160; g = 60; b = 60; }
+    else { alpha = 0.68; r = 180; g = 50; b = 70; }
+    
+    ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    ctx.fillRect(-shakeX, -shakeY, W, H);
+    
+    const vignetteAlpha = 0.25 + drunkLevel * 0.12;
+    const grad = ctx.createRadialGradient(W/2, H/2, H/5, W/2, H/2, H/1.1);
+    grad.addColorStop(0, 'rgba(0,0,0,0)');
+    grad.addColorStop(1, `rgba(0,0,0,${vignetteAlpha})`);
+    ctx.fillStyle = grad;
+    ctx.fillRect(-shakeX, -shakeY, W, H);
+    
+    const rippleCount = 3 + drunkLevel * 3;
+    for (let i = 0; i < rippleCount; i++) {
+      const phase = (t * 0.7 + i * 0.5) % 1;
+      const radius = phase * 500;
+      const opacity = 1 - phase;
+      ctx.strokeStyle = `rgba(220, 235, 255, ${opacity * 0.35})`;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      const cx = W/2 + Math.sin(t * 0.9 + i * 1.1) * 120;
+      const cy = H/2 + Math.cos(t * 0.7 + i * 0.8) * 90;
+      ctx.ellipse(cx, cy, radius, radius * 0.6, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    
+    const blobCount = drunkLevel * 2;
+    for (let i = 0; i < blobCount; i++) {
+      const bx = (Math.sin(t * 0.4 + i * 1.7) * 0.5 + 0.5) * W;
+      const by = (Math.cos(t * 0.5 + i * 2.1) * 0.5 + 0.5) * H;
+      const br = 120 + drunkLevel * 40 + Math.sin(t * 2 + i) * 30;
+      const blobAlpha = 0.08 + drunkLevel * 0.03;
+      const blobGrad = ctx.createRadialGradient(bx, by, 0, bx, by, br);
+      blobGrad.addColorStop(0, `rgba(${r+50}, ${g+30}, ${b+30}, ${blobAlpha})`);
+      blobGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = blobGrad;
+      ctx.beginPath();
+      ctx.arc(bx, by, br, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    if (drunkLevel >= 2) {
+      ctx.globalAlpha = 0.15 + drunkLevel * 0.04;
+      ctx.drawImage(canvas, shakeX * 3, shakeY * 3, W, H);
+      ctx.globalAlpha = 1;
+    }
+    
+    if (drunkLevel >= 4) {
+      ctx.globalAlpha = 0.12;
+      ctx.drawImage(canvas, shakeX * 5, -shakeY * 3, W, H);
+      ctx.globalAlpha = 1;
+    }
+    
+    ctx.restore();
+  }
+  
   for (const r of rippleEffects) {
     ctx.strokeStyle = `rgba(200, 230, 255, ${r.life * 0.6})`; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(r.x, r.y, r.radius, r.radius * 0.3, 0, 0, Math.PI * 2); ctx.stroke();
@@ -2645,6 +3219,7 @@ function draw() {
     drawBobber(bobber.x, by);
   }
   
+  drawEasterEgg();
   drawFisherman();
   drawGear(t);
   drawRod();
@@ -2688,4 +3263,4 @@ function loop(now) {
 requestAnimationFrame(loop);
 </script>
 </body>
-</html>
+</html>	
