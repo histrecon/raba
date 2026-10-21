@@ -10,9 +10,10 @@
   #game-container { position: relative; width: 100vw; height: 100vh; display: flex; justify-content: center; align-items: center; background: #0d1520; }
   canvas { display: block; width: 100%; height: 100%; object-fit: contain; touch-action: none; }
   
-  .top-panel { position: absolute; top: 15px; right: 15px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 400px; z-index: 5; }
+  .top-panel { position: absolute; top: 15px; right: 15px; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 440px; z-index: 5; }
   .btn { color: white; border: 2px solid; padding: 6px 10px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: transform 0.1s; backdrop-filter: blur(4px); white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; gap: 6px; }
   .btn:active { transform: scale(0.92); }
+  #inventoryBtn { background: rgba(180, 120, 60, 0.85); border-color: rgba(255,200,120,0.5); }
   #catalogBtn { background: rgba(60, 120, 200, 0.85); border-color: rgba(100,180,255,0.5); }
   #shopBtn { background: rgba(60, 180, 100, 0.85); border-color: rgba(100,255,150,0.5); }
   #soundBtn { background: rgba(200, 180, 60, 0.85); border-color: rgba(255,220,100,0.5); padding: 6px 10px; }
@@ -57,7 +58,7 @@
   .achv .progress-fill { height: 100%; background: #ffd700; border-radius: 2px; }
 
   .shop-tabs { display: flex; gap: 4px; margin-bottom: 10px; flex-wrap: wrap; }
-  .shop-tab { flex: 1; min-width: 70px; padding: 6px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 6px; color: #aaa; font-weight: bold; font-size: 11px; cursor: pointer; }
+  .shop-tab { flex: 1; min-width: 60px; padding: 6px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 6px; color: #aaa; font-weight: bold; font-size: 11px; cursor: pointer; }
   .shop-tab.active { background: rgba(100,180,255,0.15); border-color: #aaddff; color: #fff; }
   
   .shop-item { display: flex; align-items: center; gap: 8px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 6px; border: 1px solid rgba(255,255,255,0.1); }
@@ -97,7 +98,7 @@
   .tech-tooltip .tt-bonus { color: #7fff7f; font-size: 11px; margin: 4px 0; }
   .tech-tooltip .tt-desc { color: #aaa; font-size: 11px; line-height: 1.3; }
 
-   #achvToast, #toast, #recordToast {
+  #achvToast, #toast, #recordToast {
     position: fixed;
     left: 50%;
     transform: translateX(-50%) translateY(-20px);
@@ -211,6 +212,7 @@
     <button id="soundBtn" class="btn" onclick="toggleSound(event)">🔊</button>
     <button id="fullscreenBtn" class="btn" onclick="toggleFullscreen(event)">📺</button>
     <button id="resetBtn" class="btn" onclick="resetProgress(event)">🗑 Сброс</button>
+    <button id="inventoryBtn" class="btn" onclick="toggleInventory(event)">🎒 Улов</button>
     <button id="catalogBtn" class="btn" onclick="toggleCatalog(event)">📖 Дневник</button>
     <button id="shopBtn" class="btn" onclick="toggleShop(event)">🛒 Магазин</button>
   </div>
@@ -251,6 +253,22 @@
         <div class="instr-text">• <b>Ошибка или просрочка</b> — сом утащит тебя в омут.<br>• При поражении <b>коллекция рыб обнулится</b> (монеты и прокачка останутся).<br>• Купи <b>«Острогу Рыбака»</b> в магазине, чтобы бой стал проще и короче.</div>
       </div>
       <button class="boss-start-btn" onclick="startBossFromInstruction(event)">⚔️ В БОЙ!</button>
+    </div>
+  </div>
+
+  <div id="inventoryOverlay" class="overlay" onclick="if(event.target===this) toggleInventory(event)">
+    <div class="panel">
+      <button class="close-btn" onclick="toggleInventory(event)">×</button>
+      <h2>🎒 Улов</h2>
+      <div class="shop-tabs" style="margin-bottom: 10px;">
+        <button class="shop-tab active" id="tabSadok" onclick="switchInventoryTab('sadok')">🎒 Садок (<span id="invCount">0</span>/<span id="invLimit">10</span>)</button>
+        <button class="shop-tab" id="tabFridge" onclick="switchInventoryTab('fridge')">❄️ Холодильник (<span id="fridgeCount">0</span>/<span id="fridgeLimit">0</span>)</button>
+      </div>
+      <div id="inventoryList" style="display:flex; flex-direction:column; gap:6px; margin:10px 0;"></div>
+      <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="buy-btn" style="flex:1; padding:12px; font-size:14px; background:#4CAF50;" onclick="sellAllFish()">💰 Продать всё</button>
+        <button class="buy-btn" style="flex:1; padding:12px; font-size:14px; background:#2196F3;" onclick="moveAllToFridge()">❄️ Всё в холодильник</button>
+      </div>
     </div>
   </div>
 
@@ -304,8 +322,9 @@
       </div>
       <div class="shop-tabs">
         <button class="shop-tab active" id="tabUpgrades" onclick="switchShopTab('upgrades')">✨ Прокачка (XP)</button>
-        <button class="shop-tab" id="tabTree" onclick="switchShopTab('tree')">🔧 Удочка (Монеты)</button>
-        <button class="shop-tab" id="tabBooks" onclick="switchShopTab('books')">📕 Книги (Монеты)</button>
+        <button class="shop-tab" id="tabTree" onclick="switchShopTab('tree')">🔧 Удочка</button>
+        <button class="shop-tab" id="tabBooks" onclick="switchShopTab('books')">📕 Книги</button>
+        <button class="shop-tab" id="tabMarket" onclick="switchShopTab('market')">📈 Рынок</button>
       </div>
       <div id="shopItems"></div>
       
@@ -337,7 +356,7 @@ let xp = parseInt(localStorage.getItem('fishXp') || '0');
 let bestScore = parseInt(localStorage.getItem('fishBest') || '0');
 let totalCaught = parseInt(localStorage.getItem('fishTotal') || '0');
 let catalog = JSON.parse(localStorage.getItem('fishCatalog') || '{}');
-let upgrades = JSON.parse(localStorage.getItem('fishUpgrades') || '{"reel":0, "zone":0, "luck":0}');
+let upgrades = JSON.parse(localStorage.getItem('fishUpgrades') || '{"reel":0, "zone":0, "luck":0, "trade":0, "fridge":0}');
 let baitCount = parseInt(localStorage.getItem('fishBaitCount') || '0');
 let encyclopedia = JSON.parse(localStorage.getItem('fishEncyclopedia') || '{}');
 let achievements = JSON.parse(localStorage.getItem('fishNewAchievements') || '{}');
@@ -348,8 +367,13 @@ let bossMet = localStorage.getItem('fishBossMet') === 'true';
 
 let treeUpgrades = JSON.parse(localStorage.getItem('fishTreeUpgrades') || '{"body":0, "line":0, "float":0, "hook":0, "keeper":0, "reel":0, "handle":0, "net":0, "bait":0}');
 
-let gameStats = JSON.parse(localStorage.getItem('fishStats') || '{"earned":0, "spent":0, "misses":0, "bestStreak":0, "totalWeight":0}');
+let gameStats = JSON.parse(localStorage.getItem('fishStats') || '{"earned":0, "spent":0, "misses":0, "bestStreak":0, "totalWeight":0, "treasuresFound":0}');
 let fishRecords = JSON.parse(localStorage.getItem('fishRecords') || '{}');
+
+let inventory = JSON.parse(localStorage.getItem('fishInventory') || '[]');
+let fridge = JSON.parse(localStorage.getItem('fishFridge') || '[]');
+let marketPrices = JSON.parse(localStorage.getItem('fishMarket') || '{}');
+let weatherChangesSinceMarket = parseInt(localStorage.getItem('fishMarketTimer') || '0');
 
 let catchStreak = 0, missStreak = 0;
 let character = localStorage.getItem('fishCharacter') || null;
@@ -381,7 +405,12 @@ function changeWeather() {
   currentWeatherIndex = (currentWeatherIndex + 1) % WEATHERS.length; 
   weatherTimer = 0; 
   weatherFadeAlpha = 1.0; 
-  localStorage.setItem('fishWeatherIndex', currentWeatherIndex); 
+  localStorage.setItem('fishWeatherIndex', currentWeatherIndex);
+  weatherChangesSinceMarket++;
+  if (weatherChangesSinceMarket >= 3) {
+    weatherChangesSinceMarket = 0;
+    rollMarketPrices();
+  }
 }
 function updateGameTime(dt) { gameTimeMinutes += dt; if (gameTimeMinutes >= 24 * 60) gameTimeMinutes -= 24 * 60; }
 function formatTime() { const h = Math.floor(gameTimeMinutes / 60) % 24; const m = Math.floor(gameTimeMinutes) % 60; return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`; }
@@ -401,7 +430,8 @@ const FISH_DESCRIPTIONS = {
   'Ботинок':       { where: 'Дно', when: 'Любое', how: 'Мусор. Хорошо клюёт в начале.' },
   'Бутылка':       { where: 'Дно', when: 'Дождь', how: 'Мусор. В дождь чаще.' },
   'Шина':          { where: 'Дно', when: 'Любое', how: 'Крупный мусор.' },
-  'Банка':         { where: 'Дно', when: 'Любое', how: 'Мелкий мусор.' }
+  'Банка':         { where: 'Дно', when: 'Любое', how: 'Мелкий мусор.' },
+  'Сундук':        { where: 'Дно, очень редко', when: 'Любое', how: 'Клад! Много монет сразу.' }
 };
 
 const BOOKS = [
@@ -428,7 +458,8 @@ const FISH_TYPES = [
   { name: 'Ботинок',       color: '#3a3a3a', size: 35, pts: 1,   xp: 0,   baseWeight: 6,  minW: 300,  maxW: 1200, emoji: '👢', isTrash: true, isRare: false },
   { name: 'Бутылка',       color: '#4a8a4a', size: 28, pts: 1,   xp: 0,   baseWeight: 6,  minW: 100,  maxW: 500,  emoji: '🍾', isTrash: true, isRare: false },
   { name: 'Шина',          color: '#1a1a1a', size: 45, pts: 1,   xp: 0,   baseWeight: 6,  minW: 5000, maxW: 15000, emoji: '🛞', isTrash: true, isRare: false },
-  { name: 'Банка',         color: '#8a8a9a', size: 20, pts: 1,   xp: 0,   baseWeight: 6,  minW: 50,   maxW: 200,  emoji: '🥫', isTrash: true, isRare: false }
+  { name: 'Банка',         color: '#8a8a9a', size: 20, pts: 1,   xp: 0,   baseWeight: 6,  minW: 50,   maxW: 200,  emoji: '🥫', isTrash: true, isRare: false },
+  { name: 'Сундук',        color: '#8B4513', size: 40, pts: 0,   xp: 20,  baseWeight: 0.05, minW: 5000, maxW: 8000, emoji: '🎁', isTrash: true, isRare: false }
 ];
 const FISH_ONLY = FISH_TYPES.filter(f => !f.isTrash);
 const TRASH_ONLY = FISH_TYPES.filter(f => f.isTrash);
@@ -437,76 +468,77 @@ const TREE_DATA = {
   body: {
     name: 'Тело удилища', icon: '🎣',
     levels: [
-      { name: 'Бамбук', desc: 'Классическая палка', cost: 0, bonus: 0, requires: [], row: 0, col: 1 },
-      { name: 'Телескоп', desc: 'Стеклопластик', cost: 300, bonus: 0.05, requires: [{branch:'body', level:0}], row: 0, col: 2 },
-      { name: 'Карбон', desc: 'Лёгкий карбон', cost: 1200, bonus: 0.10, requires: [{branch:'body', level:1}, {branch:'line', level:1}], row: 0, col: 3 },
-      { name: 'Спиннинг', desc: 'Проф. снасть', cost: 3000, bonus: 0.15, requires: [{branch:'body', level:2}, {branch:'reel', level:1}], row: 0, col: 4 },
-      { name: 'Фидер', desc: 'Английская снасть', cost: 6000, bonus: 0.20, requires: [{branch:'body', level:3}, {branch:'line', level:2}], row: 0, col: 5 }
+      { name: 'Бамбук',   desc: 'Классическая палка',   cost: 0,    bonus: 0,    requires: [], row: 0, col: 1 },
+      { name: 'Телескоп', desc: 'Стеклопластик',        cost: 200,  bonus: 0.08, requires: [{branch:'body', level:0}], row: 0, col: 2 },
+      { name: 'Карбон',   desc: 'Лёгкий карбон',        cost: 800,  bonus: 0.18, requires: [{branch:'body', level:1}, {branch:'line', level:1}], row: 0, col: 3 },
+      { name: 'Спиннинг', desc: 'Проф. снасть',         cost: 2000, bonus: 0.30, requires: [{branch:'body', level:2}, {branch:'reel', level:1}], row: 0, col: 4 },
+      { name: 'Фидер',    desc: 'Английская снасть',    cost: 4000, bonus: 0.45, requires: [{branch:'body', level:3}, {branch:'line', level:2}], row: 0, col: 5 }
     ]
   },
   line: {
     name: 'Леска', icon: '🧵',
     levels: [
-      { name: 'Монофил', desc: 'Обычная леска', cost: 0, bonus: 0, requires: [], row: 1, col: 1 },
-      { name: 'Флюорокарбон', desc: 'Менее заметна', cost: 200, bonus: 0.1, requires: [{branch:'line', level:0}], row: 1, col: 2 },
-      { name: 'Плетёнка', desc: 'Крепкая', cost: 800, bonus: 0.2, requires: [{branch:'line', level:1}, {branch:'hook', level:1}], row: 1, col: 3 },
-      { name: 'Нанофил', desc: 'Очень прочная', cost: 2500, bonus: 0.35, requires: [{branch:'line', level:2}, {branch:'reel', level:2}], row: 1, col: 4 }
+      { name: 'Монофил',      desc: 'Обычная леска',    cost: 0,    bonus: 0,    requires: [], row: 1, col: 1 },
+      { name: 'Флюорокарбон', desc: 'Менее заметна',    cost: 150,  bonus: 0.10, requires: [{branch:'line', level:0}], row: 1, col: 2 },
+      { name: 'Плетёнка',     desc: 'Крепкая',          cost: 600,  bonus: 0.22, requires: [{branch:'line', level:1}, {branch:'hook', level:1}], row: 1, col: 3 },
+      { name: 'Нанофил',      desc: 'Очень прочная',    cost: 1800, bonus: 0.38, requires: [{branch:'line', level:2}, {branch:'reel', level:2}], row: 1, col: 4 }
     ]
   },
   reel: {
     name: 'Катушка', icon: '⚙️',
     levels: [
-      { name: 'Инерционная', desc: 'Простая катушка', cost: 0, bonus: 0, requires: [], row: 2, col: 1 },
-      { name: 'Безынерционная', desc: 'Плавный ход', cost: 400, bonus: 0.15, requires: [{branch:'reel', level:0}], row: 2, col: 2 },
-      { name: 'Мультипликаторная', desc: 'Для троллинга', cost: 1800, bonus: 0.3, requires: [{branch:'reel', level:1}], row: 2, col: 3 }
+      { name: 'Инерционная',        desc: 'Простая катушка', cost: 0,    bonus: 0,    requires: [], row: 2, col: 1 },
+      { name: 'Безынерционная',     desc: 'Плавный ход',     cost: 350,  bonus: 0.18, requires: [{branch:'reel', level:0}], row: 2, col: 2 },
+      { name: 'Мультипликаторная',  desc: 'Для троллинга',   cost: 1400, bonus: 0.35, requires: [{branch:'reel', level:1}], row: 2, col: 3 }
     ]
   },
   hook: {
     name: 'Крючок', icon: '🪝',
     levels: [
-      { name: 'Обычный', desc: 'Стандартный', cost: 0, bonus: 0, requires: [], row: 3, col: 1 },
-      { name: 'Кованый', desc: 'Не разгибается', cost: 250, bonus: 0.1, requires: [{branch:'hook', level:0}], row: 3, col: 2 },
-      { name: 'С кольцом', desc: 'Для крупной', cost: 1000, bonus: 0.25, requires: [{branch:'hook', level:1}], row: 3, col: 3 },
-      { name: 'Двойной', desc: 'Двойная зацепка', cost: 3000, bonus: 0.4, requires: [{branch:'hook', level:2}, {branch:'float', level:1}], row: 3, col: 4 }
+      { name: 'Обычный',    desc: 'Стандартный',       cost: 0,    bonus: 0,    requires: [], row: 3, col: 1 },
+      { name: 'Кованый',    desc: 'Не разгибается',    cost: 200,  bonus: 0.12, requires: [{branch:'hook', level:0}], row: 3, col: 2 },
+      { name: 'С кольцом',  desc: 'Для крупной',       cost: 800,  bonus: 0.28, requires: [{branch:'hook', level:1}], row: 3, col: 3 },
+      { name: 'Двойной',    desc: 'Двойная зацепка',   cost: 2200, bonus: 0.48, requires: [{branch:'hook', level:2}, {branch:'float', level:1}], row: 3, col: 4 }
     ]
   },
   float: {
     name: 'Поплавок', icon: '🎈',
     levels: [
-      { name: 'Перо', desc: 'Гусиный', cost: 0, bonus: 0, requires: [], row: 2, col: 4 },
-      { name: 'Пластик', desc: 'Яркий', cost: 150, bonus: 0.15, requires: [{branch:'float', level:0}], row: 2, col: 5 }
+      { name: 'Перо',    desc: 'Гусиный', cost: 0,   bonus: 0,    requires: [], row: 2, col: 4 },
+      { name: 'Пластик', desc: 'Яркий',   cost: 120, bonus: 0.20, requires: [{branch:'float', level:0}], row: 2, col: 5 }
     ]
   },
   keeper: {
     name: 'Садок', icon: '🪣',
     levels: [
-      { name: 'Кукан', desc: 'Для улова', cost: 0, bonus: 0, requires: [], row: 4, col: 1 },
-      { name: 'Ведро', desc: 'Удобная ёмкость', cost: 350, bonus: 0.05, requires: [{branch:'keeper', level:0}], row: 4, col: 2 },
-      { name: 'Садок', desc: 'Сетчатый садок', cost: 900, bonus: 0.10, requires: [{branch:'keeper', level:1}, {branch:'line', level:1}], row: 4, col: 3 }
+      { name: 'Кукан', desc: 'Для улова',          cost: 0,    bonus: 0,    requires: [], row: 4, col: 1 },
+      { name: 'Ведро', desc: 'Удобная ёмкость',    cost: 300,  bonus: 0.10, requires: [{branch:'keeper', level:0}], row: 4, col: 2 },
+      { name: 'Садок', desc: 'Сетчатый садок',     cost: 900,  bonus: 0.20, requires: [{branch:'keeper', level:1}, {branch:'line', level:1}], row: 4, col: 3 },
+      { name: 'Бочка', desc: 'Большая дубовая',    cost: 2500, bonus: 0.35, requires: [{branch:'keeper', level:2}, {branch:'net', level:1}], row: 4, col: 4 }
     ]
   },
   handle: {
     name: 'Рукоять', icon: '🖐️',
     levels: [
-      { name: 'Дерево', desc: 'Обычная', cost: 0, bonus: 0, requires: [], row: 5, col: 1 },
-      { name: 'Пробка', desc: 'Не скользит', cost: 300, bonus: 0.05, requires: [{branch:'handle', level:0}], row: 5, col: 2 },
-      { name: 'Неопрен', desc: 'Мягкая', cost: 800, bonus: 0.10, requires: [{branch:'handle', level:1}], row: 5, col: 3 }
+      { name: 'Дерево',  desc: 'Обычная',      cost: 0,   bonus: 0,    requires: [], row: 5, col: 1 },
+      { name: 'Пробка',  desc: 'Не скользит',  cost: 250, bonus: 0.08, requires: [{branch:'handle', level:0}], row: 5, col: 2 },
+      { name: 'Неопрен', desc: 'Мягкая',       cost: 700, bonus: 0.18, requires: [{branch:'handle', level:1}], row: 5, col: 3 }
     ]
   },
   net: {
     name: 'Подсак', icon: '🥅',
     levels: [
-      { name: 'Без подсака', desc: 'Руками', cost: 0, bonus: 0, requires: [], row: 6, col: 1 },
-      { name: 'Подсак', desc: 'Помогает', cost: 500, bonus: 0.05, requires: [{branch:'net', level:0}], row: 6, col: 2 },
-      { name: 'Большой', desc: 'Для крупной', cost: 1500, bonus: 0.10, requires: [{branch:'net', level:1}, {branch:'keeper', level:1}], row: 6, col: 3 }
+      { name: 'Без подсака', desc: 'Руками',      cost: 0,    bonus: 0,    requires: [], row: 6, col: 1 },
+      { name: 'Подсак',      desc: 'Помогает',    cost: 400,  bonus: 0.10, requires: [{branch:'net', level:0}], row: 6, col: 2 },
+      { name: 'Большой',     desc: 'Для крупной', cost: 1200, bonus: 0.22, requires: [{branch:'net', level:1}, {branch:'keeper', level:1}], row: 6, col: 3 }
     ]
   },
   bait: {
     name: 'Наживка', icon: '🪱',
     levels: [
-      { name: 'Без наживки', desc: 'Пустой крючок', cost: 0, bonus: 0, requires: [], row: 7, col: 1 },
-      { name: 'Червь', desc: 'Классика', cost: 250, bonus: 0.05, requires: [{branch:'bait', level:0}], row: 7, col: 2 },
-      { name: 'Бойл', desc: 'Для карпа', cost: 1000, bonus: 0.10, requires: [{branch:'bait', level:1}, {branch:'hook', level:1}], row: 7, col: 3 }
+      { name: 'Без наживки', desc: 'Пустой крючок', cost: 0,    bonus: 0,    requires: [], row: 7, col: 1 },
+      { name: 'Червь',       desc: 'Классика',      cost: 200,  bonus: 0.12, requires: [{branch:'bait', level:0}], row: 7, col: 2 },
+      { name: 'Бойл',        desc: 'Для карпа',     cost: 800,  bonus: 0.25, requires: [{branch:'bait', level:1}, {branch:'hook', level:1}], row: 7, col: 3 }
     ]
   }
 };
@@ -523,6 +555,19 @@ const HATS = [
 
 function getTotalTreeUpgrades() {
   return Object.values(treeUpgrades).reduce((sum, lvl) => sum + lvl, 0);
+}
+
+function getInventoryLimit() {
+  const keeperLvl = treeUpgrades.keeper || 0;
+  return 10 + keeperLvl * 10;
+}
+
+function getFridgeCapacity() {
+  const lvl = upgrades.fridge || 0;
+  if (lvl === 0) return 0;
+  if (lvl === 1) return 25;
+  if (lvl === 2) return 75;
+  return 150;
 }
 
 const ACHV_LIST = [
@@ -551,7 +596,7 @@ const ACHV_LIST = [
     desc: 'Собрать все 4 вида мусора', 
     bonus: '+15% к скорости, +4% к зоне', 
     check: () => TRASH_ONLY.every(f => catalog[f.name] > 0), 
-    progress: () => `Собрано: ${TRASH_ONLY.filter(f => catalog[f.name] > 0).length} / 4 вида`, 
+    progress: () => `Собрано: ${TRASH_ONLY.filter(f => catalog[f.name] > 0).length} / 5 видов`, 
     isBossKey: true 
   },
   { id: 'night', name: '🌙 Ночной охотник', desc: 'Поймать 10 рыб ночью', bonus: '+5% к шансу редкой рыбы', check: () => (achievements.nightCount || 0) >= 10, progress: () => Math.min(achievements.nightCount || 0, 10) + '/10', isBossKey: true },
@@ -600,8 +645,19 @@ const ACHV_LIST = [
 
   { id: 'drunk_master', name: '🍺 Пьяный мастер', desc: 'Достичь 5-го уровня опьянения', bonus: '+1000 монет', check: () => drunkLevel >= 5, progress: () => drunkLevel + '/5' },
 
+  { id: 'treasure', name: '💰 Кладоискатель', desc: 'Найти сундук-клад', bonus: '+500 монет', check: () => (gameStats.treasuresFound || 0) >= 1, progress: () => (gameStats.treasuresFound || 0) + '/1', secret: true },
+
   { id: 'leviathan', name: '🐋 Убийца Сома-Гиганта', desc: 'Секретное достижение', bonus: '+5000 монет', check: () => bossDefeated, progress: () => bossDefeated ? '✓' : '???', secret: true }
 ];
+
+function rollMarketPrices() {
+  marketPrices = {};
+  for (const f of FISH_ONLY) {
+    const r = 0.7 + Math.random() * 0.8;
+    marketPrices[f.name] = Math.round(r * 100) / 100;
+  }
+  saveProgress();
+}
 
 function migrateAchievements() {
   if (localStorage.getItem('fishMigrated_v4')) return;
@@ -614,6 +670,7 @@ function migrateAchievements() {
   saveProgress();
 }
 migrateAchievements();
+if (!marketPrices || Object.keys(marketPrices).length === 0) rollMarketPrices();
 
 let lastCatch = null;
 let particles = [], rippleEffects = [], floatingTexts = [], bubbles = [], rainDrops = [];
@@ -664,6 +721,10 @@ function saveProgress() {
   localStorage.setItem('fishDrunkTimer', drunkTimer);
   localStorage.setItem('fishTotalDrunk', totalDrunk);
   localStorage.setItem('fishEasterEgg', easterEggActive);
+  localStorage.setItem('fishInventory', JSON.stringify(inventory));
+  localStorage.setItem('fishFridge', JSON.stringify(fridge));
+  localStorage.setItem('fishMarket', JSON.stringify(marketPrices));
+  localStorage.setItem('fishMarketTimer', weatherChangesSinceMarket);
 }
 
 function checkBossTrigger() {
@@ -962,6 +1023,8 @@ const SHOP_ITEMS = [
   { id: 'reel', name: '⚡ Скорость', desc: 'Замедляет индикатор', max: 5, baseCost: 50, costMult: 2, currency: 'xp' },
   { id: 'zone', name: '🎯 Удержание', desc: 'Шире зелёная зона', max: 5, baseCost: 60, costMult: 2, currency: 'xp' },
   { id: 'luck', name: '🍀 Удача', desc: 'Меньше мусора', max: 5, baseCost: 80, costMult: 2.5, currency: 'xp' },
+  { id: 'trade', name: '🗣 Торговля', desc: 'Выгоднее продавать рыбу (+5% за ур.)', max: 5, baseCost: 100, costMult: 2, currency: 'xp' },
+  { id: 'fridge', name: '❄️ Холодильник', desc: 'Хранилище для рыбы. Ур.1: 25, Ур.2: 75, Ур.3: 150', max: 3, baseCost: 1500, costMult: 2.5, currency: 'coins' },
   { id: 'bait', name: '🪱 Наживка', desc: '×3 шанс редкой рыбы. Тратится при улове.', max: 99, baseCost: 150, costMult: 1, isConsumable: true, currency: 'coins' },
   { id: 'booze', name: '🍺 ПифКо', desc: 'Муть и рябь. Бонус к опыту: +20% за уровень.', max: 99, baseCost: 50, costMult: 1, isConsumable: true, currency: 'coins' }
 ];
@@ -1096,6 +1159,7 @@ function switchShopTab(tab) {
   document.getElementById('tabUpgrades').classList.toggle('active', tab === 'upgrades');
   document.getElementById('tabTree').classList.toggle('active', tab === 'tree');
   document.getElementById('tabBooks').classList.toggle('active', tab === 'books');
+  document.getElementById('tabMarket').classList.toggle('active', tab === 'market');
   renderShop();
 }
 function toggleShop(e) {
@@ -1167,10 +1231,18 @@ function renderShop() {
       const currencyIcon = isXp ? '✨' : '💰';
       let btnText = isMax ? 'MAX' : `${currencyIcon} ${cost}`;
       
+      let extraDesc = '';
+      if (item.id === 'fridge') {
+        extraDesc = `<div class="desc" style="color:#88ccff; font-size:9px;">Мест: ${getFridgeCapacity()}</div>`;
+      }
+      if (item.id === 'trade') {
+        extraDesc = `<div class="desc" style="color:#7fff7f; font-size:9px;">Бонус: +${lvl * 5}% к продаже</div>`;
+      }
+      
       return `
         <div class="shop-item">
           <div class="icon">${item.name.split(' ')[0]}</div>
-          <div class="info"><div class="name">${item.name.substring(2)} (ур. ${lvl}/${item.max})</div><div class="desc">${item.desc}</div></div>
+          <div class="info"><div class="name">${item.name.substring(2)} (ур. ${lvl}/${item.max})</div><div class="desc">${item.desc}</div>${extraDesc}</div>
           <button class="buy-btn" onclick="buyUpgrade('${item.id}')" ${canBuy ? '' : 'disabled'}>${btnText}</button>
         </div>`;
     }).join('');
@@ -1283,6 +1355,24 @@ function renderShop() {
           <button class="buy-btn" onclick="buyBook('${book.id}')" ${canBuy ? '' : 'disabled'}>${owned ? '✓ Куплено' : `💰 ${book.cost}`}</button>
         </div>`;
     }).join('');
+  } else if (currentShopTab === 'market') {
+    const rows = FISH_ONLY.map(f => {
+      const mult = marketPrices[f.name] || 1.0;
+      const arrow = mult > 1.05 ? '📈' : mult < 0.95 ? '📉' : '➖';
+      const color = mult > 1.05 ? '#7fff7f' : mult < 0.95 ? '#ff8888' : '#aaa';
+      return `<div class="shop-item">
+        <div class="icon">${f.emoji}</div>
+        <div class="info">
+          <div class="name">${f.name}</div>
+          <div class="desc">Базовая: ${f.pts} 💰</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="color:${color}; font-weight:bold; font-size:14px;">${arrow} ×${mult.toFixed(2)}</div>
+          <div style="color:#ffd700; font-size:12px;">${Math.round(f.pts * mult)} 💰</div>
+        </div>
+      </div>`;
+    }).join('');
+    container.innerHTML = `<div style="padding:8px; background:rgba(100,180,255,0.1); border-radius:8px; margin-bottom:10px; font-size:11px; color:#aaddff; text-align:center;">📈 Цены меняются каждые 3 смены погоды. Продавай, когда выгодно!</div>` + rows;
   }
 }
 
@@ -1406,7 +1496,143 @@ function drawTreeLines(CELL_W, CELL_H, START_X, START_Y) {
 }
 
 // ==================================================================
-// ЧАСТЬ 5: ДНЕВНИК (КАТАЛОГ + СТАТИСТИКА)
+// ЧАСТЬ 5: ИНВЕНТАРЬ И РЫНОК
+// ==================================================================
+let currentInventoryTab = 'sadok';
+
+function getSellPrice(fish, weight) {
+  const base = calcPoints(fish, weight);
+  const marketMult = marketPrices[fish.name] || 1.0;
+  const tradeBonus = 1 + (upgrades.trade || 0) * 0.05;
+  return Math.max(1, Math.round(base * marketMult * tradeBonus));
+}
+
+function toggleInventory(e) {
+  if (e) e.stopPropagation();
+  const overlay = document.getElementById('inventoryOverlay');
+  overlay.classList.toggle('show');
+  if (overlay.classList.contains('show')) renderInventory();
+}
+
+function switchInventoryTab(tab) {
+  currentInventoryTab = tab;
+  document.getElementById('tabSadok').classList.toggle('active', tab === 'sadok');
+  document.getElementById('tabFridge').classList.toggle('active', tab === 'fridge');
+  renderInventory();
+}
+
+function renderInventory() {
+  const invLimit = getInventoryLimit();
+  const fridgeLimit = getFridgeCapacity();
+  document.getElementById('invCount').textContent = inventory.length;
+  document.getElementById('invLimit').textContent = invLimit;
+  document.getElementById('fridgeCount').textContent = fridge.length;
+  document.getElementById('fridgeLimit').textContent = fridgeLimit;
+  
+  const container = document.getElementById('inventoryList');
+  const list = currentInventoryTab === 'sadok' ? inventory : fridge;
+  const isFridge = currentInventoryTab === 'fridge';
+  
+  if (fridgeLimit === 0 && isFridge) {
+    container.innerHTML = '<div style="text-align:center; color:#888; padding:20px;">Холодильник не куплен. Загляни в магазин!</div>';
+    return;
+  }
+  
+  if (list.length === 0) {
+    container.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">${isFridge ? 'Холодильник пуст' : 'Садок пуст. Поймай рыбу!'}</div>`;
+    return;
+  }
+  
+  const tradeBonus = 1 + (upgrades.trade || 0) * 0.05;
+  container.innerHTML = list.map((item, idx) => {
+    const fish = FISH_TYPES.find(f => f.name === item.name);
+    const price = getSellPrice(fish, item.weight);
+    const marketMult = marketPrices[item.name] || 1;
+    const arrow = marketMult > 1.05 ? '📈' : marketMult < 0.95 ? '📉' : '➖';
+    const moveBtn = isFridge
+      ? `<button class="buy-btn" style="background:#607D8B;" onclick="moveToSadok(${idx})">🎒</button>`
+      : `<button class="buy-btn" style="background:#2196F3;" onclick="moveToFridge(${idx})" ${fridge.length >= fridgeLimit ? 'disabled' : ''}>❄️</button>`;
+    return `<div class="shop-item">
+      <div class="icon">${item.emoji}</div>
+      <div class="info">
+        <div class="name">${item.name} — ${item.weight} г</div>
+        <div class="desc">${arrow} ×${marketMult.toFixed(2)}${tradeBonus > 1 ? ` | +${Math.round((tradeBonus-1)*100)}%` : ''}</div>
+      </div>
+      ${moveBtn}
+      <button class="buy-btn" style="background:#4CAF50;" onclick="sellFishFrom('${isFridge ? 'fridge' : 'sadok'}', ${idx})">💰 ${price}</button>
+    </div>`;
+  }).join('');
+}
+
+function moveToFridge(idx) {
+  if (idx < 0 || idx >= inventory.length) return;
+  if (fridge.length >= getFridgeCapacity()) return;
+  fridge.push(inventory[idx]);
+  inventory.splice(idx, 1);
+  playSound('buy');
+  saveProgress();
+  renderInventory();
+}
+
+function moveToSadok(idx) {
+  if (idx < 0 || idx >= fridge.length) return;
+  if (inventory.length >= getInventoryLimit()) { vibrate([50,50,50]); return; }
+  inventory.push(fridge[idx]);
+  fridge.splice(idx, 1);
+  playSound('buy');
+  saveProgress();
+  renderInventory();
+}
+
+function moveAllToFridge() {
+  if (currentInventoryTab !== 'sadok') return;
+  const space = getFridgeCapacity() - fridge.length;
+  if (space <= 0) { vibrate([50,50,50]); return; }
+  const toMove = inventory.splice(0, Math.min(space, inventory.length));
+  fridge.push(...toMove);
+  playSound('buy');
+  saveProgress();
+  renderInventory();
+}
+
+function sellFishFrom(source, idx) {
+  const list = source === 'fridge' ? fridge : inventory;
+  if (idx < 0 || idx >= list.length) return;
+  const item = list[idx];
+  const fish = FISH_TYPES.find(f => f.name === item.name);
+  const price = getSellPrice(fish, item.weight);
+  score += price;
+  gameStats.earned += price;
+  list.splice(idx, 1);
+  playSound('buy');
+  saveProgress();
+  renderInventory();
+  checkNewAchievements();
+  vibrate(50);
+}
+
+function sellAllFish() {
+  const list = currentInventoryTab === 'sadok' ? inventory : fridge;
+  if (list.length === 0) return;
+  let total = 0;
+  for (const item of list) {
+    const fish = FISH_TYPES.find(f => f.name === item.name);
+    total += getSellPrice(fish, item.weight);
+  }
+  score += total;
+  gameStats.earned += total;
+  if (currentInventoryTab === 'sadok') inventory = [];
+  else fridge = [];
+  playSound('catch');
+  saveProgress();
+  renderInventory();
+  checkNewAchievements();
+  vibrate([50, 30, 50]);
+  showAchievementToast(`💰 Продано на ${total} монет`);
+}
+
+// ==================================================================
+// ЧАСТЬ 6: ДНЕВНИК (КАТАЛОГ + СТАТИСТИКА)
 // ==================================================================
 let currentCatalogTab = 'fish';
 
@@ -1482,7 +1708,7 @@ function checkNewAchievements() {
       }
       
       saveProgress();
-      if (!a.secret || bossMet) {
+      if (!a.secret || bossMet || a.id === 'treasure' || a.id === 'drunk_master') {
         showAchievementToast(a.name);
         playSound('achv');
         vibrate([100, 50, 100, 50, 200]);
@@ -1675,6 +1901,7 @@ function renderStats() {
     else if (a.id === 'collector') pct = FISH_ONLY.filter(f => catalog[f.name] > 0).length / FISH_ONLY.length * 100;
     else if (a.id === 'trashman') pct = TRASH_ONLY.filter(f => catalog[f.name] > 0).length / TRASH_ONLY.length * 100;
     else if (a.id === 'leviathan') pct = bossDefeated ? 100 : 0;
+    else if (a.id === 'treasure') pct = (gameStats.treasuresFound || 0) >= 1 ? 100 : 0;
     
     if (isSecret) {
       return `<div class="achv secret">
@@ -1707,7 +1934,7 @@ function selectHat(hatId) {
 }
 
 // ==================================================================
-// ЧАСТЬ 6: ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И ВВОД
+// ЧАСТЬ 7: ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И ВВОД
 // ==================================================================
 function addParticles(x, y, color, count, spread = 4) {
   for (let i = 0; i < count; i++) particles.push({ x, y, vx: (Math.random()-0.5)*spread*2, vy: (Math.random()-0.5)*spread*2-1, life: 1, color, size: 2+Math.random()*4 });
@@ -1718,11 +1945,12 @@ function addFloatingText(text, x, y, color) { floatingTexts.push({ text, x, y, c
 function resetProgress(e) {
   if (e) e.stopPropagation();
   if (!confirm('Сбросить ВЕСЬ прогресс?')) return;
-  score = 0; xp = 0; bestScore = 0; totalCaught = 0; catalog = {}; upgrades = {reel:0, zone:0, luck:0}; baitCount = 0;
+  score = 0; xp = 0; bestScore = 0; totalCaught = 0; catalog = {}; upgrades = {reel:0, zone:0, luck:0, trade:0, fridge:0}; baitCount = 0;
   encyclopedia = {}; achievements = {}; bossDefeated = false; hasHarpoon = false; harpoonInShop = false; bossMet = false;
   treeUpgrades = {body:0, line:0, float:0, hook:0, keeper:0, reel:0, handle:0, net:0, bait:0};
-  gameStats = {earned:0, spent:0, misses:0, bestStreak:0, totalWeight:0};
+  gameStats = {earned:0, spent:0, misses:0, bestStreak:0, totalWeight:0, treasuresFound:0};
   fishRecords = {};
+  inventory = []; fridge = []; marketPrices = {}; weatherChangesSinceMarket = 0;
   unlockedHats = []; activeHat = null;
   boozeCount = 0; drunkLevel = 0; drunkTimer = 0; totalDrunk = 0; easterEggActive = false;
   catchStreak = 0; missStreak = 0;
@@ -1732,6 +1960,7 @@ function resetProgress(e) {
   localStorage.setItem('fishMigrated_v4', 'true');
   soundEnabled = true;
   document.getElementById('soundBtn').textContent = '🔊';
+  rollMarketPrices();
   const toast = document.getElementById('toast');
   toast.classList.add('show');
   setTimeout(() => toast.classList.remove('show'), 1500);
@@ -1844,7 +2073,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 // ==================================================================
-// ЧАСТЬ 7: ЛОГИКА РЫБАЛКИ И ВЕСА
+// ЧАСТЬ 8: ЛОГИКА РЫБАЛКИ И ВЕСА
 // ==================================================================
 function getRandomWeight(min, max) {
   const r = Math.pow(Math.random(), 2);
@@ -1902,7 +2131,6 @@ function startReeling() {
   
   let speedReduction = (upgrades.reel || 0) * 0.15 + bodyBonus + lineBonus + reelBonus;
   if (achievements.trashman) speedReduction += 0.15;
-  if (achievements.rodmaster) speedReduction += 0.10;
   
   if (drunkLevel > 0) {
     speedReduction = Math.max(0, speedReduction - drunkLevel * 0.1);
@@ -1982,6 +2210,7 @@ function pickFish() {
         weight = Math.max(1, weight);
       }
     }
+    if (f.name === 'Сундук') weight *= 0.02;
     
     if (w === 'night') {
       if (f.name === 'Сом' || f.name === 'Угорь') weight *= 3;
@@ -2061,9 +2290,26 @@ function checkReel() {
     const drunkMultiplier = 1 + (drunkLevel * 0.2);
     const xpGained = Math.round(fish.xp * wMod * streakMult * drunkMultiplier);
     
-    score += lastCatch.points; 
+    if (fish.name === 'Сундук') {
+      const treasure = 500 + Math.floor(Math.random() * 1500);
+      score += treasure;
+      gameStats.earned += treasure;
+      gameStats.treasuresFound = (gameStats.treasuresFound || 0) + 1;
+      addFloatingText(`💰 Клад! +${treasure}`, bobber.x, bobber.y - 20, '#ffd700');
+      showAchievementToast(`💰 Клад! +${treasure} монет`);
+    } else if (fish.isTrash) {
+      score += lastCatch.points;
+      gameStats.earned += lastCatch.points;
+    } else {
+      if (inventory.length < getInventoryLimit()) {
+        inventory.push({ name: fish.name, weight: weight, emoji: fish.emoji, color: fish.color });
+        addFloatingText(`🎒 В садок (${inventory.length}/${getInventoryLimit()})`, bobber.x, bobber.y - 20, '#7fff7f');
+      } else {
+        addFloatingText('🎒 Садок полон!', bobber.x, bobber.y - 20, '#ff6666');
+      }
+    }
+    
     xp += xpGained;
-    gameStats.earned += lastCatch.points;
     gameStats.totalWeight += weight;
     
     totalCaught++;
@@ -2074,7 +2320,6 @@ function checkReel() {
     state = S.RETURNING; stateTime = 0;
     addParticles(bobber.x, bobber.y, fish.color, 25, 6);
     addRipple(bobber.x, bobber.y);
-    addFloatingText(`+${lastCatch.points} 💰`, bobber.x, bobber.y - 20, fish.color);
     addFloatingText(`+${xpGained} ✨`, bobber.x, bobber.y - 45, '#00ccff');
     
     if (fish.isRare) { playSound('rare'); vibrate([50, 30, 50, 30, 100]); }
@@ -2091,7 +2336,7 @@ function checkReel() {
 function resetToIdle() { state = S.IDLE; stateTime = 0; lastCatch = null; }
 
 // ==================================================================
-// ЧАСТЬ 8: БОСС
+// ЧАСТЬ 9: БОСС
 // ==================================================================
 function startBossFight() {
   state = S.BOSS_INTRO; stateTime = 0;
@@ -2150,6 +2395,8 @@ function winBossFight() {
   state = S.BOSS_WIN; stateTime = 0;
   bossDefeated = true;
   xp += 500;
+  score += 5000;
+  gameStats.earned += 5000;
   if (score > bestScore) bestScore = score;
   playSound('achv');
   saveProgress();
@@ -2174,7 +2421,7 @@ function loseBossFight() {
 }
 
 // ==================================================================
-// ЧАСТЬ 9: ОБНОВЛЕНИЕ
+// ЧАСТЬ 10: ОБНОВЛЕНИЕ
 // ==================================================================
 let hintCounter = 0;
 
@@ -2314,7 +2561,7 @@ function update(dt) {
 }
 
 // ==================================================================
-// ЧАСТЬ 10: РИСОВАНИЕ
+// ЧАСТЬ 11: РИСОВАНИЕ
 // ==================================================================
 function drawFishBody(x, y, size, color, dir = 1, alpha = 1) {
   ctx.save(); ctx.translate(x, y); ctx.scale(dir, 1); ctx.globalAlpha = alpha;
@@ -2357,10 +2604,16 @@ function drawGear(t) {
       ctx.fillStyle = 'rgba(150, 150, 150, 0.9)';
       ctx.beginPath(); ctx.rect(-8, 5, 16, 20); ctx.fill();
       ctx.strokeStyle = '#777'; ctx.lineWidth = 1; ctx.strokeRect(-8, 5, 16, 20);
-    } else {
+    } else if (keeperLvl === 2) {
       ctx.fillStyle = 'rgba(200, 200, 200, 0.4)';
       ctx.beginPath(); ctx.ellipse(0, 15, 12, 18, 0, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = '#aaa'; ctx.lineWidth = 1; ctx.stroke();
+    } else {
+      ctx.fillStyle = 'rgba(139, 69, 19, 0.8)';
+      ctx.beginPath(); ctx.ellipse(0, 15, 14, 20, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#5a3a1a'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = '#a06030'; ctx.lineWidth = 1;
+      for (let i = -10; i <= 10; i += 5) { ctx.beginPath(); ctx.moveTo(-14, 15 + i); ctx.lineTo(14, 15 + i); ctx.stroke(); }
     }
     ctx.restore();
   }
@@ -2535,11 +2788,9 @@ function drawEasterEgg() {
   
   if (isWoman) {
     // === РЫБАК В ПЛАВКАХ ===
-    // Тень
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.beginPath(); ctx.ellipse(0, 183, 30, 8, 0, 0, Math.PI * 2); ctx.fill();
     
-    // Ноги (короче)
     ctx.fillStyle = '#d9a066';
     ctx.fillRect(-11, 106, 9, 22);
     ctx.fillRect(2, 106, 9, 22);
@@ -2551,7 +2802,6 @@ function drawEasterEgg() {
     ctx.beginPath(); ctx.ellipse(-8, 171, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(8, 171, 8, 4, 0, 0, Math.PI * 2); ctx.fill();
     
-    // Плавки
     ctx.fillStyle = '#e63946';
     ctx.beginPath();
     ctx.moveTo(-18, 84); ctx.lineTo(18, 84);
@@ -2565,7 +2815,6 @@ function drawEasterEgg() {
     ctx.beginPath(); ctx.moveTo(-2, 87); ctx.quadraticCurveTo(-5, 92, -3, 96); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(2, 87); ctx.quadraticCurveTo(5, 92, 3, 96); ctx.stroke();
     
-    // Торс
     ctx.fillStyle = '#d2a679';
     ctx.beginPath();
     ctx.moveTo(-20, 62);
@@ -2582,12 +2831,10 @@ function drawEasterEgg() {
     ctx.beginPath(); ctx.arc(-8, 62, 8, 0.2, Math.PI - 0.2); ctx.stroke();
     ctx.beginPath(); ctx.arc(8, 62, 8, 0.2, Math.PI - 0.2); ctx.stroke();
     
-    // Плечи
     ctx.fillStyle = '#d2a679';
     ctx.beginPath(); ctx.ellipse(-20, 64, 7, 7, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(20, 64, 7, 7, 0, 0, Math.PI * 2); ctx.fill();
     
-    // Руки
     ctx.strokeStyle = '#d2a679'; ctx.lineWidth = 8; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(-20, 64); ctx.lineTo(-34, 82); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(20, 64); ctx.lineTo(34, 80); ctx.stroke();
@@ -2598,17 +2845,14 @@ function drawEasterEgg() {
     ctx.beginPath(); ctx.arc(-35, 83, 4.5, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(35, 81, 4.5, 0, Math.PI * 2); ctx.fill();
     
-    // Шея
     ctx.fillStyle = '#c8955f';
     ctx.fillRect(-6, 54, 12, 8);
     
-    // Голова
     ctx.fillStyle = '#f0c090';
     ctx.beginPath(); ctx.arc(0, 40, 17, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#e8b585';
     ctx.beginPath(); ctx.arc(0, 47, 12, 0.1, Math.PI - 0.1); ctx.fill();
     
-    // Волосы
     ctx.fillStyle = '#3a2515';
     ctx.beginPath();
     ctx.arc(0, 36, 17, Math.PI * 1.05, Math.PI * 1.95);
@@ -2624,18 +2868,15 @@ function drawEasterEgg() {
     ctx.quadraticCurveTo(-6, 30, -14, 30);
     ctx.fill();
     
-    // Брови
     ctx.strokeStyle = '#3a2515'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(-11, 34); ctx.lineTo(-4, 33); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(11, 34); ctx.lineTo(4, 33); ctx.stroke();
     
-    // Улыбка
     ctx.strokeStyle = '#8a5a3a'; ctx.lineWidth = 2.2;
     ctx.beginPath(); ctx.arc(0, 47, 8, 0.15, Math.PI - 0.15); ctx.stroke();
     ctx.fillStyle = '#fff';
     ctx.beginPath(); ctx.ellipse(0, 48, 6, 2, 0, 0, Math.PI); ctx.fill();
     
-    // Очки
     ctx.fillStyle = '#1a1a1a';
     ctx.beginPath(); ctx.ellipse(-7, 39, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(7, 39, 7, 5, 0, 0, Math.PI * 2); ctx.fill();
@@ -2644,7 +2885,6 @@ function drawEasterEgg() {
     ctx.beginPath(); ctx.ellipse(-9, 38, 2.5, 1.5, -0.3, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(5, 38, 2.5, 1.5, -0.3, 0, Math.PI * 2); ctx.fill();
     
-    // Коктейль
     ctx.fillStyle = '#ff6b9d';
     ctx.beginPath();
     ctx.moveTo(30, 78); ctx.lineTo(40, 78); ctx.lineTo(35, 90); ctx.closePath(); ctx.fill();
@@ -2658,11 +2898,9 @@ function drawEasterEgg() {
     ctx.beginPath(); ctx.ellipse(38, 60, 2, 1, 0.5, 0, Math.PI * 2); ctx.fill();
   } else {
     // === РЫБАЧКА В БИКИНИ ===
-    // Тень
     ctx.fillStyle = 'rgba(0,0,0,0.25)';
     ctx.beginPath(); ctx.ellipse(0, 183, 30, 8, 0, 0, Math.PI * 2); ctx.fill();
     
-    // Ноги (короче)
     ctx.fillStyle = '#e0b080';
     ctx.beginPath();
     ctx.moveTo(-11, 105); ctx.quadraticCurveTo(-13, 135, -10, 168); ctx.lineTo(-4, 168);
@@ -2674,7 +2912,6 @@ function drawEasterEgg() {
     ctx.beginPath(); ctx.ellipse(-8, 171, 7, 4, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(8, 171, 7, 4, 0, 0, Math.PI * 2); ctx.fill();
     
-    // Плавки-бикини
     ctx.fillStyle = '#ff2e88';
     ctx.beginPath();
     ctx.moveTo(-15, 85); ctx.quadraticCurveTo(0, 83, 15, 85);
@@ -2688,7 +2925,6 @@ function drawEasterEgg() {
     ctx.beginPath(); ctx.moveTo(-15, 85); ctx.lineTo(-20, 80); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(15, 85); ctx.lineTo(20, 80); ctx.stroke();
     
-    // Торс
     ctx.fillStyle = '#d2a679';
     ctx.beginPath();
     ctx.moveTo(-14, 62);
@@ -2702,7 +2938,6 @@ function drawEasterEgg() {
     ctx.strokeStyle = 'rgba(140,90,60,0.5)'; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.arc(0, 82, 1.5, 0, Math.PI * 2); ctx.stroke();
     
-    // Руки
     ctx.strokeStyle = '#d2a679'; ctx.lineWidth = 7; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(-16, 63); ctx.lineTo(-32, 82); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(16, 63); ctx.lineTo(32, 82); ctx.stroke();
@@ -2710,7 +2945,6 @@ function drawEasterEgg() {
     ctx.beginPath(); ctx.arc(-33, 83, 4, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(33, 83, 4, 0, Math.PI * 2); ctx.fill();
     
-    // Бикини-верх
     ctx.fillStyle = '#ff2e88';
     ctx.beginPath(); ctx.ellipse(-8, 67, 8, 7, -0.2, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(8, 67, 8, 7, 0.2, 0, Math.PI * 2); ctx.fill();
@@ -2722,17 +2956,14 @@ function drawEasterEgg() {
     ctx.beginPath(); ctx.moveTo(-8, 67); ctx.lineTo(-14, 63); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(8, 67); ctx.lineTo(14, 63); ctx.stroke();
     
-    // Шея
     ctx.fillStyle = '#c8955f';
     ctx.fillRect(-5, 55, 10, 7);
     
-    // Голова
     ctx.fillStyle = '#f0c090';
     ctx.beginPath(); ctx.arc(0, 41, 16, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#e8b585';
     ctx.beginPath(); ctx.arc(0, 47, 10, 0.1, Math.PI - 0.1); ctx.fill();
     
-    // Волосы
     ctx.fillStyle = '#8b4513';
     ctx.beginPath();
     ctx.ellipse(0, 39, 20, 22, 0, Math.PI * 0.9, Math.PI * 2.1);
@@ -2759,18 +2990,15 @@ function drawEasterEgg() {
     ctx.fillStyle = 'rgba(255,200,150,0.3)';
     ctx.beginPath(); ctx.ellipse(-8, 35, 6, 3, -0.3, 0, Math.PI * 2); ctx.fill();
     
-    // Брови
     ctx.strokeStyle = '#6a3520'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(-10, 35); ctx.lineTo(-4, 34); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(10, 35); ctx.lineTo(4, 34); ctx.stroke();
     
-    // Улыбка
     ctx.strokeStyle = '#c06060'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(0, 47, 7, 0.15, Math.PI - 0.15); ctx.stroke();
     ctx.fillStyle = '#fff';
     ctx.beginPath(); ctx.ellipse(0, 48, 5, 1.8, 0, 0, Math.PI); ctx.fill();
     
-    // Очки
     ctx.fillStyle = '#1a1a1a';
     ctx.beginPath(); ctx.arc(-7, 39, 6, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(7, 39, 6, 0, Math.PI * 2); ctx.fill();
@@ -2779,12 +3007,10 @@ function drawEasterEgg() {
     ctx.beginPath(); ctx.arc(-9, 38, 2, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(5, 38, 2, 0, Math.PI * 2); ctx.fill();
     
-    // Серьги
     ctx.fillStyle = '#ffd700';
     ctx.beginPath(); ctx.arc(-15, 49, 2.5, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath(); ctx.arc(15, 49, 2.5, 0, Math.PI * 2); ctx.fill();
     
-    // Коктейль
     ctx.fillStyle = '#7fd8ff';
     ctx.beginPath();
     ctx.moveTo(28, 78); ctx.lineTo(38, 78); ctx.lineTo(33, 90); ctx.closePath(); ctx.fill();
@@ -2876,7 +3102,7 @@ function drawUI() {
   
   if (lastCatch && (state === S.RESULT || state === S.RETURNING)) {
     const panelW = 280;
-    ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.beginPath(); ctx.roundRect(W - panelW - 15, 160, panelW, 85, 10); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.beginPath(); ctx.roundRect(W - panelW - 15, 160, panelW, 110, 10); ctx.fill();
     ctx.strokeStyle = lastCatch.color; ctx.lineWidth = 2; ctx.stroke();
     
     ctx.font = 'bold 20px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = lastCatch.color;
@@ -2885,8 +3111,17 @@ function drawUI() {
     ctx.font = 'bold 16px "Segoe UI", sans-serif'; ctx.fillStyle = '#ffd700';
     ctx.fillText(`${lastCatch.weight} г`, W - panelW/2 - 15, 215);
     
-    ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = lastCatch.isTrash ? '#ff8888' : '#fff';
-    ctx.fillText(lastCatch.isTrash ? '🗑 Мусор...' : `+${lastCatch.points} монет`, W - panelW/2 - 15, 235);
+    ctx.font = '14px "Segoe UI", sans-serif'; ctx.fillStyle = '#fff';
+    if (lastCatch.isTrash && lastCatch.name !== 'Сундук') {
+      ctx.fillText(`🗑 Мусор... +${lastCatch.points} 💰`, W - panelW/2 - 15, 235);
+    } else if (lastCatch.name === 'Сундук') {
+      ctx.fillText(`💰 Клад!`, W - panelW/2 - 15, 235);
+    } else {
+      ctx.fillText(`🎒 В садок`, W - panelW/2 - 15, 235);
+    }
+    
+    ctx.fillStyle = '#00ccff';
+    ctx.fillText(`+${Math.round(lastCatch.xpGained || 0)} ✨ опыта`, W - panelW/2 - 15, 255);
   }
 }
 
@@ -3302,4 +3537,4 @@ function loop(now) {
 requestAnimationFrame(loop);
 </script>
 </body>
-</html>	
+</html>
